@@ -1,0 +1,12 @@
+{
+  "/login/page": "app/login/page.js",
+  "/firm-order-create/page": "app/firm-order-create/page.js",
+  "/firm-products/page": "app/firm-products/page.js",
+  "/firm-finances/page": "app/firm-finances/page.js",
+  "/firm-clients/page": "app/firm-clients/page.js",
+  "/firm-orders/page": "app/firm-orders/page.js",
+  "/firm-drivers/page": "app/firm-drivers/page.js",
+  "/firm-staff/page": "app/firm-staff/page.js",
+  "/firm-regions/page": "app/firm-regions/page.js",
+  "/firm-dashboard/page": "app/firm-dashboard/page.js"
+}

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- 5L Bottle -->
+  <defs>
+    <linearGradient id="bottle5" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Bottle Body -->
+  <rect x="195" y="150" width="122" height="280" rx="18" fill="url(#bottle5)"/>
+
+  <!-- Bottle Neck -->
+  <rect x="225" y="110" width="62" height="50" rx="10" fill="#6D28D9"/>
+
+  <!-- Bottle Cap -->
+  <rect x="235" y="80" width="42" height="35" rx="7" fill="#5B21B6"/>
+
+  <!-- Highlight/Shine -->
+  <ellipse cx="225" cy="220" rx="20" ry="45" fill="#A78BFA" opacity="0.4"/>
+
+  <!-- Water Wave -->
+  <path d="M 205 320 Q 256 310 307 320 L 307 405 Q 256 415 205 405 Z" fill="#C4B5FD" opacity="0.3"/>
+
+  <!-- Volume Label -->
+  <text x="256" y="310" font-family="Arial, sans-serif" font-size="70" font-weight="bold" fill="#FFFFFF" text-anchor="middle">5L</text>
+</svg>

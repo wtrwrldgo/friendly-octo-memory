@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 text-gray-900;
+}
+
+@layer utilities {
+  .gradient-navy {
+    background: linear-gradient(135deg, #0C1633 0%, #1e3a8a 100%);
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+}

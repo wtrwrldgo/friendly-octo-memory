@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node setup-test-user.js:*)",
+      "Bash(node:*)",
+      "mcp__postgres__query",
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9)",
+      "Bash(npm run dev:*)",
+      "Bash(pbcopy)",
+      "Bash(npx expo install:*)",
+      "Bash(npx expo start:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
