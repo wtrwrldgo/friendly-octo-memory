@@ -1,305 +1,290 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  Image,
   FlatList,
   Dimensions,
-  TouchableOpacity,
-  Animated,
+  Pressable,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../types';
-import { Colors, Spacing, FontSizes, BorderRadius } from '../constants/Colors';
-import { PrimaryButton } from '../components/PrimaryButton';
-import { LinearGradient } from 'expo-linear-gradient';
-
-const { width, height } = Dimensions.get('window');
+import { useLanguage } from '../context/LanguageContext';
 
 type WelcomeScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Welcome'>;
 };
 
-const SLIDES = [
-  {
-    id: '1',
-    icon: '💧',
-    title: 'Fresh Water, Anytime',
-    description: 'Order purified water for your home and office with just one tap',
-  },
-  {
-    id: '2',
-    icon: '🚀',
-    title: 'Fast Delivery',
-    description: 'Get your water delivered quickly from trusted suppliers',
-  },
-  {
-    id: '3',
-    icon: '📍',
-    title: 'Track Your Order',
-    description: 'Real-time tracking of your water delivery every step of the way',
-  },
-];
+const { width } = Dimensions.get('window');
+
+type Slide = {
+  key: string;
+  title: string;
+  subtitle: string;
+  image: any;
+  cta?: string;
+};
+
+const DOT_SIZE = 8;
 
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
+  const { t } = useLanguage();
+  const listRef = useRef<FlatList<Slide>>(null);
+  const [index, setIndex] = useState(0);
 
-  // Animation values for each slide
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
+  const SLIDES: Slide[] = useMemo(() => [
+    {
+      key: 'fast',
+      title: t('auth.slide1Title'),
+      subtitle: t('auth.slide1Description'),
+      image: require('../assets/onboarding-fast-delivery.png'),
+    },
+    {
+      key: 'updates',
+      title: t('auth.slide3Title'),
+      subtitle: t('auth.slide3Description'),
+      image: require('../assets/onboarding-courier.png'),
+    },
+    {
+      key: 'payment',
+      title: t('auth.slide2Title'),
+      subtitle: t('auth.slide2Description'),
+      image: require('../assets/onboarding-payment.png'),
+      cta: t('auth.getStarted'),
+    },
+  ], [t]);
 
-  useEffect(() => {
-    // Reset and start animations when slide changes
-    fadeAnim.setValue(0);
-    scaleAnim.setValue(0.8);
-    slideAnim.setValue(50);
+  const isLast = index === SLIDES.length - 1;
+  const primaryCta = useMemo(
+    () => (isLast ? (SLIDES[index].cta ?? t('auth.getStarted')) : t('auth.next')),
+    [index, isLast, SLIDES, t]
+  );
 
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 40,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        tension: 40,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [currentIndex]);
-
-  const handleNext = () => {
-    if (currentIndex < SLIDES.length - 1) {
-      flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
-    } else {
-      navigation.navigate('SelectLanguage');
+  const goNext = useCallback(() => {
+    if (isLast) {
+      navigation.navigate('AskName');
+      return;
     }
-  };
+    listRef.current?.scrollToIndex({ index: index + 1, animated: true });
+  }, [index, isLast, navigation]);
 
-  const handleSkip = () => {
-    navigation.navigate('SelectLanguage');
-  };
+  const skip = useCallback(() => {
+    navigation.navigate('AskName');
+  }, [navigation]);
 
   return (
     <LinearGradient
-      colors={['#0A1628', '#0C1633', '#0F1B3D']}
-      style={styles.container}
+      colors={['#F3FBFF', '#F7FEFF']}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      style={styles.gradient}
     >
-      {/* Logo and Brand */}
-      <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoIcon}>💧</Text>
-          <Text style={styles.logoText}>Water Go</Text>
+      <StatusBar barStyle="dark-content" />
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.brand}>
+            Water<Text style={styles.brandAccent}>Go</Text>
+          </Text>
+          <Pressable onPress={skip} hitSlop={8}>
+            <Text style={styles.skip}>{t('auth.skip')}</Text>
+          </Pressable>
         </View>
-      </View>
 
-      {/* Slides */}
-      <FlatList
-        ref={flatListRef}
-        data={SLIDES}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={(event) => {
-          const index = Math.round(event.nativeEvent.contentOffset.x / width);
-          setCurrentIndex(index);
-        }}
-        renderItem={({ item }) => (
-          <View style={styles.slide}>
-            <Animated.View
-              style={[
-                styles.slideContent,
-                {
-                  opacity: fadeAnim,
-                  transform: [
-                    { scale: scaleAnim },
-                    { translateY: slideAnim },
-                  ],
-                },
-              ]}
-            >
-              {/* Large 3D-style icon/image area */}
-              <View style={styles.iconContainer}>
-                <Animated.View
-                  style={[
-                    styles.iconBackground,
-                    {
-                      transform: [
-                        {
-                          scale: scaleAnim.interpolate({
-                            inputRange: [0.8, 1],
-                            outputRange: [0.9, 1],
-                          }),
-                        },
-                      ],
-                    },
-                  ]}
-                >
-                  <Text style={styles.icon}>{item.icon}</Text>
-                </Animated.View>
+        {/* Slides Container */}
+        <View style={styles.slidesContainer}>
+          <FlatList
+            ref={listRef}
+            data={SLIDES}
+            keyExtractor={(s) => s.key}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(e) => {
+              const next = Math.round(e.nativeEvent.contentOffset.x / width);
+              setIndex(next);
+            }}
+            renderItem={({ item }) => (
+              <View style={styles.slideWrapper}>
+                <View style={styles.slideContent}>
+                  {/* Image */}
+                  <View style={styles.heroWrap}>
+                    <Image
+                      source={item.image}
+                      style={styles.hero}
+                      resizeMode="contain"
+                      accessibilityIgnoresInvertColors
+                    />
+                  </View>
+
+                  {/* Text */}
+                  <View style={styles.textBlock}>
+                    <Text style={styles.title}>{item.title}</Text>
+                    <Text style={styles.subtitle}>{item.subtitle}</Text>
+                  </View>
+                </View>
               </View>
+            )}
+          />
+        </View>
 
-              {/* Title */}
-              <Text style={styles.title}>{item.title}</Text>
-
-              {/* Description */}
-              <Text style={styles.description}>{item.description}</Text>
-            </Animated.View>
+        {/* Footer */}
+        <View style={styles.footer}>
+          {/* Dots */}
+          <View style={styles.dotsRow}>
+            {SLIDES.map((_, i) => {
+              const active = i === index;
+              return (
+                <View key={i} style={[styles.dot, active && styles.dotActive]} />
+              );
+            })}
           </View>
-        )}
-        keyExtractor={(item) => item.id}
-      />
 
-      {/* Footer with button and pagination */}
-      <View style={styles.footer}>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.getStartedButton}
-            onPress={handleNext}
-            activeOpacity={0.9}
-          >
-            <Text style={styles.buttonText}>
-              {currentIndex === SLIDES.length - 1 ? 'Get Started' : 'Next'}
-            </Text>
-          </TouchableOpacity>
+          {/* Buttons */}
+          <View style={styles.buttons}>
+            <Pressable style={styles.primaryBtn} onPress={goNext}>
+              <Text style={styles.primaryText}>{primaryCta}</Text>
+            </Pressable>
+          </View>
         </View>
-
-        {/* Pagination dots */}
-        <View style={styles.pagination}>
-          {SLIDES.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.dot,
-                index === currentIndex && styles.activeDot,
-              ]}
-            />
-          ))}
-        </View>
-      </View>
+      </SafeAreaView>
     </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  gradient: {
+    flex: 1,
+  },
+  safe: {
     flex: 1,
   },
   header: {
-    paddingTop: 60,
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
-    alignItems: 'center',
-  },
-  logoContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'space-between',
   },
-  logoIcon: {
-    fontSize: 36,
-  },
-  logoText: {
+  brand: {
     fontSize: 32,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: -0.5,
+    fontWeight: '800',
+    color: '#0C1633',
   },
-  slide: {
+  brandAccent: {
+    color: '#5AA8FF',
+  },
+  skip: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#6B7280',
+  },
+
+  slidesContainer: {
+    flex: 1,
+  },
+  slideWrapper: {
     width,
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
   },
   slideContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+
+  heroWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 32,
+  },
+  hero: {
+    width: width * 0.9,
+    height: width * 0.9,
+    minWidth: width * 0.9,
+    minHeight: width * 0.9,
+  },
+
+  textBlock: {
     alignItems: 'center',
     width: '100%',
   },
-  iconContainer: {
-    marginBottom: Spacing.xxl * 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconBackground: {
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.3,
-    shadowRadius: 40,
-    elevation: 20,
-  },
-  icon: {
-    fontSize: 120,
-  },
   title: {
     fontSize: 32,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: Spacing.md,
+    lineHeight: 38,
+    fontWeight: '800',
+    color: '#0C1633',
     textAlign: 'center',
     letterSpacing: -0.5,
+    marginBottom: 12,
   },
-  description: {
+  subtitle: {
     fontSize: 17,
-    color: 'rgba(255, 255, 255, 0.7)',
+    lineHeight: 24,
+    color: '#5B6472',
+    fontWeight: '500',
     textAlign: 'center',
-    lineHeight: 26,
-    paddingHorizontal: Spacing.lg,
-    maxWidth: 340,
+    maxWidth: 300,
   },
+
   footer: {
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: 50,
+    paddingHorizontal: 24,
+    paddingBottom: 8,
   },
-  buttonContainer: {
-    marginBottom: Spacing.lg,
-  },
-  getStartedButton: {
-    backgroundColor: '#3B82F6',
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-    shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  pagination: {
+  dotsRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    alignSelf: 'center',
     gap: 8,
+    marginBottom: 24,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    width: DOT_SIZE,
+    height: DOT_SIZE,
+    borderRadius: DOT_SIZE / 2,
+    backgroundColor: 'rgba(12,22,51,0.15)',
   },
-  activeDot: {
-    backgroundColor: '#3B82F6',
-    width: 32,
+  dotActive: {
+    width: DOT_SIZE * 3,
+    borderRadius: DOT_SIZE,
+    backgroundColor: '#2F7BFF',
+  },
+
+  buttons: {
+    gap: 12,
+  },
+  primaryBtn: {
+    height: 60,
+    borderRadius: 18,
+    backgroundColor: '#2F7BFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#2F7BFF',
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  primaryText: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 18,
+  },
+  secondaryBtn: {
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  secondaryText: {
+    color: '#6B7280',
+    fontWeight: '700',
+    fontSize: 16,
   },
 });
 

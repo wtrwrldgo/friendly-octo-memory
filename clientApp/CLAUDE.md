@@ -165,17 +165,126 @@ Orders progress through these stages (defined in `types/index.ts`):
 
 ## Design System
 
+### Visual Design Language
+
+The app follows a **clean, modern, minimalist design** with emphasis on whitespace and clarity.
+
 **Colors** (defined in `constants/Colors.ts`):
 - Background: `#FFFFFF` (white)
-- Text: `#0C1633` (dark navy)
-- Primary: `#2D6FFF` (blue)
+- Text Primary: `#0C1633` (dark navy) - used for headings
+- Text Secondary: `#8E99AB` (gray) - used for subtitles/descriptions
+- Primary Button: `#2D6FFF` (vibrant blue) - main CTA buttons
 - Secondary colors: success green, error red, warning yellow
 
-**Components Style**:
-- Rounded corners (borderRadius: 12-16)
-- Consistent spacing (padding: 16-24)
-- Shadow elevations for cards
-- Responsive to screen sizes
+### UI Patterns for Welcome/Onboarding Screens
+
+Based on the onboarding design (see WelcomeScreen):
+
+**Layout Structure:**
+1. **Centered illustration** (top 50% of screen)
+   - Large, colorful vector icons/illustrations
+   - Generous whitespace around graphics
+   - Icons should be simple, flat design style
+
+2. **Main heading** (centered)
+   - Large, bold text (28-32px)
+   - Dark navy color (#0C1633)
+   - Short, impactful messaging
+
+3. **Subtitle/description** (centered, below heading)
+   - Medium-sized text (16-18px)
+   - Gray color (#8E99AB)
+   - 2-3 lines maximum
+   - Descriptive, friendly tone
+
+4. **Pagination dots** (horizontal center)
+   - Small circular indicators
+   - Active dot: Primary blue (#2D6FFF)
+   - Inactive dots: Light gray
+   - Positioned above CTA button
+
+5. **Primary CTA button** (bottom)
+   - Full-width with horizontal margins (16-24px)
+   - Bright blue background (#2D6FFF)
+   - White text, bold weight
+   - Large tap target (minimum 48px height)
+   - Rounded corners (borderRadius: 12-16)
+   - Fixed to bottom with safe area padding
+
+**Typography Hierarchy:**
+- Headings: Bold, 28-32px, #0C1633
+- Body text: Regular, 16-18px, #8E99AB
+- Button text: Semi-bold, 16-18px, #FFFFFF
+
+**Component Spacing:**
+- Screen padding: 24-32px horizontal
+- Vertical spacing between elements: 16-24px
+- Button bottom margin: Use safe area insets
+- Minimum touch targets: 48x48px
+
+**Icon/Illustration Guidelines:**
+- Use simple, flat vector illustrations
+- Primary colors: Blue (#2D6FFF), light blue tints
+- Accent colors: Yellow/orange for highlights
+- Style: Friendly, approachable, modern
+- Size: Large enough to be focal point (200-300px)
+
+### UI Patterns for Selection/List Screens
+
+Based on language selection design (see SelectLanguageScreen):
+
+**Layout Structure:**
+1. **Header section** (top, centered)
+   - Icon (globe, user, etc.) - 48-60px, dark navy (#0C1633)
+   - Main heading - Bold, 28-32px, centered
+   - Subtitle - Regular, 16-18px, gray (#8E99AB), centered
+   - Generous top padding (60-80px from safe area)
+
+2. **Selection cards** (scrollable list)
+   - Each card is a pressable container
+   - White background with subtle border/shadow
+   - Border radius: 16-20px
+   - Vertical spacing between cards: 12-16px
+   - Horizontal margin: 16-24px from screen edges
+
+3. **Card content layout** (horizontal flex)
+   - **Left**: Flag/icon (48x48px with border radius 8px)
+   - **Center**: Language name (vertical stack)
+     - Primary text: Bold, 18-20px, dark navy
+     - Secondary text: Regular, 14-16px, gray
+   - **Right**: Selection indicator (if selected)
+     - Blue checkmark circle (#2D6FFF)
+     - 32-40px diameter
+     - White checkmark icon inside
+
+4. **Card states:**
+   - Default: White background, light border (#E5E9F2)
+   - Selected: White background, blue checkmark visible
+   - Pressed: Slight opacity change (0.7-0.8)
+   - Hover: Light gray background (web only)
+
+**Selection Card Specifications:**
+```
+Card Structure:
+├─ Padding: 16-20px
+├─ Min height: 72-80px
+├─ Border radius: 16-20px
+├─ Border: 1px solid #E5E9F2 (optional)
+├─ Shadow: subtle (elevation 1-2)
+└─ Content:
+   ├─ Icon/Flag (left): 48x48px, margin-right: 16px
+   ├─ Text Stack (center, flex: 1):
+   │  ├─ Primary: 18-20px, bold, #0C1633
+   │  └─ Secondary: 14-16px, regular, #8E99AB
+   └─ Checkmark (right): 32-40px circle, #2D6FFF, white icon
+```
+
+**Interactive Behavior:**
+- Single selection (radio button behavior)
+- Tap anywhere on card to select
+- Smooth transition when selection changes
+- Only one card can have checkmark at a time
+- Consider adding haptic feedback on selection (iOS/Android)
 
 ## Important Implementation Notes
 
@@ -184,6 +293,45 @@ Orders progress through these stages (defined in `types/index.ts`):
 3. **Phone authentication**: Uses Twilio service (`services/twilio.service.ts`)
 4. **Token management**: Automatic refresh on 401 errors via `services/http.service.ts`
 5. **Storage**: SecureStore for tokens, AsyncStorage for user data
+
+### Shadow Performance Best Practice
+
+**CRITICAL**: When using shadows on Views, always set a `backgroundColor` to avoid performance warnings.
+
+**❌ Incorrect (causes warning):**
+```typescript
+<View style={{
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 8,
+  elevation: 3, // Android
+}}>
+  {/* Content */}
+</View>
+```
+
+**✅ Correct:**
+```typescript
+<View style={{
+  backgroundColor: '#FFFFFF', // REQUIRED for efficient shadow rendering
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 8,
+  elevation: 3, // Android
+  borderRadius: 16,
+}}>
+  {/* Content */}
+</View>
+```
+
+**Why**: React Native cannot efficiently calculate shadows on transparent backgrounds. Always specify a solid `backgroundColor` on any View with shadow properties.
+
+**Common shadow styles used in app:**
+- Cards: `backgroundColor: '#FFFFFF'` + subtle shadow (opacity: 0.08-0.1)
+- Elevated buttons: `backgroundColor: '#2D6FFF'` + medium shadow (opacity: 0.15-0.2)
+- Floating elements: Stronger shadows (opacity: 0.2-0.25)
 
 ## Common Development Patterns
 

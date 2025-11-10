@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../types';
 import { Colors, Spacing, FontSizes } from '../constants/Colors';
@@ -61,7 +62,14 @@ const AddressSelectScreen: React.FC<AddressSelectScreenProps> = ({ navigation })
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={styles.backIcon}>←</Text>
+      </TouchableOpacity>
+
       <View style={styles.content}>
         <Text style={styles.title}>Select Address</Text>
         <Text style={styles.subtitle}>
@@ -114,7 +122,7 @@ const AddressSelectScreen: React.FC<AddressSelectScreenProps> = ({ navigation })
           loading={loading}
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -122,6 +130,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backIcon: {
+    fontSize: 28,
+    color: Colors.text,
   },
   content: {
     flex: 1,

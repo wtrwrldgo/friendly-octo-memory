@@ -9,7 +9,7 @@
 
 import { shouldUseMockData } from '../config/api.config';
 import MockApiService from './mock-api.service';
-import RealApiService from './real-api.service';
+import SimpleSupabaseApiService from './simple-supabase-api.service';
 import StorageService from './storage.service';
 import {
   Firm,
@@ -24,7 +24,9 @@ import {
 class ApiService {
   // Get the appropriate service based on configuration
   private getService() {
-    return shouldUseMockData() ? MockApiService : RealApiService;
+    // For MVP launch: use Simple Supabase API (no edge functions needed!)
+    // This works immediately without deploying edge functions
+    return shouldUseMockData() ? MockApiService : SimpleSupabaseApiService;
   }
 
   // Authentication
@@ -179,7 +181,12 @@ class ApiService {
     }
   }
 
-  async getOrderStatus(orderId: string): Promise<{ stage: OrderStage; estimatedDelivery: Date }> {
+  async getOrderStatus(orderId: string): Promise<{
+    stage: OrderStage;
+    estimatedDelivery: Date;
+    queuePosition?: number;
+    ordersAhead?: number;
+  }> {
     try {
       return await this.getService().getOrderStatus(orderId);
     } catch (error: any) {
@@ -201,6 +208,15 @@ class ApiService {
       return await this.getService().cancelOrder(orderId);
     } catch (error: any) {
       throw new Error(error.message || 'Failed to cancel order');
+    }
+  }
+
+  // Reviews
+  async submitReview(orderId: string, rating: number, comment: string): Promise<{ success: boolean }> {
+    try {
+      return await this.getService().submitReview(orderId, rating, comment);
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to submit review');
     }
   }
 
@@ -231,9 +247,9 @@ export const sendVerificationCode = (phone: string) =>
 export const verifyCode = (phone: string, code: string) =>
   new ApiService().verifyCode(phone, code);
 
-export const getUserData = (userId: string) => new ApiService().getUserProfile();
+export const getUserData = () => new ApiService().getUserProfile();
 
-export const updateUserProfile = (userId: string, updates: Partial<User>) =>
+export const updateUserProfile = (updates: Partial<User>) =>
   new ApiService().updateUserProfile(updates);
 
 export const getUserAddresses = () => new ApiService().getUserAddresses();

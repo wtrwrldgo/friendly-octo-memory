@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Product } from '../types';
-import { Colors, Spacing, FontSizes, BorderRadius } from '../constants/Colors';
+import { Colors, Spacing } from '../constants/Colors';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ProductCardProps {
   product: Product;
@@ -18,139 +19,155 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onIncrement,
   onDecrement,
 }) => {
+  const { t } = useLanguage();
   return (
     <View style={styles.container}>
-      <View style={styles.imageContainer}>
+      {/* Product Image with Circular Background */}
+      <View style={styles.imageWrapper}>
+        <View style={styles.circleBackground} />
         <Image
           source={{ uri: product.image }}
           style={styles.image}
           resizeMode="contain"
         />
       </View>
+
+      {/* Product Info */}
       <View style={styles.content}>
-        <Text style={styles.name}>{product.name}</Text>
-        <Text style={styles.description} numberOfLines={2}>
-          {product.description}
+        <Text style={styles.name} numberOfLines={2}>
+          {product.name}
         </Text>
-        <View style={styles.footer}>
-          <View>
-            <Text style={styles.price}>${product.price}</Text>
-            <Text style={styles.volume}>{product.volume}</Text>
-          </View>
-          {quantity === 0 ? (
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={onAdd}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.addButtonText}>Add</Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.quantityContainer}>
-              <TouchableOpacity
-                style={styles.quantityButton}
-                onPress={onDecrement}
-              >
-                <Text style={styles.quantityButtonText}>-</Text>
-              </TouchableOpacity>
-              <Text style={styles.quantity}>{quantity}</Text>
-              <TouchableOpacity
-                style={styles.quantityButton}
-                onPress={onIncrement}
-              >
-                <Text style={styles.quantityButtonText}>+</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
+        <Text style={styles.volume}>{product.volume}</Text>
+        <Text style={styles.price}>{product.price.toLocaleString()} UZS</Text>
       </View>
+
+      {/* Add Button or Quantity Controls */}
+      {quantity === 0 ? (
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={onAdd}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.addButtonText}>{t('product.add')}</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.quantityContainer}>
+          <TouchableOpacity
+            style={styles.quantityButton}
+            onPress={onDecrement}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.quantityButtonText}>-</Text>
+          </TouchableOpacity>
+          <Text style={styles.quantity}>{quantity}</Text>
+          <TouchableOpacity
+            style={styles.quantityButton}
+            onPress={onIncrement}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.quantityButtonText}>+</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     backgroundColor: Colors.white,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
+    borderRadius: 24,
+    padding: Spacing.lg,
     marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    elevation: 2,
+    width: '48%',
   },
-  imageContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.gray,
+  imageWrapper: {
+    width: '100%',
+    height: 200,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Spacing.md,
+    marginBottom: Spacing.sm,
+    position: 'relative',
+  },
+  circleBackground: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: '#E8F4F8',
   },
   image: {
-    width: '100%',
-    height: '100%',
+    width: 180,
+    height: 180,
+    zIndex: 1,
   },
   content: {
-    flex: 1,
+    marginBottom: Spacing.md,
   },
   name: {
-    fontSize: FontSizes.md,
-    fontWeight: '600',
-    color: Colors.text,
-    marginBottom: Spacing.xs,
-  },
-  description: {
-    fontSize: FontSizes.sm,
-    color: Colors.grayText,
-    marginBottom: Spacing.sm,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  price: {
-    fontSize: FontSizes.lg,
+    fontSize: 16,
     fontWeight: '700',
     color: Colors.text,
+    marginBottom: 6,
+    lineHeight: 22,
+    minHeight: 44,
   },
   volume: {
-    fontSize: FontSizes.xs,
+    fontSize: 14,
+    fontWeight: '400',
     color: Colors.grayText,
+    marginBottom: 8,
+  },
+  price: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.text,
+    marginBottom: Spacing.md,
   },
   addButton: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.sm,
+    backgroundColor: '#4E7FFF',
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   addButtonText: {
     color: Colors.white,
-    fontSize: FontSizes.sm,
+    fontSize: 16,
     fontWeight: '600',
   },
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.gray,
-    borderRadius: BorderRadius.sm,
+    justifyContent: 'space-between',
+    backgroundColor: '#4E7FFF',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: Spacing.sm,
   },
   quantityButton: {
     width: 32,
     height: 32,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 10,
   },
   quantityButtonText: {
-    fontSize: FontSizes.lg,
-    color: Colors.primary,
-    fontWeight: '600',
+    fontSize: 20,
+    color: Colors.white,
+    fontWeight: '700',
   },
   quantity: {
-    fontSize: FontSizes.md,
-    fontWeight: '600',
-    color: Colors.text,
-    paddingHorizontal: Spacing.md,
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.white,
+    minWidth: 30,
+    textAlign: 'center',
   },
 });

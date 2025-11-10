@@ -135,6 +135,63 @@ class StorageService {
       throw error;
     }
   }
+
+  // ============================================
+  // Helper aliases for easier use
+  // ============================================
+
+  async setToken(token: string): Promise<void> {
+    return this.setAuthToken(token);
+  }
+
+  async getToken(): Promise<string | null> {
+    return this.getAuthToken();
+  }
+
+  async setUser(user: any): Promise<void> {
+    return this.setUserData(user);
+  }
+
+  async getUser<T = any>(): Promise<T | null> {
+    return this.getUserData<T>();
+  }
+
+  async clearAuth(): Promise<void> {
+    await this.removeAuthToken();
+    await this.removeRefreshToken();
+    await this.removeUserData();
+  }
+
+  // ============================================
+  // Generic storage methods (for any key-value)
+  // ============================================
+
+  async setItem(key: string, value: string): Promise<void> {
+    try {
+      await AsyncStorage.setItem(key, value);
+    } catch (error) {
+      console.error(`Error saving item ${key}:`, error);
+      throw error;
+    }
+  }
+
+  async getItem(key: string): Promise<string | null> {
+    try {
+      return await AsyncStorage.getItem(key);
+    } catch (error) {
+      console.error(`Error getting item ${key}:`, error);
+      return null;
+    }
+  }
+
+  async removeItem(key: string): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(key);
+    } catch (error) {
+      console.error(`Error removing item ${key}:`, error);
+      throw error;
+    }
+  }
 }
 
 export default new StorageService();

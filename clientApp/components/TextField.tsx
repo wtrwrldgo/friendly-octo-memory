@@ -19,13 +19,14 @@ export const TextField: React.FC<TextFieldProps> = ({
   label,
   error,
   containerStyle,
+  style,
   ...inputProps
 }) => {
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
       <TextInput
-        style={[styles.input, error && styles.inputError]}
+        style={[styles.input, error ? styles.inputError : null, style]}
         placeholderTextColor={Colors.grayText}
         {...inputProps}
       />

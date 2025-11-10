@@ -1,5 +1,8 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Cart, CartItem, Product, Firm } from '../types';
+
+const CART_STORAGE_KEY = '@watergo_cart';
 
 interface CartContextType {
   cart: Cart;
@@ -19,6 +22,41 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     total: 0,
     firm: null,
   });
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load cart from storage on mount
+  useEffect(() => {
+    loadCart();
+  }, []);
+
+  // Persist cart to storage whenever it changes
+  useEffect(() => {
+    if (isLoaded) {
+      saveCart(cart);
+    }
+  }, [cart, isLoaded]);
+
+  const loadCart = async () => {
+    try {
+      const cartData = await AsyncStorage.getItem(CART_STORAGE_KEY);
+      if (cartData) {
+        const parsedCart = JSON.parse(cartData);
+        setCart(parsedCart);
+      }
+    } catch (error) {
+      console.error('Failed to load cart from storage:', error);
+    } finally {
+      setIsLoaded(true);
+    }
+  };
+
+  const saveCart = async (cartData: Cart) => {
+    try {
+      await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartData));
+    } catch (error) {
+      console.error('Failed to save cart to storage:', error);
+    }
+  };
 
   const calculateTotal = (items: CartItem[]): number => {
     return items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
@@ -86,10 +124,23 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const decrementQuantity = (productId: string) => {
     setCart((prev) => {
       const existingItem = prev.items.find((item) => item.product.id === productId);
-      if (!existingItem || existingItem.quantity <= 1) {
+
+      // If item doesn't exist, return unchanged
+      if (!existingItem) {
         return prev;
       }
 
+      // If quantity is 1, remove the item completely
+      if (existingItem.quantity <= 1) {
+        const newItems = prev.items.filter((item) => item.product.id !== productId);
+        return {
+          items: newItems,
+          total: calculateTotal(newItems),
+          firm: newItems.length > 0 ? prev.firm : null,
+        };
+      }
+
+      // Otherwise, just decrement the quantity
       const newItems = prev.items.map((item) =>
         item.product.id === productId
           ? { ...item, quantity: item.quantity - 1 }

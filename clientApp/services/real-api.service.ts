@@ -105,9 +105,19 @@ class RealApiService {
     return await HttpService.get<Order>(url);
   }
 
-  async getOrderStatus(orderId: string): Promise<{ stage: OrderStage; estimatedDelivery: Date }> {
+  async getOrderStatus(orderId: string): Promise<{
+    stage: OrderStage;
+    estimatedDelivery: Date;
+    queuePosition?: number;
+    ordersAhead?: number;
+  }> {
     const url = API_ENDPOINTS.ORDERS.STATUS.replace(':id', orderId);
-    return await HttpService.get<{ stage: OrderStage; estimatedDelivery: Date }>(url);
+    return await HttpService.get<{
+      stage: OrderStage;
+      estimatedDelivery: Date;
+      queuePosition?: number;
+      ordersAhead?: number;
+    }>(url);
   }
 
   async getOrderDriver(orderId: string): Promise<Driver | null> {

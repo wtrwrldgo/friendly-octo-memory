@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, Animated } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import {
+  View, Text, StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView, TouchableOpacity
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../types';
-import { Colors, Spacing, FontSizes } from '../constants/Colors';
 import { PrimaryButton } from '../components/PrimaryButton';
-import { PhoneInput } from '../components/PhoneInput';
+import { PhoneInputDuolingo } from '../components/PhoneInputDuolingo';
 import { sendVerificationCode } from '../services/api';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 import { validatePhoneNumber } from '../utils/validation';
 
 type AuthPhoneScreenProps = {
@@ -17,148 +20,129 @@ const AuthPhoneScreen: React.FC<AuthPhoneScreenProps> = ({ navigation }) => {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const { showError } = useToast();
+  const { t } = useLanguage();
 
-  // Animation values
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const valid = useMemo(() => validatePhoneNumber(`+998${phone.replace(/\s/g, '')}`), [phone]);
 
-  useEffect(() => {
-    // Staggered entrance animation
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        tension: 50,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  const handleContinue = async () => {
-    const fullPhone = `+998${phone.replace(/\s/g, '')}`;
-    const validation = validatePhoneNumber(fullPhone);
-
-    if (!validation.isValid) {
-      showError(validation.error || 'Invalid phone number');
-      return;
-    }
+  const handleSendCode = async () => {
+    if (!valid || loading) return;
 
     setLoading(true);
     try {
+      const fullPhone = `+998${phone.replace(/\s/g, '')}`;
       await sendVerificationCode(fullPhone);
       navigation.navigate('VerifyCode', { phone: fullPhone });
     } catch (error: any) {
-      showError(error.message || 'Failed to send code. Please try again.');
+      showError(error.message || t('errors.sendCodeFailed') || 'Failed to send verification code');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <LinearGradient
+      colors={['#E9F7FF', '#F7FEFF']}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      style={{ flex: 1 }}
     >
-      <View style={styles.content}>
-        <Animated.View
-          style={[
-            styles.centerContent,
-            {
-              opacity: fadeAnim,
-              transform: [
-                { translateY: slideAnim },
-                { scale: scaleAnim },
-              ],
-            },
-          ]}
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Back Button */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
         >
-          <Animated.Text
-            style={[
-              styles.emoji,
-              {
-                transform: [
-                  {
-                    rotate: fadeAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['-10deg', '0deg'],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            📱
-          </Animated.Text>
-          <Text style={styles.title}>Enter your phone</Text>
-          <Text style={styles.subtitle}>We'll send you a verification code</Text>
+          <Text style={styles.backIcon}>←</Text>
+        </TouchableOpacity>
 
-          <View style={styles.inputContainer}>
-            <PhoneInput value={phone} onChangeText={setPhone} />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.container}
+        >
+          <View style={styles.content}>
+            {/* Phone Icon */}
+            <Text style={styles.phoneIcon}>📱</Text>
+
+            <Text style={styles.h1}>{t('auth.enterPhone')}</Text>
+            <Text style={styles.h2}>{t('auth.sendCodeMessage')}</Text>
+
+            <PhoneInputDuolingo
+              value={phone}
+              onChangeText={setPhone}
+              containerStyle={styles.inputWrap}
+            />
           </View>
 
-          <PrimaryButton
-            title="Send Code"
-            onPress={handleContinue}
-            disabled={phone.replace(/\s/g, '').length !== 9}
-            loading={loading}
-          />
-        </Animated.View>
-      </View>
-    </KeyboardAvoidingView>
+          <View style={styles.footer}>
+            <PrimaryButton
+              title={t('auth.sendCode')}
+              onPress={handleSendCode}
+              disabled={!valid || loading}
+              loading={loading}
+              style={styles.button}
+              textStyle={styles.buttonText}
+            />
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  content: {
-    flex: 1,
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    zIndex: 10,
+    width: 44,
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.lg,
   },
-  centerContent: {
-    width: '100%',
-    maxWidth: 400,
+  backIcon: {
+    fontSize: 32,
+    color: '#0C1633',
+  },
+  container: { flex: 1, paddingHorizontal: 24 },
+  content: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
   },
-  emoji: {
-    fontSize: 80,
-    marginBottom: Spacing.lg,
+  phoneIcon: {
+    fontSize: 200,
+    marginBottom: 20,
+  },
+  h1: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#0C1633',
     textAlign: 'center',
   },
-  title: {
-    fontSize: FontSizes.xxl,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: Spacing.sm,
+  h2: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#6B7280',
     textAlign: 'center',
+    marginBottom: 30,
+    paddingHorizontal: 20,
   },
-  subtitle: {
-    fontSize: FontSizes.md,
-    color: Colors.grayText,
-    marginBottom: Spacing.xxl,
-    textAlign: 'center',
-    paddingHorizontal: Spacing.md,
+  inputWrap: { width: '100%' },
+  footer: { paddingBottom: 20, paddingTop: 4 },
+  button: {
+    height: 64,
+    borderRadius: 22,
+    backgroundColor: '#2F7BFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#2F7BFF',
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
   },
-  inputContainer: {
-    width: '100%',
-    marginBottom: Spacing.xl,
-  },
+  buttonText: { color: '#FFFFFF', fontWeight: '800', fontSize: 20 },
 });
 
 export default AuthPhoneScreen;

@@ -1,95 +1,84 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Colors, Spacing, FontSizes } from '../constants/Colors';
 import { HeaderBar } from '../components/HeaderBar';
+import { useLanguage } from '../context/LanguageContext';
 
 const TermsOfServiceScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const { t } = useLanguage();
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <HeaderBar title="Terms of Service" onBack={() => navigation.goBack()} />
+      <HeaderBar title={t('profile.termsOfService')} onBack={() => navigation.goBack()} />
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        <Text style={styles.title}>Terms of Service</Text>
-        <Text style={styles.updated}>Last updated: {new Date().toLocaleDateString()}</Text>
+        <Text style={styles.title}>{t('terms.title')}</Text>
+        <Text style={styles.updated}>{t('terms.lastUpdated')}: {new Date().toLocaleDateString()}</Text>
 
-        <Text style={styles.sectionTitle}>1. Acceptance of Terms</Text>
+        <Text style={styles.sectionTitle}>{t('terms.section1Title')}</Text>
         <Text style={styles.text}>
-          By accessing and using WaterGo, you accept and agree to be bound by these Terms of Service.
-          If you do not agree, please do not use our services.
+          {t('terms.section1Text')}
         </Text>
 
-        <Text style={styles.sectionTitle}>2. Service Description</Text>
+        <Text style={styles.sectionTitle}>{t('terms.section2Title')}</Text>
         <Text style={styles.text}>
-          WaterGo is a water delivery platform that connects customers with local water suppliers.
-          We facilitate the ordering and delivery of bottled water but do not directly sell or deliver water ourselves.
+          {t('terms.section2Text')}
         </Text>
 
-        <Text style={styles.sectionTitle}>3. User Accounts</Text>
+        <Text style={styles.sectionTitle}>{t('terms.section3Title')}</Text>
         <Text style={styles.text}>
-          You are responsible for:
+          {t('terms.section3Text')}
         </Text>
-        <Text style={styles.bullet}>• Providing accurate information</Text>
-        <Text style={styles.bullet}>• Maintaining the security of your account</Text>
-        <Text style={styles.bullet}>• All activities under your account</Text>
+        <Text style={styles.bullet}>{t('terms.section3Bullet1')}</Text>
+        <Text style={styles.bullet}>{t('terms.section3Bullet2')}</Text>
+        <Text style={styles.bullet}>{t('terms.section3Bullet3')}</Text>
 
-        <Text style={styles.sectionTitle}>4. Orders and Payment</Text>
+        <Text style={styles.sectionTitle}>{t('terms.section4Title')}</Text>
         <Text style={styles.text}>
-          • All orders are subject to availability{'\n'}
-          • Prices are set by individual suppliers{'\n'}
-          • Payment is currently cash on delivery{'\n'}
-          • Delivery fees may apply based on location{'\n'}
-          • Minimum order amounts may vary by supplier
+          {t('terms.section4Text')}
         </Text>
 
-        <Text style={styles.sectionTitle}>5. Cancellations and Refunds</Text>
+        <Text style={styles.sectionTitle}>{t('terms.section5Title')}</Text>
         <Text style={styles.text}>
-          • You may cancel orders before they are confirmed{'\n'}
-          • Once a driver is assigned, cancellations may not be possible{'\n'}
-          • Refunds for damaged or incorrect orders handled case-by-case{'\n'}
-          • Contact support for refund requests
+          {t('terms.section5Text')}
         </Text>
 
-        <Text style={styles.sectionTitle}>6. Delivery</Text>
+        <Text style={styles.sectionTitle}>{t('terms.section6Title')}</Text>
         <Text style={styles.text}>
-          • Delivery times are estimates and not guaranteed{'\n'}
-          • You must provide accurate delivery address{'\n'}
-          • Someone must be present to receive the order{'\n'}
-          • Additional fees may apply for failed delivery attempts
+          {t('terms.section6Text')}
         </Text>
 
-        <Text style={styles.sectionTitle}>7. Prohibited Uses</Text>
+        <Text style={styles.sectionTitle}>{t('terms.section7Title')}</Text>
         <Text style={styles.text}>
-          You may not:
+          {t('terms.section7Text')}
         </Text>
-        <Text style={styles.bullet}>• Provide false information</Text>
-        <Text style={styles.bullet}>• Place fraudulent orders</Text>
-        <Text style={styles.bullet}>• Abuse or harass drivers or support staff</Text>
-        <Text style={styles.bullet}>• Use the service for illegal purposes</Text>
+        <Text style={styles.bullet}>{t('terms.section7Bullet1')}</Text>
+        <Text style={styles.bullet}>{t('terms.section7Bullet2')}</Text>
+        <Text style={styles.bullet}>{t('terms.section7Bullet3')}</Text>
+        <Text style={styles.bullet}>{t('terms.section7Bullet4')}</Text>
 
-        <Text style={styles.sectionTitle}>8. Limitation of Liability</Text>
+        <Text style={styles.sectionTitle}>{t('terms.section8Title')}</Text>
         <Text style={styles.text}>
-          WaterGo is not liable for:
+          {t('terms.section8Text')}
         </Text>
-        <Text style={styles.bullet}>• Quality of products from suppliers</Text>
-        <Text style={styles.bullet}>• Delays caused by suppliers or drivers</Text>
-        <Text style={styles.bullet}>• Issues outside our control</Text>
+        <Text style={styles.bullet}>{t('terms.section8Bullet1')}</Text>
+        <Text style={styles.bullet}>{t('terms.section8Bullet2')}</Text>
+        <Text style={styles.bullet}>{t('terms.section8Bullet3')}</Text>
 
-        <Text style={styles.sectionTitle}>9. Changes to Terms</Text>
+        <Text style={styles.sectionTitle}>{t('terms.section9Title')}</Text>
         <Text style={styles.text}>
-          We reserve the right to modify these terms at any time. Continued use of the service
-          constitutes acceptance of modified terms.
+          {t('terms.section9Text')}
         </Text>
 
-        <Text style={styles.sectionTitle}>10. Contact Us</Text>
+        <Text style={styles.sectionTitle}>{t('terms.section10Title')}</Text>
         <Text style={styles.text}>
-          For questions about these Terms of Service:
+          {t('terms.section10Text')}
         </Text>
-        <Text style={styles.contact}>Email: support@watergo.com</Text>
-        <Text style={styles.contact}>Phone: +998 XX XXX XXXX</Text>
+        <Text style={styles.contact}>{t('terms.contactEmail')}</Text>
+        <Text style={styles.contact}>{t('terms.contactPhone')}</Text>
       </ScrollView>
     </SafeAreaView>
   );

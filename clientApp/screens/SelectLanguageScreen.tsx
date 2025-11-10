@@ -1,111 +1,187 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import {
+  View, Text, StyleSheet, Pressable, Image, Animated, Easing, Platform
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../types';
-import { Colors, Spacing, FontSizes, BorderRadius } from '../constants/Colors';
-import { PrimaryButton } from '../components/PrimaryButton';
 import { LANGUAGES } from '../constants/MockData';
+import { useLanguage } from '../context/LanguageContext';
+import { Language } from '../i18n/translations';
 
-type SelectLanguageScreenProps = {
+type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'SelectLanguage'>;
 };
 
-const SelectLanguageScreen: React.FC<SelectLanguageScreenProps> = ({ navigation }) => {
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
+const CARD_H = 80;
+const RADIUS = 20;
 
-  const handleContinue = () => {
-    navigation.navigate('AskName');
+const SelectLanguageScreen: React.FC<Props> = ({ navigation }) => {
+  const { setLanguage, t } = useLanguage();
+  const [selected, setSelected] = useState<Language>('en');
+
+  const getLanguageName = (code: string) => {
+    const lang = LANGUAGES.find(l => l.code === code);
+    return lang ? lang.name : code.toUpperCase();
+  };
+
+  const onContinue = () => {
+    setLanguage(selected);
+    navigation.navigate('Welcome');
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Select Language</Text>
-        <Text style={styles.subtitle}>Choose your preferred language</Text>
+    <LinearGradient colors={['#E9F7FF', '#F7FEFF']} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ flex: 1 }}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        {/* HEADER */}
+        <View style={styles.header}>
+          <Image
+            source={require('../assets/globe-3d.png')}
+            style={styles.globe}
+            resizeMode="contain"
+            accessibilityIgnoresInvertColors
+          />
+          <Text style={styles.title}>{t('auth.selectLanguage') || 'Select Your Language'}</Text>
+        </View>
 
-        <FlatList
-          data={LANGUAGES}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.languageItem,
-                selectedLanguage === item.code && styles.languageItemSelected,
-              ]}
-              onPress={() => setSelectedLanguage(item.code)}
-            >
-              <View>
-                <Text style={styles.languageName}>{item.name}</Text>
-                <Text style={styles.languageNative}>{item.nativeName}</Text>
-              </View>
-              {selectedLanguage === item.code && (
-                <Text style={styles.checkmark}>✓</Text>
-              )}
-            </TouchableOpacity>
-          )}
-          keyExtractor={(item) => item.code}
-        />
-      </View>
+        {/* LIST */}
+        <View style={styles.listContainer}>
+          {LANGUAGES.map((l) => {
+            let flagImage;
+            if (l.code === 'en') flagImage = require('../assets/flag-usa.png');
+            else if (l.code === 'ru') flagImage = require('../assets/flag-russia.png');
+            else if (l.code === 'uz') flagImage = require('../assets/flag-uzbekistan.png');
+            else if (l.code === 'kaa') flagImage = require('../assets/flag-karakalpakstan.png');
 
-      <View style={styles.footer}>
-        <PrimaryButton title="Continue" onPress={handleContinue} />
-      </View>
-    </View>
+            return (
+              <LanguageCard
+                key={l.code}
+                name={getLanguageName(l.code)}
+                flagImage={flagImage}
+                active={selected === (l.code as Language)}
+                onPress={() => setSelected(l.code as Language)}
+              />
+            );
+          })}
+        </View>
+
+        {/* HINT */}
+        <Text style={styles.hint}>{t('auth.languageHint') || 'You can change the language later in Settings.'}</Text>
+
+        {/* CTA */}
+        <Pressable onPress={onContinue} disabled={!selected} style={[styles.button, !selected && { opacity: 0.5 }]}>
+          <Text style={styles.buttonText}>{t('auth.continue') || 'Continue'}</Text>
+        </Pressable>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
+function LanguageCard({
+  name,
+  flagImage,
+  active,
+  onPress,
+}: {
+  name: string;
+  flagImage: any;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const scale = useMemo(() => new Animated.Value(1), []);
+  const animateIn = () =>
+    Animated.timing(scale, { toValue: 0.98, duration: 80, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+  const animateOut = () =>
+    Animated.timing(scale, { toValue: 1, duration: 120, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+
+  return (
+    <Animated.View style={{ transform: [{ scale }], marginBottom: 14 }}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={animateIn}
+        onPressOut={animateOut}
+        android_ripple={{ color: 'rgba(47,123,255,0.08)' }}
+        style={[styles.card, active && styles.cardActive]}
+      >
+        <Image source={flagImage} style={styles.flagImage} resizeMode="contain" />
+        <Text style={styles.languageName}>{name}</Text>
+
+        {/* checkmark for active */}
+        {active && <Text style={styles.check}>✓</Text>}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  content: {
-    flex: 1,
-    padding: Spacing.lg,
+  safe: { flex: 1, paddingHorizontal: 24, paddingBottom: 20, justifyContent: 'center' },
+  header: { alignItems: 'center', marginBottom: 20, marginTop: -20 },
+  globe: {
+    width: 138,
+    height: 138,
+    marginBottom: 4,
   },
   title: {
-    fontSize: FontSizes.xxl,
-    fontWeight: '700',
-    color: Colors.text,
-    marginTop: Spacing.xxl,
-    marginBottom: Spacing.sm,
+    fontSize: 30,
+    fontWeight: '800',
+    color: '#0C1633',
+    textAlign: 'center',
   },
-  subtitle: {
-    fontSize: FontSizes.md,
-    color: Colors.grayText,
-    marginBottom: Spacing.xl,
-  },
-  languageItem: {
+
+  listContainer: { marginBottom: 16 },
+
+  card: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: Spacing.md,
+    height: CARD_H,
+    paddingHorizontal: 18,
+    backgroundColor: '#FFFFFF',
+    borderRadius: RADIUS,
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
-    marginBottom: Spacing.md,
+    borderColor: 'rgba(12,22,51,0.08)',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
-  languageItemSelected: {
-    borderColor: Colors.primary,
+  cardActive: {
+    borderColor: '#2F7BFF',
     borderWidth: 2,
-    backgroundColor: Colors.primary + '10',
+    backgroundColor: '#E9F2FF',
+    shadowColor: '#2F7BFF',
+    shadowOpacity: 0.16,
   },
-  languageName: {
-    fontSize: FontSizes.md,
-    fontWeight: '600',
-    color: Colors.text,
-    marginBottom: 2,
+  flagImage: { width: 40, height: 40, marginRight: 14, borderRadius: 6 },
+  languageName: { fontSize: 20, fontWeight: '700', color: '#0C1633', flex: 1 },
+  check: {
+    marginLeft: 'auto',
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#2F7BFF',
   },
-  languageNative: {
-    fontSize: FontSizes.sm,
-    color: Colors.grayText,
+
+  hint: {
+    textAlign: 'center',
+    color: '#6B7280',
+    fontSize: 13,
+    marginBottom: 10,
   },
-  checkmark: {
-    fontSize: FontSizes.xl,
-    color: Colors.primary,
+
+  button: {
+    height: 64,
+    borderRadius: 22,
+    backgroundColor: '#2F7BFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#2F7BFF',
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    ...Platform.select({ android: { elevation: 4 } }),
   },
-  footer: {
-    padding: Spacing.lg,
-  },
+  buttonText: { color: '#FFFFFF', fontWeight: '800', fontSize: 20 },
 });
 
 export default SelectLanguageScreen;

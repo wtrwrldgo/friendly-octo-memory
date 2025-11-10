@@ -1,47 +1,62 @@
 import { Firm, Product, Language, Address, Driver } from '../types';
 
 export const LANGUAGES: Language[] = [
-  { code: 'en', name: 'English', nativeName: 'English' },
-  { code: 'ru', name: 'Russian', nativeName: 'Русский' },
-  { code: 'uz', name: 'Uzbek', nativeName: 'O\'zbekcha' },
+  { code: 'en', name: 'English', nativeName: 'English', flag: '🇺🇸' },
+  { code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺' },
+  { code: 'uz', name: 'Uzbek', nativeName: 'O\'zbekcha', flag: '🇺🇿' },
+  { code: 'kaa', name: 'Qaraqalpaq', nativeName: 'Qaraqalpaq tili', flag: '🇰🇬' },
 ];
 
 export const MOCK_FIRMS: Firm[] = [
   {
     id: '1',
     name: 'AQUAwater',
-    logo: 'https://i.postimg.cc/1tYzmgBX/Chat-GPT-Image-30-2025-16-35-32.png',
+    logo: 'https://i.ibb.co/VWKH3CRG/Chat-GPT-Image-7-2025-21-23-09.png',
     rating: 4.8,
     deliveryTime: '15-25 min',
     minOrder: 5000,
     deliveryFee: 5000,
+    location: 'Tashkent',
+    promotions: [
+      { label: '-10% delivery', value: 'delivery-discount', color: 'green' },
+      { label: '-20% bottles', value: 'bottles-discount', color: 'blue' },
+    ],
   },
   {
     id: '2',
     name: 'OceanWater',
-    logo: 'https://i.postimg.cc/LsKCWNM6/Chat-GPT-Image-30-2025-16-43-13.png',
+    logo: 'https://i.ibb.co/nNBPCsDT/Chat-GPT-Image-7-2025-18-28-27.png',
     rating: 4.6,
     deliveryTime: '20-30 min',
     minOrder: 4000,
     deliveryFee: 4000,
+    location: 'Tashkent',
+    promotions: [
+      { label: 'Free delivery', value: 'free-delivery', color: 'green' },
+    ],
   },
   {
     id: '3',
     name: 'Zam-Zam Water',
-    logo: 'https://i.postimg.cc/vZbwKrwy/Chat-GPT-Image-30-2025-16-57-55.png',
+    logo: 'https://i.ibb.co/zVxYH72K/Chat-GPT-Image-7-2025-18-31-17.png',
     rating: 5.0,
     deliveryTime: '10-20 min',
     minOrder: 6000,
     deliveryFee: 6000,
+    location: 'Tashkent',
+    promotions: [
+      { label: 'Premium quality', value: 'premium', color: 'blue' },
+    ],
   },
   {
     id: '4',
     name: 'Crystal Water',
-    logo: 'https://i.postimg.cc/Prc8z5g1/Chat-GPT-Image-30-2025-17-05-11.png',
+    logo: 'https://i.ibb.co/tT6DzPMK/Chat-GPT-Image-7-2025-18-31-19.png',
     rating: 4.7,
     deliveryTime: '25-35 min',
     minOrder: 3500,
     deliveryFee: 3500,
+    location: 'Tashkent',
   },
 ];
 
@@ -205,38 +220,14 @@ export const MOCK_PRODUCTS: Product[] = [
   },
 ];
 
-export const MOCK_ADDRESSES: Address[] = [
-  {
-    id: '1',
-    title: 'Home',
-    address: 'Tashkent, Chorsu District, 123 Main Street',
-    lat: 41.2995,
-    lng: 69.2401,
-    isDefault: true,
-  },
-  {
-    id: '2',
-    title: 'Work',
-    address: 'Tashkent, Yunusabad District, 456 Central Avenue',
-    lat: 41.3111,
-    lng: 69.2797,
-    isDefault: false,
-  },
-  {
-    id: '3',
-    title: 'Parent\'s House',
-    address: 'Tashkent, Mirabad District, 789 Business Center',
-    lat: 41.2858,
-    lng: 69.2034,
-    isDefault: false,
-  },
-];
+export const MOCK_ADDRESSES: Address[] = [];
 
 export const MOCK_DRIVER: Driver = {
   id: '1',
-  name: 'Ali Karimov',
+  name: 'Isakov Musabek',
   phone: '+998901234567',
   photo: '👨‍💼',
   rating: 4.9,
-  vehicleNumber: '01 A 123 BC',
+  vehicleNumber: '95K401XA',
+  company: 'AQUAwater',
 };

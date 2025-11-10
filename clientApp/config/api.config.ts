@@ -16,9 +16,9 @@ export interface ApiConfig {
 // Environment-based configuration
 const ENV = {
   development: {
-    baseURL: 'http://localhost:3000/api', // Change to your local backend URL
+    baseURL: 'http://localhost:3000/api', // Not used - Supabase direct connection
     timeout: 15000,
-    useMockData: true, // Use mock data in development until backend is ready
+    useMockData: true, // Using mock data until database is ready
   },
   staging: {
     baseURL: 'https://staging-api.watergo.com/api', // Your staging API URL

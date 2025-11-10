@@ -4,7 +4,7 @@
  * TypeScript interfaces for all API requests and responses
  */
 
-import { User, Address, Firm, Product, Order, OrderStage, Driver } from './index';
+import { User, OrderStage } from './index';
 
 // ==================== Authentication ====================
 

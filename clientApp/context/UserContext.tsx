@@ -1,5 +1,8 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, Address } from '../types';
+import { BYPASS_AUTH, MOCK_USER, MOCK_ADDRESS } from '../config/dev.config';
+import ApiService from '../services/api';
 
 interface UserContextType {
   user: User | null;
@@ -9,15 +12,81 @@ interface UserContextType {
   setAddresses: (addresses: Address[]) => void;
   setSelectedAddress: (address: Address | null) => void;
   updateUser: (updates: Partial<User>) => void;
-  addAddress: (address: Address) => void;
+  addAddress: (address: Omit<Address, 'id'>) => Promise<Address>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
+
+const USER_STORAGE_KEY = '@watergo_user';
+const ADDRESSES_STORAGE_KEY = '@watergo_addresses';
+const SELECTED_ADDRESS_STORAGE_KEY = '@watergo_selected_address';
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load persisted data on mount
+  useEffect(() => {
+    loadPersistedData();
+  }, []);
+
+  const loadPersistedData = async () => {
+    try {
+      if (BYPASS_AUTH) {
+        setUser(MOCK_USER);
+        setAddresses([MOCK_ADDRESS]);
+        setSelectedAddress(MOCK_ADDRESS);
+        setIsLoaded(true);
+        return;
+      }
+
+      const [userData, addressesData, selectedAddressData] = await Promise.all([
+        AsyncStorage.getItem(USER_STORAGE_KEY),
+        AsyncStorage.getItem(ADDRESSES_STORAGE_KEY),
+        AsyncStorage.getItem(SELECTED_ADDRESS_STORAGE_KEY),
+      ]);
+
+      if (userData) setUser(JSON.parse(userData));
+      if (addressesData) setAddresses(JSON.parse(addressesData));
+      if (selectedAddressData) setSelectedAddress(JSON.parse(selectedAddressData));
+    } catch (error) {
+      console.error('Failed to load persisted user data:', error);
+    } finally {
+      setIsLoaded(true);
+    }
+  };
+
+  // Persist user data whenever it changes
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (user) {
+      AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    } else {
+      AsyncStorage.removeItem(USER_STORAGE_KEY);
+    }
+  }, [user, isLoaded]);
+
+  // Persist addresses whenever they change
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (addresses.length > 0) {
+      AsyncStorage.setItem(ADDRESSES_STORAGE_KEY, JSON.stringify(addresses));
+    } else {
+      AsyncStorage.removeItem(ADDRESSES_STORAGE_KEY);
+    }
+  }, [addresses, isLoaded]);
+
+  // Persist selected address whenever it changes
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (selectedAddress) {
+      AsyncStorage.setItem(SELECTED_ADDRESS_STORAGE_KEY, JSON.stringify(selectedAddress));
+    } else {
+      AsyncStorage.removeItem(SELECTED_ADDRESS_STORAGE_KEY);
+    }
+  }, [selectedAddress, isLoaded]);
 
   const updateUser = (updates: Partial<User>) => {
     if (user) {
@@ -25,8 +94,32 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const addAddress = (address: Address) => {
-    setAddresses([...addresses, address]);
+  const addAddress = async (address: Omit<Address, 'id'>): Promise<Address> => {
+    // Call API first to get the proper ID
+    try {
+      const savedAddress = await ApiService.addAddress(address);
+      console.log('UserContext - Address saved with API, received ID:', savedAddress.id);
+
+      // Add the saved address (with correct ID) to local state
+      setAddresses(prev => [...prev, savedAddress]);
+      console.log('UserContext - Address added to state:', savedAddress);
+
+      return savedAddress;
+    } catch (error) {
+      console.error('UserContext - Failed to add address with API:', error);
+      // Create a fallback address with temporary ID if API fails
+      const fallbackAddress: Address = {
+        ...address,
+        id: `temp_${Date.now()}`,
+      };
+      setAddresses(prev => [...prev, fallbackAddress]);
+      return fallbackAddress;
+    }
+  };
+
+  const setSelectedAddressWithLogging = (address: Address | null) => {
+    console.log('Setting selected address:', address);
+    setSelectedAddress(address);
   };
 
   return (
@@ -37,7 +130,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         selectedAddress,
         setUser,
         setAddresses,
-        setSelectedAddress,
+        setSelectedAddress: setSelectedAddressWithLogging,
         updateUser,
         addAddress,
       }}

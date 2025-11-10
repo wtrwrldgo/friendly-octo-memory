@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { Colors, Spacing, FontSizes } from '../constants/Colors';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
@@ -21,9 +21,11 @@ export const Toast: React.FC<ToastProps> = ({
 }) => {
   const translateY = useRef(new Animated.Value(-100)).current;
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isHidden, setIsHidden] = useState(true);
 
   useEffect(() => {
     if (visible) {
+      setIsHidden(false);
       // Show toast
       Animated.spring(translateY, {
         toValue: 0,
@@ -53,11 +55,12 @@ export const Toast: React.FC<ToastProps> = ({
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
+      setIsHidden(true);
       onHide();
     });
   };
 
-  if (!visible && translateY._value === -100) {
+  if (!visible && isHidden) {
     return null;
   }
 

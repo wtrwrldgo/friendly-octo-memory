@@ -1,9 +1,9 @@
 // User Types
 export interface User {
-  id: string;
-  name: string;
-  phone: string;
-  language: string;
+  id?: string;
+  name?: string;
+  phone?: string;
+  language?: string;
 }
 
 export interface Address {
@@ -13,6 +13,12 @@ export interface Address {
   lat: number;
   lng: number;
   isDefault: boolean;
+  addressType?: 'house' | 'apartment' | 'government' | 'office';
+  entrance?: string;
+  floor?: string;
+  apartment?: string;
+  intercom?: string;
+  comment?: string;
 }
 
 // Firm & Product Types
@@ -24,6 +30,12 @@ export interface Firm {
   deliveryTime: string;
   minOrder: number;
   deliveryFee: number;
+  location?: string;
+  promotions?: Array<{
+    label: string;
+    value: string;
+    color: 'green' | 'blue';
+  }>;
 }
 
 export interface Product {
@@ -64,6 +76,7 @@ export interface Driver {
   photo: string;
   rating: number;
   vehicleNumber: string;
+  company: string;
 }
 
 export interface Order {
@@ -76,6 +89,19 @@ export interface Order {
   driver: Driver | null;
   createdAt: Date;
   estimatedDelivery: Date;
+  queuePosition?: number; // Position in queue (e.g., 3 for "3rd in queue")
+  ordersAhead?: number; // Number of orders before this one (e.g., 2)
+  reviewed?: boolean; // Whether the order has been reviewed
+}
+
+// Review Types
+export interface Review {
+  id: string;
+  orderId: string;
+  userId: string;
+  rating: number; // 1-5 stars
+  comment: string;
+  createdAt: Date;
 }
 
 // Language Types
@@ -83,6 +109,7 @@ export interface Language {
   code: string;
   name: string;
   nativeName: string;
+  flag: string;
 }
 
 // Navigation Types
@@ -93,9 +120,13 @@ export type AuthStackParamList = {
   AskName: undefined;
   AuthPhone: undefined;
   VerifyCode: { phone: string };
-  EnableLocation: undefined;
   AddressSelect: undefined;
   SelectAddress: undefined;
+  AddressType: { addressData: any };
+  ApartmentDetails: { addressData: any };
+  OfficeDetails: { addressData: any };
+  GovernmentDetails: { addressData: any };
+  AddressSummary: { addressData: any };
 };
 
 export type MainStackParamList = {

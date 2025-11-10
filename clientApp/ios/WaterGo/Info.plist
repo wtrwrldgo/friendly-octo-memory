@@ -39,12 +39,14 @@
     </array>
     <key>CFBundleVersion</key>
     <string>1</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSAppTransportSecurity</key>
     <dict>
       <key>NSAllowsArbitraryLoads</key>
-      <false/>
+      <true/>
       <key>NSAllowsLocalNetworking</key>
       <true/>
     </dict>
@@ -56,6 +58,10 @@
     <string>WaterGo needs your location to provide accurate delivery services.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>WaterGo needs your location to deliver water to your address.</string>
+    <key>YandexMapsAPIKey</key>
+    <string>34c20e7b-cade-43bd-a252-fea9b47389e6</string>
+    <key>RCTNewArchEnabled</key>
+    <true/>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>

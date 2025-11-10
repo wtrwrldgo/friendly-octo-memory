@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Colors, Spacing, FontSizes } from '../constants/Colors';
 import { HeaderBar } from '../components/HeaderBar';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { useLanguage } from '../context/LanguageContext';
 
 export type PaymentMethod = 'cash' | 'card' | 'wallet';
 
@@ -15,34 +16,35 @@ interface PaymentMethodOption {
   available: boolean;
 }
 
-const paymentMethods: PaymentMethodOption[] = [
-  {
-    id: 'cash',
-    title: 'Cash on Delivery',
-    subtitle: 'Pay when you receive your order',
-    icon: '💵',
-    available: true,
-  },
-  {
-    id: 'card',
-    title: 'Credit/Debit Card',
-    subtitle: 'Pay securely with your card',
-    icon: '💳',
-    available: false, // Enable when backend is ready
-  },
-  {
-    id: 'wallet',
-    title: 'Digital Wallet',
-    subtitle: 'UzCard, Humo, Payme',
-    icon: '💰',
-    available: false, // Enable when backend is ready
-  },
-];
-
 export default function PaymentMethodScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const { t } = useLanguage();
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('cash');
+
+  const paymentMethodsLocalized: PaymentMethodOption[] = [
+    {
+      id: 'cash',
+      title: t('payment.cash'),
+      subtitle: t('payment.cashDescription'),
+      icon: '💵',
+      available: true,
+    },
+    {
+      id: 'card',
+      title: t('payment.card'),
+      subtitle: t('payment.cardDescription'),
+      icon: '💳',
+      available: false,
+    },
+    {
+      id: 'wallet',
+      title: t('payment.wallet'),
+      subtitle: t('payment.walletDescription'),
+      icon: '💰',
+      available: false,
+    },
+  ];
 
   const handleContinue = () => {
     if (route.params?.onSelect) {
@@ -53,12 +55,12 @@ export default function PaymentMethodScreen() {
 
   return (
     <View style={styles.container}>
-      <HeaderBar title="Payment Method" onBack={() => navigation.goBack()} />
+      <HeaderBar title={t('payment.title')} onBack={() => navigation.goBack()} />
 
       <ScrollView style={styles.content}>
-        <Text style={styles.sectionTitle}>Select Payment Method</Text>
+        <Text style={styles.sectionTitle}>{t('payment.selectMethod')}</Text>
 
-        {paymentMethods.map((method) => (
+        {paymentMethodsLocalized.map((method) => (
           <TouchableOpacity
             key={method.id}
             style={[
@@ -78,7 +80,7 @@ export default function PaymentMethodScreen() {
                 <Text style={styles.methodTitle}>{method.title}</Text>
                 {!method.available && (
                   <View style={styles.comingSoonBadge}>
-                    <Text style={styles.comingSoonText}>Coming Soon</Text>
+                    <Text style={styles.comingSoonText}>{t('payment.comingSoon')}</Text>
                   </View>
                 )}
               </View>
@@ -101,15 +103,14 @@ export default function PaymentMethodScreen() {
         <View style={styles.note}>
           <Text style={styles.noteIcon}>ℹ️</Text>
           <Text style={styles.noteText}>
-            Cash on delivery is currently the only available payment method. Card and wallet
-            payments will be available soon.
+            {t('payment.cashOnlyNote')}
           </Text>
         </View>
       </ScrollView>
 
       <View style={styles.footer}>
         <PrimaryButton
-          title="Continue"
+          title={t('payment.confirm')}
           onPress={handleContinue}
           disabled={!selectedMethod}
         />
@@ -121,7 +122,7 @@ export default function PaymentMethodScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.gray,
   },
   content: {
     flex: 1,
@@ -154,7 +155,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.gray,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,

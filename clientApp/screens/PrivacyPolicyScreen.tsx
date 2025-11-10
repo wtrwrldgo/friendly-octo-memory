@@ -1,68 +1,69 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Colors, Spacing, FontSizes } from '../constants/Colors';
 import { HeaderBar } from '../components/HeaderBar';
+import { useLanguage } from '../context/LanguageContext';
 
 const PrivacyPolicyScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const { t } = useLanguage();
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <HeaderBar title="Privacy Policy" onBack={() => navigation.goBack()} />
+      <HeaderBar title={t('profile.privacyPolicy')} onBack={() => navigation.goBack()} />
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        <Text style={styles.title}>Privacy Policy</Text>
-        <Text style={styles.updated}>Last updated: {new Date().toLocaleDateString()}</Text>
+        <Text style={styles.title}>{t('privacy.title')}</Text>
+        <Text style={styles.updated}>{t('privacy.lastUpdated')}: {new Date().toLocaleDateString()}</Text>
 
-        <Text style={styles.sectionTitle}>1. Information We Collect</Text>
+        <Text style={styles.sectionTitle}>{t('privacy.section1Title')}</Text>
         <Text style={styles.text}>
-          We collect information you provide directly to us when using WaterGo, including:
+          {t('privacy.section1Text')}
         </Text>
-        <Text style={styles.bullet}>• Name and phone number</Text>
-        <Text style={styles.bullet}>• Delivery addresses</Text>
-        <Text style={styles.bullet}>• Order history</Text>
-        <Text style={styles.bullet}>• Device information and location data</Text>
+        <Text style={styles.bullet}>{t('privacy.section1Bullet1')}</Text>
+        <Text style={styles.bullet}>{t('privacy.section1Bullet2')}</Text>
+        <Text style={styles.bullet}>{t('privacy.section1Bullet3')}</Text>
+        <Text style={styles.bullet}>{t('privacy.section1Bullet4')}</Text>
 
-        <Text style={styles.sectionTitle}>2. How We Use Your Information</Text>
+        <Text style={styles.sectionTitle}>{t('privacy.section2Title')}</Text>
         <Text style={styles.text}>
-          We use the information we collect to:
+          {t('privacy.section2Text')}
         </Text>
-        <Text style={styles.bullet}>• Process and deliver your water orders</Text>
-        <Text style={styles.bullet}>• Communicate with you about orders and deliveries</Text>
-        <Text style={styles.bullet}>• Improve our services</Text>
-        <Text style={styles.bullet}>• Send you notifications about order status</Text>
+        <Text style={styles.bullet}>{t('privacy.section2Bullet1')}</Text>
+        <Text style={styles.bullet}>{t('privacy.section2Bullet2')}</Text>
+        <Text style={styles.bullet}>{t('privacy.section2Bullet3')}</Text>
+        <Text style={styles.bullet}>{t('privacy.section2Bullet4')}</Text>
 
-        <Text style={styles.sectionTitle}>3. Information Sharing</Text>
+        <Text style={styles.sectionTitle}>{t('privacy.section3Title')}</Text>
         <Text style={styles.text}>
-          We share your information only with:
+          {t('privacy.section3Text')}
         </Text>
-        <Text style={styles.bullet}>• Water suppliers fulfilling your orders</Text>
-        <Text style={styles.bullet}>• Delivery drivers assigned to your orders</Text>
-        <Text style={styles.bullet}>• Service providers helping us operate the app</Text>
+        <Text style={styles.bullet}>{t('privacy.section3Bullet1')}</Text>
+        <Text style={styles.bullet}>{t('privacy.section3Bullet2')}</Text>
+        <Text style={styles.bullet}>{t('privacy.section3Bullet3')}</Text>
 
-        <Text style={styles.sectionTitle}>4. Data Security</Text>
+        <Text style={styles.sectionTitle}>{t('privacy.section4Title')}</Text>
         <Text style={styles.text}>
-          We implement appropriate security measures to protect your personal information.
-          Your payment information is never stored on our servers.
+          {t('privacy.section4Text')}
         </Text>
 
-        <Text style={styles.sectionTitle}>5. Your Rights</Text>
+        <Text style={styles.sectionTitle}>{t('privacy.section5Title')}</Text>
         <Text style={styles.text}>
-          You have the right to:
+          {t('privacy.section5Text')}
         </Text>
-        <Text style={styles.bullet}>• Access your personal data</Text>
-        <Text style={styles.bullet}>• Request correction of your data</Text>
-        <Text style={styles.bullet}>• Request deletion of your account</Text>
-        <Text style={styles.bullet}>• Opt-out of marketing communications</Text>
+        <Text style={styles.bullet}>{t('privacy.section5Bullet1')}</Text>
+        <Text style={styles.bullet}>{t('privacy.section5Bullet2')}</Text>
+        <Text style={styles.bullet}>{t('privacy.section5Bullet3')}</Text>
+        <Text style={styles.bullet}>{t('privacy.section5Bullet4')}</Text>
 
-        <Text style={styles.sectionTitle}>6. Contact Us</Text>
+        <Text style={styles.sectionTitle}>{t('privacy.section6Title')}</Text>
         <Text style={styles.text}>
-          If you have questions about this Privacy Policy, please contact us at:
+          {t('privacy.section6Text')}
         </Text>
-        <Text style={styles.contact}>Email: privacy@watergo.com</Text>
-        <Text style={styles.contact}>Phone: +998 XX XXX XXXX</Text>
+        <Text style={styles.contact}>{t('privacy.contactEmail')}</Text>
+        <Text style={styles.contact}>{t('privacy.contactPhone')}</Text>
       </ScrollView>
     </SafeAreaView>
   );

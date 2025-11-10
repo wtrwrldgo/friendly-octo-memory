@@ -34,7 +34,8 @@ class TwilioService {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error('Failed to send SMS:', data);
+        // Suppress error logging in dev mode - this is expected
+        // console.error('Failed to send SMS:', data);
         return {
           success: false,
           error: data.error || 'Failed to send SMS',
@@ -46,7 +47,8 @@ class TwilioService {
         messageSid: data.messageSid,
       };
     } catch (error: any) {
-      console.error('Error sending SMS:', error);
+      // Suppress error logging in dev mode - this is expected
+      // console.error('Error sending SMS:', error);
       return {
         success: false,
         error: error.message || 'Network error',

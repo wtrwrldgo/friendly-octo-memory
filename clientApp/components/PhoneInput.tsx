@@ -48,7 +48,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Phone Number</Text>
-      <View style={[styles.inputContainer, error && styles.inputError]}>
+      <View style={[styles.inputContainer, error ? styles.inputError : null]}>
         <TouchableOpacity style={styles.countryCode}>
           <Text style={styles.countryCodeText}>{countryCode}</Text>
         </TouchableOpacity>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Image } from 'react-native';
 import { Driver } from '../types';
 import { Colors, Spacing, FontSizes, BorderRadius } from '../constants/Colors';
 
@@ -14,17 +14,29 @@ export const DriverInfoCard: React.FC<DriverInfoCardProps> = ({ driver }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.photoContainer}>
-        <Text style={styles.photo}>{driver.photo}</Text>
-      </View>
-      <View style={styles.content}>
-        <Text style={styles.name}>{driver.name}</Text>
-        <View style={styles.row}>
-          <Text style={styles.rating}>⭐ {driver.rating}</Text>
-          <View style={styles.dot} />
-          <Text style={styles.vehicle}>{driver.vehicleNumber}</Text>
+      <View style={styles.leftSection}>
+        {/* Driver Photo/Icon */}
+        <View style={styles.photoContainer}>
+          <Image
+            source={require('../assets/icon.png')}
+            style={styles.carIcon}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* Driver Info */}
+        <View style={styles.driverInfo}>
+          <Text style={styles.driverName}>{driver.name}</Text>
+          <Text style={styles.companyName}>{driver.company}</Text>
         </View>
       </View>
+
+      {/* Vehicle Number Badge */}
+      <View style={styles.vehicleBadge}>
+        <Text style={styles.vehicleText}>{driver.vehicleNumber}</Text>
+      </View>
+
+      {/* Call Button */}
       <TouchableOpacity style={styles.callButton} onPress={handleCall}>
         <Text style={styles.callIcon}>📞</Text>
       </TouchableOpacity>
@@ -38,57 +50,66 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
     alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   photoContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: BorderRadius.round,
-    backgroundColor: Colors.gray,
+    width: 64,
+    height: 64,
+    borderRadius: BorderRadius.md,
+    backgroundColor: '#E8F0FE',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
   },
-  photo: {
-    fontSize: 32,
+  carIcon: {
+    width: 40,
+    height: 40,
+    tintColor: Colors.primary,
   },
-  content: {
+  driverInfo: {
     flex: 1,
   },
-  name: {
+  driverName: {
     fontSize: FontSizes.md,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.text,
-    marginBottom: Spacing.xs,
+    marginBottom: 4,
   },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rating: {
+  companyName: {
     fontSize: FontSizes.sm,
     color: Colors.grayText,
+    fontWeight: '400',
   },
-  dot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: Colors.grayText,
-    marginHorizontal: Spacing.xs,
+  vehicleBadge: {
+    backgroundColor: Colors.text,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
   },
-  vehicle: {
+  vehicleText: {
     fontSize: FontSizes.sm,
-    color: Colors.grayText,
+    fontWeight: '700',
+    color: Colors.white,
+    letterSpacing: 0.5,
   },
   callButton: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     borderRadius: BorderRadius.round,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.primary, // Required for efficient shadow rendering
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   callIcon: {
     fontSize: 24,

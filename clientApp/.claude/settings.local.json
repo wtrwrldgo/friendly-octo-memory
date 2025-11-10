@@ -9,7 +9,18 @@
       "Bash(npm run dev:*)",
       "Bash(pbcopy)",
       "Bash(npx expo install:*)",
-      "Bash(npx expo start:*)"
+      "Bash(npx expo start:*)",
+      "Bash(tree:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run built:*)",
+      "WebFetch(domain:ibb.co)",
+      "Bash(cat:*)",
+      "Bash(curl:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(pod install:*)",
+      "Bash(npx expo prebuild:*)",
+      "Bash(npm install:*)",
+      "Bash(killall:*)"
     ],
     "deny": [],
     "ask": []
