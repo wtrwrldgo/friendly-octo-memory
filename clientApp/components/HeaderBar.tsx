@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Spacing, FontSizes } from '../constants/Colors';
+import { Colors } from '../constants/Colors';
 
 interface HeaderBarProps {
   title: string;
@@ -55,40 +55,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: 56,
-    paddingHorizontal: Spacing.md,
+    height: 48,
+    paddingHorizontal: 12,
     backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
   },
   backIcon: {
-    fontSize: FontSizes.xl,
+    fontSize: 20,
     color: Colors.text,
   },
   title: {
     flex: 1,
-    fontSize: FontSizes.lg,
+    fontSize: 16,
     fontWeight: '600',
     color: Colors.text,
     textAlign: 'center',
-    marginHorizontal: Spacing.sm,
+    marginHorizontal: 8,
   },
   rightButton: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
   },
   rightIcon: {
-    fontSize: FontSizes.lg,
+    fontSize: 16,
   },
   placeholder: {
-    width: 40,
+    width: 36,
   },
 });

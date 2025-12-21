@@ -23,7 +23,7 @@ const AskNameScreen: React.FC<AskNameScreenProps> = ({ navigation }) => {
   const handleContinue = () => {
     if (!valid) return;
     updateUser({ name: name.trim() });
-    navigation.navigate('AuthPhone');
+    navigation.navigate('SelectAddress');
   };
 
   return (
@@ -48,7 +48,7 @@ const AskNameScreen: React.FC<AskNameScreenProps> = ({ navigation }) => {
         >
           <View style={styles.content}>
             <Image
-              source={{ uri: 'https://i.ibb.co/Zz0zpT7d/Chat-GPT-Image-8-2025-11-20-09.png' }}
+              source={require('../assets/illustrations/ask-name.png')}
               style={styles.mascot}
               resizeMode="contain"
               accessibilityIgnoresInvertColors

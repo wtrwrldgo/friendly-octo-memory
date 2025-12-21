@@ -17,6 +17,22 @@ const AddressSelectScreen: React.FC<AddressSelectScreenProps> = ({ navigation })
   const { addresses, setAddresses, selectedAddress, setSelectedAddress, setUser, user } = useUser();
   const [loading, setLoading] = useState(true);
 
+  // ---- GET ADDRESS ICON ----
+  const getAddressIcon = (addressType?: 'house' | 'apartment' | 'government' | 'office') => {
+    switch (addressType) {
+      case 'house':
+        return require('../assets/address/house-3d.png');
+      case 'apartment':
+        return require('../assets/address/apartment-3d.png');
+      case 'office':
+        return require('../assets/address/office-3d.png');
+      case 'government':
+        return require('../assets/address/government-3d.png');
+      default:
+        return require('../assets/address/house-3d.png'); // Default fallback
+    }
+  };
+
   useEffect(() => {
     loadAddresses();
   }, []);
@@ -92,9 +108,11 @@ const AddressSelectScreen: React.FC<AddressSelectScreenProps> = ({ navigation })
             data={addresses}
             renderItem={({ item }) => (
               <AddressCard
-                address={item}
+                title={item.title}
+                subtitle={item.address}
+                iconSource={getAddressIcon(item.addressType)}
                 onPress={() => setSelectedAddress(item)}
-                selected={selectedAddress?.id === item.id}
+                isSelected={selectedAddress?.id === item.id}
               />
             )}
             keyExtractor={(item) => item.id}

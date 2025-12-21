@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image, SafeAreaView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, Platform, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AuthStackParamList } from '../types';
@@ -10,12 +11,32 @@ type LoadingScreenProps = {
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      navigation.replace('SelectLanguage');
-    }, 2000);
+    let isMounted = true; // Track if component is still mounted
 
-    return () => clearTimeout(timer);
+    const navigateToSelectLanguage = async () => {
+      console.log('📱 [LoadingScreen] Component mounted! Navigating to SelectLanguage...');
+
+      // Use setTimeout to ensure navigation happens after component is fully mounted
+      setTimeout(() => {
+        // Only navigate if component is still mounted
+        if (!isMounted) {
+          console.log('📱 [LoadingScreen] Component unmounted, skipping navigation');
+          return;
+        }
+
+        // Always navigate to SelectLanguage first
+        // The SelectLanguage screen will pre-select any stored language
+        console.log('📱 [LoadingScreen] Navigating to SelectLanguage...');
+        navigation.replace('SelectLanguage');
+      }, 1500); // Show loading screen for 1.5 seconds
+    };
+
+    navigateToSelectLanguage();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, [navigation]);
 
   return (

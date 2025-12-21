@@ -7,12 +7,14 @@ import {
   TextInput,
   FlatList,
   ActivityIndicator,
-  Alert,
   Platform,
   Image,
+  Keyboard,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { YaMap, Marker } from 'react-native-yamap';
+import { MapFallbackUI } from '../components/MapFallbackUI';
 
 interface CameraPosition {
   lat: number;
@@ -24,6 +26,7 @@ import { DEFAULT_LOCATION } from '../config/mapkit.config';
 import { Colors } from '../constants/Colors';
 import { useUser } from '../context/UserContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 import type {
   SearchSuggestion,
   SelectedAddress
@@ -33,6 +36,7 @@ export default function SelectAddressScreen() {
   const navigation = useNavigation<any>();
   const { addresses, user } = useUser();
   const { t } = useLanguage();
+  const { showError } = useToast();
 
   // State
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -43,6 +47,7 @@ export default function SelectAddressScreen() {
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const [, setMapReady] = useState<boolean>(false);
   const [isFetchingLocation, setIsFetchingLocation] = useState<boolean>(false);
+  const [showFallback, setShowFallback] = useState<boolean>(false);
 
   const [cameraPosition, setCameraPosition] = useState<CameraPosition>({
     lat: DEFAULT_LOCATION.latitude,
@@ -56,28 +61,28 @@ export default function SelectAddressScreen() {
 
   // Set initial map position on mount
   useEffect(() => {
-    // When map is ready, set camera to default location (Nukus)
     const timer = setTimeout(() => {
       if (mapRef.current) {
-        // Use requestAnimationFrame to ensure UI updates on main thread
         requestAnimationFrame(() => {
-          mapRef.current?.setCenter(
-            { lat: DEFAULT_LOCATION.latitude, lon: DEFAULT_LOCATION.longitude },
-            DEFAULT_LOCATION.zoom,
-            0,  // azimuth
-            0,  // tilt
-            0   // no animation on initial load
-          );
-          console.log('✅ Map initialized at default location (Nukus)');
+          try {
+            mapRef.current?.setCenter(
+              { lat: DEFAULT_LOCATION.latitude, lon: DEFAULT_LOCATION.longitude },
+              DEFAULT_LOCATION.zoom,
+              0,
+              0,
+              0
+            );
+          } catch (error) {
+            console.error('Error calling setCenter:', error);
+          }
         });
       }
-    }, 500); // Small delay to ensure map is ready
+    }, 500);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Disable back navigation during signup flow to keep flow clean
-  // But allow it when user is already authenticated (adding additional address)
+  // Disable back navigation during signup flow
   useEffect(() => {
     const isSignupFlow = addresses.length === 0 && !user?.id;
     navigation.setOptions({
@@ -86,139 +91,109 @@ export default function SelectAddressScreen() {
     });
   }, [navigation, addresses.length, user?.id]);
 
-  /**
-   * Request location permission and get user's current location
-   */
   const requestLocationPermission = async () => {
-    if (isFetchingLocation) {
-      console.log('Already fetching location, please wait...');
-      return;
-    }
+    if (isFetchingLocation) return;
 
     setIsFetchingLocation(true);
-    // Clear any existing address before fetching new location
     setLocalSelectedAddress(null);
-    console.log('🌍 GPS button clicked - Requesting location...');
 
     try {
+      // Request permission
       const { status } = await Location.requestForegroundPermissionsAsync();
-      console.log('📍 Location permission status:', status);
 
-      if (status === 'granted') {
-        console.log('✅ Permission granted! Getting current position...');
-
-        // Get user's current location with BALANCED accuracy
-        // Always fetch fresh location to avoid showing old cached addresses
-        console.log('📡 Fetching current location...');
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced, // Balanced for faster response
-        });
-        console.log('✅ Got current location:', location.coords.latitude, location.coords.longitude);
-
-        const userPosition: CameraPosition = {
-          lat: location.coords.latitude,
-          lon: location.coords.longitude,
+      if (status !== 'granted') {
+        showError(t('auth.locationPermissionDenied') || 'Location permission denied. Using default location.');
+        // Fall back to default location
+        const defaultPosition: CameraPosition = {
+          lat: DEFAULT_LOCATION.latitude,
+          lon: DEFAULT_LOCATION.longitude,
           zoom: 16,
         };
-
-        // Update camera position state
-        setCameraPosition(userPosition);
-
-        // Animate map to user's location using ref
+        setCameraPosition(defaultPosition);
         if (mapRef.current) {
-          // Ensure UI update happens on main thread
-          requestAnimationFrame(() => {
-            mapRef.current?.setCenter(
-              { lat: location.coords.latitude, lon: location.coords.longitude },
-              16, // zoom
-              0,  // azimuth
-              0,  // tilt
-              1000, // duration (1 second animation)
-            );
-            console.log('✅ Camera animated to user location');
-          });
-        } else {
-          console.log('⚠️ Map ref not available, camera not moved');
+          mapRef.current?.setCenter(
+            { lat: DEFAULT_LOCATION.latitude, lon: DEFAULT_LOCATION.longitude },
+            16, 0, 0, 1000
+          );
         }
-
-        // Reverse geocode user's location
-        await reverseGeocode(location.coords.latitude, location.coords.longitude);
-      } else {
-        // Permission denied, use default location (Nukus, Uzbekistan)
-        console.log('❌ Location permission denied, using default location (Nukus)');
-        Alert.alert(
-          t('auth.locationPermissionDenied') || 'Location Permission Denied',
-          t('auth.locationPermissionMessage') || 'Please enable location permission to use this feature.'
-        );
-        reverseGeocode(DEFAULT_LOCATION.latitude, DEFAULT_LOCATION.longitude);
+        await reverseGeocode(DEFAULT_LOCATION.latitude, DEFAULT_LOCATION.longitude);
+        return;
       }
+
+      // Get actual GPS location
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const { latitude, longitude } = location.coords;
+
+      const userPosition: CameraPosition = {
+        lat: latitude,
+        lon: longitude,
+        zoom: 16,
+      };
+
+      setCameraPosition(userPosition);
+
+      if (mapRef.current) {
+        requestAnimationFrame(() => {
+          mapRef.current?.setCenter(
+            { lat: latitude, lon: longitude },
+            16,
+            0,
+            0,
+            1000,
+          );
+        });
+      }
+
+      await reverseGeocode(latitude, longitude);
     } catch (error) {
-      console.error('❌ Error requesting location permission:', error);
-      Alert.alert(
-        t('auth.error') || 'Error',
-        t('auth.locationError') || 'Failed to get your location. Please try again.'
-      );
-      // Fallback to default location
+      console.error('Error getting location:', error);
+      showError(t('auth.locationError') || 'Failed to get your location.');
+      // Fall back to default location on error
       reverseGeocode(DEFAULT_LOCATION.latitude, DEFAULT_LOCATION.longitude);
     } finally {
       setIsFetchingLocation(false);
-      console.log('🏁 Location fetch complete');
     }
   };
 
-  /**
-   * Handle map tap - drop pin and reverse geocode
-   */
   const handleMapPress = (event: any) => {
     const { lat, lon } = event.nativeEvent;
+    Keyboard.dismiss();
 
-    // Ensure map updates happen on main thread
     requestAnimationFrame(() => {
-      // Update camera position to tapped location
       setCameraPosition({
         lat,
         lon,
         zoom: cameraPosition.zoom,
       });
-
-      // Reverse geocode the tapped location
       reverseGeocode(lat, lon);
     });
   };
 
-  /**
-   * Reverse geocode: Convert coordinates to address
-   * @param lat - Latitude
-   * @param lon - Longitude
-   */
   const reverseGeocode = async (lat: number, lon: number) => {
     setIsGeocoding(true);
 
     try {
-      // Use OpenStreetMap Nominatim with timeout for faster response
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&accept-language=en`,
         {
-          headers: {
-            'User-Agent': 'WaterGo Mobile App'
-          },
+          headers: { 'User-Agent': 'WaterGo Mobile App' },
           signal: controller.signal
         }
       );
 
       clearTimeout(timeoutId);
-
       const data = await response.json();
 
       if (data && data.display_name) {
-        // Format address from OSM data
         const addr = data.address || {};
         let addressParts = [];
 
-        // Build address: Street + House, City, Country
         if (addr.road) {
           let street = addr.road;
           if (addr.house_number) street = `${addr.house_number} ${street}`;
@@ -236,29 +211,16 @@ export default function SelectAddressScreen() {
           ? addressParts.join(', ')
           : data.display_name;
 
-        setLocalSelectedAddress({
-          lat,
-          lon,
-          address: formattedAddress,
-        });
+        setLocalSelectedAddress({ lat, lon, address: formattedAddress });
         return;
       }
 
-      // Fallback: use coordinates as address
-      console.log('No address found, using coordinates');
       setLocalSelectedAddress({
         lat,
         lon,
         address: `Location: ${lat.toFixed(4)}, ${lon.toFixed(4)}`,
       });
     } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.log('⏱️ Reverse geocoding timeout - using coordinates');
-      } else {
-        console.error('Reverse geocoding error:', error);
-      }
-
-      // Fallback: use coordinates as address
       setLocalSelectedAddress({
         lat,
         lon,
@@ -269,10 +231,6 @@ export default function SelectAddressScreen() {
     }
   };
 
-  /**
-   * Forward geocode: Search for address by text query
-   * @param query - Search query text
-   */
   const searchAddress = async (query: string) => {
     if (!query || query.trim().length < 3) {
       setSuggestions([]);
@@ -283,21 +241,30 @@ export default function SelectAddressScreen() {
     setIsSearching(true);
 
     try {
-      // Use OpenStreetMap Nominatim search (free, no API key needed)
+      // Add regional bias for Uzbekistan (viewbox: minLon, maxLat, maxLon, minLat)
+      // Uzbekistan bounding box approximately: 55.9, 45.6, 73.1, 37.2
+      const viewbox = '55.9,45.6,73.1,37.2';
+      const searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=10&accept-language=en&viewbox=${viewbox}&bounded=0&countrycodes=uz`;
+
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5&accept-language=en`,
-        {
-          headers: {
-            'User-Agent': 'WaterGo Mobile App'
-          }
-        }
+        searchUrl,
+        { headers: { 'User-Agent': 'WaterGo Mobile App' } }
       );
 
-      const data = await response.json();
+      let data = await response.json();
+
+      // If no results with country restriction, try global search
+      if (!Array.isArray(data) || data.length === 0) {
+        const globalSearchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5&accept-language=en`;
+        const globalResponse = await fetch(
+          globalSearchUrl,
+          { headers: { 'User-Agent': 'WaterGo Mobile App' } }
+        );
+        data = await globalResponse.json();
+      }
 
       if (Array.isArray(data) && data.length > 0) {
         const results: SearchSuggestion[] = data.map((item: any, index: number) => {
-          // Format address from OSM data
           const addr = item.address || {};
           let addressParts = [];
 
@@ -313,16 +280,12 @@ export default function SelectAddressScreen() {
 
           if (addr.country) addressParts.push(addr.country);
 
-          const title = addressParts.length > 0
-            ? addressParts.join(', ')
-            : item.display_name;
-
-          const subtitle = item.type ? `${item.type}` : '';
+          const title = addressParts.length > 0 ? addressParts.join(', ') : item.display_name;
 
           return {
             id: `${index}`,
             title: title,
-            subtitle: subtitle,
+            subtitle: item.type || '',
             lat: parseFloat(item.lat),
             lon: parseFloat(item.lon),
           };
@@ -343,30 +306,22 @@ export default function SelectAddressScreen() {
     }
   };
 
-  /**
-   * Handle search input change with debouncing
-   */
   const handleSearchChange = (text: string) => {
     setSearchQuery(text);
 
-    // Clear previous timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    // Debounce search (wait 500ms after user stops typing)
     searchTimeoutRef.current = setTimeout(() => {
       searchAddress(text);
     }, 500);
   };
 
-  /**
-   * Handle suggestion tap - move map to location
-   */
   const handleSuggestionPress = (suggestion: SearchSuggestion) => {
-    // Ensure map updates happen on main thread
+    Keyboard.dismiss();
+
     requestAnimationFrame(() => {
-      // Update camera position
       const newPosition: CameraPosition = {
         lat: suggestion.lat,
         lon: suggestion.lon,
@@ -375,7 +330,6 @@ export default function SelectAddressScreen() {
 
       setCameraPosition(newPosition);
 
-      // Animate map to location
       if (mapRef.current) {
         mapRef.current?.setCenter(
           { lat: suggestion.lat, lon: suggestion.lon },
@@ -386,35 +340,24 @@ export default function SelectAddressScreen() {
         );
       }
 
-      // Update selected address
       setLocalSelectedAddress({
         lat: suggestion.lat,
         lon: suggestion.lon,
         address: suggestion.title,
       });
 
-      // Clear search
       setSearchQuery('');
       setSuggestions([]);
       setShowSuggestions(false);
     });
   };
 
-  /**
-   * Handle "Use this address" button press
-   * Navigate to AddressTypeScreen to select building type
-   */
   const handleUseAddress = () => {
     if (!localSelectedAddress) {
-      Alert.alert(t('auth.noAddressSelected'), t('auth.noAddressSelectedMessage'));
+      showError(t('auth.noAddressSelectedMessage'));
       return;
     }
 
-    console.log('=== SelectAddressScreen: Use Address Clicked ===');
-    console.log('Local Selected Address:', localSelectedAddress);
-    console.log('Navigating to AddressTypeScreen...');
-
-    // Prepare address data to pass to next screen
     const addressData = {
       address: localSelectedAddress.address,
       lat: localSelectedAddress.lat,
@@ -422,91 +365,126 @@ export default function SelectAddressScreen() {
       isFirstAddress: addresses.length === 0,
     };
 
-    // Navigate to AddressTypeScreen to select building type
     navigation.navigate('AddressType', { addressData });
   };
 
-  /**
-   * Render search suggestion item
-   */
-  const renderSuggestion = ({ item }: { item: SearchSuggestion }) => (
+  const renderSuggestion = ({ item, index }: { item: SearchSuggestion; index: number }) => (
     <TouchableOpacity
-      style={styles.suggestionItem}
+      style={[
+        styles.suggestionItem,
+        index === suggestions.length - 1 && styles.suggestionItemLast
+      ]}
       onPress={() => handleSuggestionPress(item)}
+      activeOpacity={0.7}
     >
-      <Text style={styles.suggestionTitle} numberOfLines={1}>
-        {item.title}
-      </Text>
-      {item.subtitle ? (
-        <Text style={styles.suggestionSubtitle} numberOfLines={1}>
-          {item.subtitle}
+      <View style={styles.suggestionIcon}>
+        <Image
+          source={require('../assets/ui-icons/address-icon.png')}
+          style={styles.suggestionPinIcon}
+          resizeMode="contain"
+        />
+      </View>
+      <View style={styles.suggestionContent}>
+        <Text style={styles.suggestionTitle} numberOfLines={2}>
+          {item.title}
         </Text>
-      ) : null}
+        {item.subtitle ? (
+          <View style={styles.suggestionBadge}>
+            <Text style={styles.suggestionBadgeText}>
+              {item.subtitle}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+      <View style={styles.suggestionArrow}>
+        <Text style={styles.suggestionArrowText}>→</Text>
+      </View>
     </TouchableOpacity>
   );
 
-  // Check if user is authenticated (not in signup flow)
   const isAuthenticated = addresses.length > 0 || user?.id;
 
-  // Handle cancel button press (for authenticated users only)
   const handleCancel = () => {
     navigation.goBack();
   };
 
+  const handleFallbackAddress = (address: string, lat?: number, lon?: number) => {
+    const addressData = {
+      address,
+      lat: lat || DEFAULT_LOCATION.latitude,
+      lng: lon || DEFAULT_LOCATION.longitude,
+      isFirstAddress: addresses.length === 0,
+    };
+    navigation.navigate('AddressType', { addressData });
+  };
+
+  const handleRetryMap = () => {
+    setShowFallback(false);
+    setMapReady(false);
+  };
+
+  if (showFallback) {
+    return (
+      <View style={styles.container}>
+        {isAuthenticated && (
+          <TouchableOpacity style={styles.backButton} onPress={handleCancel} activeOpacity={0.8}>
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+        )}
+        <MapFallbackUI
+          onAddressSelected={handleFallbackAddress}
+          onRetry={handleRetryMap}
+          placeholder={t('auth.enterAddressManually') || 'Enter your full address'}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {/* Cancel Button (only show when authenticated) */}
-      {isAuthenticated && (
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={handleCancel}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.cancelButtonText}>✕</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Yandex Map */}
+      {/* Map */}
       <YaMap
         ref={mapRef}
         style={styles.map}
-        showUserPosition={false}
+        showUserPosition={true}
         nightMode={false}
-        onMapLoaded={() => {
-          console.log('✅ Map loaded successfully!');
-          console.log('📍 Setting initial location:', DEFAULT_LOCATION);
-          setMapReady(true);
-          // Set camera position immediately after map loads
-          if (mapRef.current) {
-            // Ensure UI update happens on main thread
-            requestAnimationFrame(() => {
-              mapRef.current?.setCenter(
-                { lat: DEFAULT_LOCATION.latitude, lon: DEFAULT_LOCATION.longitude },
-                DEFAULT_LOCATION.zoom,
-                0,
-                0,
-                500
-              );
-            });
-          }
-        }}
-        onCameraPositionChange={() => {
-          console.log('🎥 Camera position changed');
-        }}
-        onMapPress={handleMapPress}
+        zoomGesturesEnabled={true}
+        scrollGesturesEnabled={true}
+        tiltGesturesEnabled={false}
+        rotateGesturesEnabled={false}
+        fastTapEnabled={false}
         initialRegion={{
           lat: DEFAULT_LOCATION.latitude,
           lon: DEFAULT_LOCATION.longitude,
           zoom: DEFAULT_LOCATION.zoom,
         }}
+        onMapLoaded={() => {
+          setMapReady(true);
+          if (mapRef.current) {
+            setTimeout(() => {
+              mapRef.current?.setCenter(
+                { lat: DEFAULT_LOCATION.latitude, lon: DEFAULT_LOCATION.longitude },
+                DEFAULT_LOCATION.zoom,
+                0,
+                0,
+                100
+              );
+            }, 300);
+          }
+        }}
+        onCameraPositionChange={(event: any) => {
+          if (event?.nativeEvent) {
+            const { lat, lon, zoom } = event.nativeEvent;
+            if (lat && lon && zoom !== undefined) {
+              setCameraPosition({ lat, lon, zoom });
+            }
+          }
+        }}
+        onMapPress={handleMapPress}
       >
-        {/* Pin Marker */}
         {localSelectedAddress && (
           <Marker
-            point={{
-              lat: localSelectedAddress.lat,
-              lon: localSelectedAddress.lon,
-            }}
+            point={{ lat: localSelectedAddress.lat, lon: localSelectedAddress.lon }}
             source={require('../assets/pin.png')}
             scale={1.5}
             anchor={{ x: 0.5, y: 1 }}
@@ -514,42 +492,37 @@ export default function SelectAddressScreen() {
         )}
       </YaMap>
 
-      {/* GPS Auto-Find Location Button */}
-      <TouchableOpacity
-        style={[styles.gpsButton, isFetchingLocation && styles.gpsButtonActive]}
-        onPress={requestLocationPermission}
-        activeOpacity={0.8}
-        disabled={isFetchingLocation}
-      >
-        {isFetchingLocation ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
-        ) : (
-          <Text style={styles.gpsIcon}>🧭</Text>
-        )}
-      </TouchableOpacity>
-
-      {/* Search Input Container */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputWrapper}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder={t('auth.searchAddressPlaceholder')}
-            placeholderTextColor="#999"
-            value={searchQuery}
-            onChangeText={handleSearchChange}
-            autoCorrect={false}
-            autoCapitalize="words"
-          />
-          {isSearching && (
-            <ActivityIndicator
-              size="small"
-              color={Colors.primary}
-              style={styles.searchLoader}
-            />
+      {/* Header with Search */}
+      <SafeAreaView style={styles.header} edges={['top']} pointerEvents="box-none">
+        <View style={styles.headerContent} pointerEvents="box-none">
+          {isAuthenticated && (
+            <TouchableOpacity style={styles.backButton} onPress={handleCancel} activeOpacity={0.8}>
+              <Text style={styles.backButtonText}>←</Text>
+            </TouchableOpacity>
           )}
+
+          <View style={[styles.searchContainer, !isAuthenticated && styles.searchContainerFull]}>
+            <Image
+              source={require('../assets/ui-icons/search-icon.png')}
+              style={styles.searchIcon}
+              resizeMode="contain"
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t('auth.searchAddressPlaceholder') || 'Search address...'}
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={handleSearchChange}
+              autoCorrect={false}
+              autoCapitalize="words"
+            />
+            {isSearching && (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            )}
+          </View>
         </View>
 
-        {/* Search Suggestions Dropdown */}
+        {/* Suggestions */}
         {showSuggestions && suggestions.length > 0 && (
           <View style={styles.suggestionsContainer}>
             <FlatList
@@ -561,48 +534,112 @@ export default function SelectAddressScreen() {
             />
           </View>
         )}
+      </SafeAreaView>
+
+      {/* Map Controls */}
+      <View style={styles.mapControls} pointerEvents="box-none">
+        {/* GPS Button */}
+        <TouchableOpacity
+          style={[styles.gpsButton, isFetchingLocation && styles.gpsButtonActive]}
+          onPress={requestLocationPermission}
+          activeOpacity={0.8}
+          disabled={isFetchingLocation}
+        >
+          {isFetchingLocation ? (
+            <ActivityIndicator size="small" color={Colors.primary} />
+          ) : (
+            <Image
+              source={require('../assets/ui-icons/address-icon.png')}
+              style={styles.gpsIcon}
+              resizeMode="contain"
+            />
+          )}
+        </TouchableOpacity>
+
+        {/* Zoom Controls */}
+        <View style={styles.zoomControls}>
+          <TouchableOpacity
+            style={styles.zoomButton}
+            onPress={() => {
+              const currentZoom = cameraPosition.zoom;
+              const currentLat = cameraPosition.lat;
+              const currentLon = cameraPosition.lon;
+              const newZoom = Math.min(currentZoom + 1, 20);
+
+              if (mapRef.current) {
+                mapRef.current.setZoom(newZoom, 0.3);
+              }
+              setCameraPosition({ lat: currentLat, lon: currentLon, zoom: newZoom });
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.zoomButtonText}>+</Text>
+          </TouchableOpacity>
+          <View style={styles.zoomDivider} />
+          <TouchableOpacity
+            style={styles.zoomButton}
+            onPress={() => {
+              const currentZoom = cameraPosition.zoom;
+              const currentLat = cameraPosition.lat;
+              const currentLon = cameraPosition.lon;
+              const newZoom = Math.max(currentZoom - 1, 5);
+
+              if (mapRef.current) {
+                mapRef.current.setZoom(newZoom, 0.3);
+              }
+              setCameraPosition({ lat: currentLat, lon: currentLon, zoom: newZoom });
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.zoomButtonText}>−</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Selected Address Display */}
-      <View style={styles.bottomContainer}>
+      {/* Bottom Sheet */}
+      <View style={styles.bottomSheet}>
         {isGeocoding ? (
-          <View style={styles.addressLoading}>
+          <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color={Colors.primary} />
-            <Text style={styles.addressLoadingText}>{t('auth.fetchingAddress')}</Text>
+            <Text style={styles.loadingText}>{t('auth.fetchingAddress') || 'Getting address...'}</Text>
           </View>
         ) : localSelectedAddress ? (
-          <>
-            <View style={styles.selectedAddressContainer}>
-              <Text style={styles.selectedAddressLabel}>{t('auth.selectedAddress')}</Text>
-              <Text style={styles.selectedAddressText} numberOfLines={2}>
-                {localSelectedAddress.address}
-              </Text>
-              <Text style={styles.selectedAddressCoords}>
-                {t('auth.locationLabel')} {localSelectedAddress.lat.toFixed(6)}, {localSelectedAddress.lon.toFixed(6)}
-              </Text>
+          <View style={styles.addressContainer}>
+            <View style={styles.addressHeader}>
+              <Image
+                source={require('../assets/ui-icons/address-icon.png')}
+                style={styles.addressIcon3d}
+                resizeMode="contain"
+              />
+              <View style={styles.addressInfo}>
+                <Text style={styles.addressLabel}>{t('auth.selectedAddress') || 'Selected Location'}</Text>
+                <Text style={styles.addressText} numberOfLines={2}>
+                  {localSelectedAddress.address}
+                </Text>
+              </View>
             </View>
 
             <TouchableOpacity
-              style={styles.useAddressButton}
+              style={styles.confirmButton}
               onPress={handleUseAddress}
+              activeOpacity={0.9}
             >
-              <Text style={styles.useAddressButtonText}>{t('auth.useThisAddress')}</Text>
+              <Text style={styles.confirmButtonText}>{t('auth.useThisAddress') || 'Use This Address'}</Text>
+              <Text style={styles.confirmButtonArrow}>→</Text>
             </TouchableOpacity>
-          </>
+          </View>
         ) : (
-          <View style={styles.selectedAddressContainer}>
-            <View style={styles.emptyStateRow}>
-              <Image
-                source={require('../assets/mascot/water-drop-mascot.png')}
-                style={styles.mascotImage}
-                resizeMode="contain"
-              />
-              <View style={styles.emptyStateTextContainer}>
-                <Text style={styles.emptyStateTitle}>{t('auth.noLocationSelected')}</Text>
-                <Text style={styles.emptyStateText}>
-                  {t('auth.tapGPSButton')}
-                </Text>
-              </View>
+          <View style={styles.emptyContainer}>
+            <Image
+              source={require('../assets/mascot/water-drop-mascot.png')}
+              style={styles.mascotImage}
+              resizeMode="contain"
+            />
+            <View style={styles.emptyTextContainer}>
+              <Text style={styles.emptyTitle}>{t('auth.noLocationSelected') || 'Select Your Location'}</Text>
+              <Text style={styles.emptySubtitle}>
+                {t('auth.tapGPSButton') || 'Tap on the map or use GPS button to find your address'}
+              </Text>
             </View>
           </View>
         )}
@@ -614,218 +651,322 @@ export default function SelectAddressScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.gray,
+    backgroundColor: '#F8FAFC',
   },
   map: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
   },
 
-  // GPS Button
-  gpsButton: {
+  // Header
+  header: {
     position: 'absolute',
-    bottom: 280,
-    right: 16,
-    zIndex: 15,
-    backgroundColor: Colors.white,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 6,
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
   },
-  gpsButtonActive: {
-    backgroundColor: Colors.primary,
-  },
-  gpsIcon: {
-    fontSize: 28,
-  },
-
-  // Search Container
-  searchContainer: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 60 : 20,
-    left: 16,
-    right: 16,
-    zIndex: 10,
-  },
-  searchInputWrapper: {
-    backgroundColor: Colors.gray,
-    borderRadius: 12,
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    paddingTop: Platform.OS === 'android' ? 16 : 8,
+    paddingBottom: 12,
+    gap: 12,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#0C1633',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  backButtonText: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#1E293B',
+  },
+  searchContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    height: 50,
+    shadowColor: '#0C1633',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  searchContainerFull: {
+    marginLeft: 0,
+  },
+  searchIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+    opacity: 0.5,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
-    color: Colors.text,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1E293B',
     padding: 0,
-  },
-  searchLoader: {
-    marginLeft: 8,
   },
 
   // Suggestions
   suggestionsContainer: {
-    backgroundColor: Colors.gray,
-    borderRadius: 12,
+    marginHorizontal: 16,
     marginTop: 8,
-    maxHeight: 250,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    maxHeight: 300,
+    shadowColor: '#0C1633',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 12,
+    overflow: 'hidden',
   },
   suggestionsList: {
-    borderRadius: 12,
+    borderRadius: 20,
   },
   suggestionItem: {
-    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
+  },
+  suggestionItemLast: {
+    borderBottomWidth: 0,
+  },
+  suggestionIcon: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  suggestionPinIcon: {
+    width: 44,
+    height: 44,
+  },
+  suggestionContent: {
+    flex: 1,
+    gap: 6,
   },
   suggestionTitle: {
     fontSize: 15,
-    color: Colors.text,
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#1E293B',
+    lineHeight: 20,
   },
-  suggestionSubtitle: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 2,
+  suggestionBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  suggestionBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+    textTransform: 'capitalize',
+  },
+  suggestionArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  suggestionArrowText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#94A3B8',
   },
 
-  // Bottom Container
-  bottomContainer: {
+  // Map Controls
+  mapControls: {
+    position: 'absolute',
+    right: 16,
+    bottom: 240,
+    zIndex: 50,
+    gap: 12,
+  },
+  gpsButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#0C1633',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  gpsButtonActive: {
+    opacity: 0.7,
+  },
+  gpsIcon: {
+    width: 44,
+    height: 44,
+  },
+  zoomControls: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    shadowColor: '#0C1633',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+    overflow: 'hidden',
+  },
+  zoomButton: {
+    width: 50,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  zoomButtonText: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#1E293B',
+  },
+  zoomDivider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+  },
+
+  // Bottom Sheet
+  bottomSheet: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: Colors.gray,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingTop: 20,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    paddingHorizontal: 20,
+    shadowColor: '#0C1633',
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 20,
+    minHeight: 180,
   },
 
-  // Address Loading
-  addressLoading: {
+  // Loading
+  loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: 24,
+    gap: 12,
   },
-  addressLoadingText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 8,
+  loadingText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#64748B',
   },
 
-  // Selected Address
-  selectedAddressContainer: {
-    marginBottom: 4,
+  // Address Container
+  addressContainer: {
+    gap: 16,
   },
-  selectedAddressLabel: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 4,
-  },
-  emptyStateRow: {
+  addressHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  mascotImage: {
-    width: 140,
-    height: 140,
-    flexShrink: 0,
+  addressIcon3d: {
+    width: 56,
+    height: 56,
   },
-  emptyStateTextContainer: {
+  addressInfo: {
     flex: 1,
   },
-  emptyStateIcon: {
-    fontSize: 48,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: 4,
-  },
-  emptyStateText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 18,
-  },
-  selectedAddressText: {
-    fontSize: 16,
-    color: Colors.text,
+  addressLabel: {
+    fontSize: 13,
     fontWeight: '600',
+    color: '#64748B',
     marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  selectedAddressCoords: {
-    fontSize: 12,
-    color: '#999',
+  addressText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1E293B',
+    lineHeight: 22,
   },
-
-  // Use Address Button
-  useAddressButton: {
+  confirmButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: Colors.primary,
-    borderRadius: 12,
+    borderRadius: 16,
     paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  useAddressButtonDisabled: {
-    backgroundColor: '#B0C4DE',
-    opacity: 0.7,
+  confirmButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
-  useAddressButtonText: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: '600',
+  confirmButtonArrow: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 
-  // Cancel Button
-  cancelButton: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 60 : 20,
-    right: 16,
-    zIndex: 20,
-    backgroundColor: Colors.white,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
+  // Empty State
+  emptyContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    gap: 16,
   },
-  cancelButtonText: {
-    fontSize: 20,
-    color: Colors.text,
-    fontWeight: '600',
+  mascotImage: {
+    width: 100,
+    height: 100,
+  },
+  emptyTextContainer: {
+    flex: 1,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1E293B',
+    marginBottom: 6,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#64748B',
+    lineHeight: 20,
   },
 });

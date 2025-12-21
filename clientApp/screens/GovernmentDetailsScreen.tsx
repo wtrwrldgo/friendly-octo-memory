@@ -4,149 +4,188 @@ import {
   Text,
   Pressable,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Image,
+  TextInput,
+  TouchableOpacity,
+  Platform,
+  Dimensions,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { TextField } from '../components/TextField';
 
-// Progress Dot Component
-const Dot = ({ active, wide = false }: { active?: boolean; wide?: boolean }) => (
-  <View
-    style={[
-      styles.dot,
-      wide && { width: 22 },
-      { backgroundColor: active ? '#3B82F6' : '#E2E8F0' },
-    ]}
-  />
-);
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
+import { useLanguage } from '../context/LanguageContext';
+import { useUser } from '../context/UserContext';
+import { useToast } from '../context/ToastContext';
 
 export default function GovernmentDetailsScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const { t } = useLanguage();
+  const { addAddress } = useUser();
+  const { showToast } = useToast();
   const addressData = route.params?.addressData;
 
-  const [entrance, setEntrance] = useState('');
+  const [name, setName] = useState('');
   const [floor, setFloor] = useState('');
   const [officeNumber, setOfficeNumber] = useState('');
-  const [security, setSecurity] = useState('');
-  const [comment, setComment] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
-  const onNext = () => {
-    // Add government building details to address data
-    const updatedAddressData = {
-      ...addressData,
-      entrance,
-      floor,
-      apartment: officeNumber, // Using 'apartment' field for office/room number
-      intercom: security, // Using 'intercom' field for security/entry info
-      comment,
-    };
+  const onNext = async () => {
+    if (!isValid || !addressData || isSaving) return;
 
-    // Navigate to summary screen
-    navigation.navigate('AddressSummary', { addressData: updatedAddressData });
+    setIsSaving(true);
+
+    try {
+      await addAddress({
+        title: addressData.address.split(',')[0] || 'My Address',
+        address: addressData.address,
+        lat: addressData.lat,
+        lng: addressData.lng,
+        isDefault: addressData.isFirstAddress || false,
+        addressType: addressData.addressType,
+        name: name.trim(),
+        floor: floor.trim(),
+        apartment: officeNumber.trim(),
+        comment: '',
+      });
+
+      showToast('Address saved successfully!', 'success');
+
+      if (addressData.isFirstAddress) {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [
+              {
+                name: 'MainTabs',
+                state: {
+                  routes: [{ name: 'HomeTab' }],
+                  index: 0,
+                },
+              },
+            ],
+          })
+        );
+      } else {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [
+              {
+                name: 'MainTabs',
+                state: {
+                  routes: [{ name: 'ProfileTab' }],
+                  index: 0,
+                },
+              },
+            ],
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Error saving address:', error);
+      showToast('Failed to save address. Please try again.', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // Check if required fields are filled
-  const isValid = officeNumber.trim().length > 0;
+  const isValid = name.trim().length > 0 && officeNumber.trim().length > 0 && !isSaving;
 
   return (
-    <SafeAreaView style={styles.safe}>
-      {/* Header with Progress */}
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={10}>
-          <Text style={styles.backArrow}>←</Text>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color="#0C1633" />
         </Pressable>
 
-        <View style={styles.progress}>
-          <Dot active />
-          <Dot active />
-          <Dot active />
-          <Dot active wide />
-        </View>
-
-        <Text style={styles.title}>Government Building</Text>
-        <Text style={styles.subtitle}>Информация для прохода</Text>
+        <Text style={styles.title}>{t('auth.governmentDetails')}</Text>
+        <Text style={styles.subtitle}>{t('auth.governmentDetailsHelp')}</Text>
       </View>
 
-      {/* Icon */}
-      <View style={styles.iconContainer}>
+      {/* Hero Image - Full width */}
+      <View style={styles.heroContainer}>
         <Image
-          source={require('../assets/address/government-3d.png')}
-          style={styles.buildingIcon}
-          resizeMode="contain"
+          source={require('../assets/illustrations/government-building.png')}
+          style={styles.heroImage}
+          resizeMode="cover"
         />
       </View>
 
       {/* Form */}
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 120 }}
+        contentContainerStyle={styles.formContainer}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Building Entrance</Text>
-          <TextField
-            value={entrance}
-            onChangeText={setEntrance}
-            placeholder="e.g., Main gate, West wing"
-            autoCapitalize="sentences"
+        {/* Organization Name (required) */}
+        <Text style={styles.label}>
+          {t('auth.organizationName')} <Text style={styles.required}>*</Text>
+        </Text>
+        <View style={styles.inputCard}>
+          <Ionicons name="business-outline" size={18} color="#6B7280" style={styles.leftIcon} />
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            placeholder={t('auth.organizationNamePlaceholder')}
+            placeholderTextColor="#9CA3AF"
+            style={styles.input}
+            autoCapitalize="words"
           />
         </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Floor</Text>
-          <TextField
+        {/* Floor */}
+        <Text style={styles.labelSecondary}>{t('auth.floor')}</Text>
+        <View style={styles.inputCard}>
+          <Ionicons name="layers-outline" size={18} color="#6B7280" style={styles.leftIcon} />
+          <TextInput
             value={floor}
             onChangeText={setFloor}
-            placeholder="e.g., 3"
+            placeholder={t('auth.floorPlaceholder')}
+            placeholderTextColor="#9CA3AF"
+            style={styles.input}
             keyboardType="number-pad"
-            autoCapitalize="none"
           />
         </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.labelRequired}>Office / Room Number *</Text>
-          <TextField
+        {/* Office Number (required) */}
+        <Text style={styles.label}>
+          {t('auth.officeRoom')} <Text style={styles.required}>*</Text>
+        </Text>
+        <View style={styles.inputCard}>
+          <Ionicons name="document-text-outline" size={18} color="#6B7280" style={styles.leftIcon} />
+          <TextInput
             value={officeNumber}
             onChangeText={setOfficeNumber}
-            placeholder="e.g., Room 305, Cabinet 12"
+            placeholder={t('auth.officeRoomPlaceholder')}
+            placeholderTextColor="#9CA3AF"
+            style={styles.input}
             autoCapitalize="sentences"
           />
         </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Entry Requirements</Text>
-          <TextField
-            value={security}
-            onChangeText={setSecurity}
-            placeholder="e.g., Show ID at security, Pass required"
-            autoCapitalize="sentences"
-          />
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Additional Info</Text>
-          <TextField
-            value={comment}
-            onChangeText={setComment}
-            placeholder="Contact person, phone, or other instructions"
-            multiline
-            numberOfLines={3}
-            autoCapitalize="sentences"
-          />
-        </View>
+        <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Sticky Next Button */}
+      {/* Sticky Button */}
       <View style={styles.sticky}>
-        <Pressable
-          onPress={onNext}
-          disabled={!isValid}
-          style={[styles.nextBtn, !isValid && styles.nextBtnDisabled]}
-        >
-          <Text style={styles.nextText}>Next</Text>
-        </Pressable>
+        <TouchableOpacity activeOpacity={0.9} disabled={!isValid} onPress={onNext}>
+          <LinearGradient
+            colors={isValid ? ['#3B82F6', '#2563EB'] : ['#D1D5DB', '#D1D5DB']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.cta}
+          >
+            <Text style={[styles.ctaText, !isValid && styles.ctaTextDisabled]}>
+              {isSaving ? 'SAVING...' : 'SAVE ADDRESS'}
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -161,61 +200,92 @@ const styles = StyleSheet.create({
   // Header
   header: {
     paddingHorizontal: 20,
-    paddingTop: 6,
+    paddingTop: 4,
     paddingBottom: 8,
   },
-  backArrow: {
-    fontSize: 24,
-    color: '#0C1633',
-  },
-  progress: {
-    flexDirection: 'row',
-    gap: 6,
-    marginTop: 8,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  backButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0C1633',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   title: {
-    marginTop: 16,
-    fontSize: 28,
-    fontWeight: '800',
+    marginTop: 12,
+    fontSize: 24,
+    fontWeight: '700',
     color: '#0C1633',
-    letterSpacing: 0.2,
   },
   subtitle: {
-    marginTop: 6,
+    marginTop: 2,
     fontSize: 14,
     color: '#6B7280',
+    lineHeight: 20,
   },
 
-  // Icon
-  iconContainer: {
-    alignItems: 'center',
-    paddingVertical: 20,
+  // Hero Image - Full width (same as HouseDetails)
+  heroContainer: {
+    width: SCREEN_WIDTH,
+    height: 260,
+    backgroundColor: '#EBF4FF',
+    overflow: 'hidden',
   },
-  buildingIcon: {
-    width: 120,
-    height: 120,
+  heroImage: {
+    width: '100%',
+    height: '100%',
   },
 
   // Form
-  fieldGroup: {
-    marginTop: 16,
+  formContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
   },
+
+  // Labels
   label: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#0C1633',
+    color: '#374151',
+    marginTop: 14,
     marginBottom: 8,
   },
-  labelRequired: {
-    fontSize: 15,
+  labelSecondary: {
+    fontSize: 14,
     fontWeight: '600',
-    color: '#0C1633',
+    color: '#6B7280',
+    marginTop: 14,
     marginBottom: 8,
+  },
+  required: {
+    color: '#3B82F6',
+  },
+
+  // Input
+  inputCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingLeft: 44,
+    paddingRight: 14,
+    height: 52,
+  },
+  leftIcon: {
+    position: 'absolute',
+    left: 14,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: '#0C1633',
   },
 
   // Sticky Button
@@ -224,25 +294,29 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 20,
     backgroundColor: '#F7F9FC',
   },
-  nextBtn: {
-    backgroundColor: '#3B82F6',
-    paddingVertical: 16,
-    borderRadius: 16,
+  cta: {
+    height: 56,
+    borderRadius: 14,
     alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#3B82F6',
     shadowOpacity: 0.25,
     shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
-  nextBtnDisabled: {
-    backgroundColor: '#AFC7FF',
+  ctaText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+    letterSpacing: 0.5,
   },
-  nextText: {
-    color: '#FFF',
-    fontSize: 17,
-    fontWeight: '800',
+  ctaTextDisabled: {
+    color: '#6B7280',
   },
 });

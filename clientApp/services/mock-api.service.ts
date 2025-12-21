@@ -20,7 +20,7 @@ import {
   MOCK_ADDRESSES,
   MOCK_DRIVER,
 } from '../constants/MockData';
-import TwilioService from './twilio.service';
+import SmsService from './sms.service';
 
 // Simulate network delay
 const delay = (ms: number = 1000) =>
@@ -42,7 +42,7 @@ class MockApiService {
     await delay(500);
 
     // Generate a random 4-digit code
-    const code = TwilioService.generateVerificationCode();
+    const code = SmsService.generateVerificationCode();
 
     // Store the code with 10-minute expiration
     verificationCodes.set(phone, {
@@ -50,8 +50,8 @@ class MockApiService {
       expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
     });
 
-    // Send SMS via Twilio (only if edge function is deployed)
-    const smsResult = await TwilioService.sendVerificationCode(phone, code);
+    // Send SMS via CRM (Eskiz)
+    const smsResult = await SmsService.sendVerificationCode(phone, code);
 
     if (!smsResult.success) {
       // Expected in development: Twilio Edge Function not deployed yet
@@ -214,6 +214,8 @@ class MockApiService {
     firmId: string;
     addressId: string;
     total: number;
+    paymentMethod?: string;
+    preferredDeliveryTime?: string | null;
   }): Promise<Order> {
     await delay(1500);
 
@@ -257,6 +259,8 @@ class MockApiService {
       firmId: string;
       addressId: string;
       total: number;
+      paymentMethod?: string;
+      preferredDeliveryTime?: string | null;
     },
     firm: Firm,
     address: Address
@@ -275,17 +279,31 @@ class MockApiService {
     const now = new Date();
     const estimatedDelivery = new Date(now.getTime() + 30 * 60 * 1000); // 30 min
 
+    // Calculate fees
+    const subtotal = orderData.total;
+    const deliveryFee = firm.deliveryFee;
+    const serviceFee = Math.round(subtotal * 0.05); // 5% service fee
+    const total = subtotal + deliveryFee + serviceFee;
+
     const orderId = `order_${Date.now()}`;
+    const seq = Math.floor(Math.random() * 1000) + 1;
+    const orderNumber = `WG-${new Date().getFullYear()}-${String(seq).padStart(6, '0')}`;
     const order: Order = {
       id: orderId,
+      orderNumber,
       stage: OrderStage.ORDER_PLACED,
       items,
-      total: orderData.total,
+      subtotal,
+      deliveryFee,
+      serviceFee,
+      total,
+      paymentMethod: (orderData.paymentMethod as 'cash' | 'card' | 'wallet') || 'cash',
       firm,
       deliveryAddress: address,
       driver: null,
       createdAt: now,
       estimatedDelivery,
+      preferredDeliveryTime: orderData.preferredDeliveryTime ? new Date(orderData.preferredDeliveryTime) : null,
       queuePosition: undefined,
       ordersAhead: undefined,
     };
@@ -345,8 +363,11 @@ class MockApiService {
     } else if (timeElapsed < 40) {
       // 25-40 seconds: COURIER_ON_THE_WAY
       currentStage = OrderStage.COURIER_ON_THE_WAY;
+    } else if (timeElapsed < 55) {
+      // 40-55 seconds: COURIER_ARRIVED
+      currentStage = OrderStage.COURIER_ARRIVED;
     } else {
-      // 40+ seconds: DELIVERED
+      // 55+ seconds: DELIVERED
       currentStage = OrderStage.DELIVERED;
     }
 
@@ -398,6 +419,17 @@ class MockApiService {
     return {
       address: `Street Address at ${lat.toFixed(4)}, ${lng.toFixed(4)}`,
     };
+  }
+
+  // Push Notifications (mock - just logs)
+  async registerPushToken(token: string, platform: string): Promise<{ success: boolean }> {
+    console.log('[Mock] Register push token:', token.substring(0, 20), platform);
+    return { success: true };
+  }
+
+  async unregisterPushToken(token: string): Promise<{ success: boolean }> {
+    console.log('[Mock] Unregister push token:', token.substring(0, 20));
+    return { success: true };
   }
 }
 

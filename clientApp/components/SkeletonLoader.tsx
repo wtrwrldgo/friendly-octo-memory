@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
-import { Colors, Spacing } from '../constants/Colors';
+import { View, StyleSheet, Animated, Platform } from 'react-native';
+import { Colors } from '../constants/Colors';
 
 interface SkeletonLoaderProps {
   width?: number | string;
@@ -18,7 +18,7 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   const animatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.loop(
+    const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(animatedValue, {
           toValue: 1,
@@ -31,8 +31,13 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
           useNativeDriver: true,
         }),
       ])
-    ).start();
-  }, []);
+    );
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
+  }, [animatedValue]);
 
   const opacity = animatedValue.interpolate({
     inputRange: [0, 1],
@@ -58,12 +63,33 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
 export const FirmCardSkeleton: React.FC = () => {
   return (
     <View style={styles.firmCard}>
-      <SkeletonLoader width={100} height={100} borderRadius={12} />
-      <View style={styles.firmCardContent}>
-        <SkeletonLoader width="70%" height={18} />
-        <SkeletonLoader width="50%" height={14} style={{ marginTop: 8 }} />
-        <SkeletonLoader width="60%" height={14} style={{ marginTop: 4 }} />
+      {/* Banner */}
+      <SkeletonLoader width="100%" height={160} borderRadius={16} />
+
+      {/* Meta row */}
+      <View style={styles.metaRow}>
+        <View style={styles.metaItem}>
+          <SkeletonLoader width={32} height={32} borderRadius={8} />
+          <SkeletonLoader width={50} height={14} style={{ marginLeft: 8 }} />
+        </View>
+        <View style={styles.metaItem}>
+          <SkeletonLoader width={32} height={32} borderRadius={8} />
+          <SkeletonLoader width={60} height={14} style={{ marginLeft: 8 }} />
+        </View>
+        <View style={styles.metaItem}>
+          <SkeletonLoader width={32} height={32} borderRadius={8} />
+          <SkeletonLoader width={40} height={14} style={{ marginLeft: 8 }} />
+        </View>
       </View>
+
+      {/* Chips row */}
+      <View style={styles.chipsRow}>
+        <SkeletonLoader width={80} height={28} borderRadius={12} />
+        <SkeletonLoader width={100} height={28} borderRadius={12} />
+      </View>
+
+      {/* CTA button */}
+      <SkeletonLoader width="100%" height={44} borderRadius={14} style={{ marginTop: 14 }} />
     </View>
   );
 };
@@ -73,15 +99,35 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.border,
   },
   firmCard: {
-    flexDirection: 'row',
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 18,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
+        shadowOffset: { width: 0, height: 8 },
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
-  firmCardContent: {
-    flex: 1,
-    marginLeft: Spacing.md,
-    justifyContent: 'center',
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    marginTop: 10,
+    gap: 8,
   },
 });

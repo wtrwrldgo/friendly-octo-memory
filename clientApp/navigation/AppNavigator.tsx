@@ -1,16 +1,16 @@
 import React from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet, Image, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthStackParamList, OrderStage } from '../types';
-import { Colors, FontSizes } from '../constants/Colors';
+import { Colors } from '../constants/Colors';
 import { useCart } from '../context/CartContext';
 import { useOrder } from '../context/OrderContext';
 import { useLanguage } from '../context/LanguageContext';
 
 // Auth Screens
-import LoadingScreen from '../screens/LoadingScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import SelectLanguageScreen from '../screens/SelectLanguageScreen';
 import AskNameScreen from '../screens/AskNameScreen';
@@ -28,9 +28,11 @@ import ProfileScreen from '../screens/ProfileScreen';
 import SelectAddressScreen from '../screens/SelectAddressScreen';
 import AddressTypeScreen from '../screens/AddressTypeScreen';
 import ApartmentDetailsScreen from '../screens/ApartmentDetailsScreen';
+import HouseDetailsScreen from '../screens/HouseDetailsScreen';
 import OfficeDetailsScreen from '../screens/OfficeDetailsScreen';
 import GovernmentDetailsScreen from '../screens/GovernmentDetailsScreen';
 import AddressSummaryScreen from '../screens/AddressSummaryScreen';
+import CityNotSupportedScreen from '../screens/CityNotSupportedScreen';
 import PaymentMethodScreen from '../screens/PaymentMethodScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import TermsOfServiceScreen from '../screens/TermsOfServiceScreen';
@@ -42,12 +44,12 @@ const Tab = createBottomTabNavigator();
 export const AuthNavigator = () => {
   return (
     <AuthStack.Navigator
+      initialRouteName="SelectLanguage"
       screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',
       }}
     >
-      <AuthStack.Screen name="Loading" component={LoadingScreen} />
       <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
       <AuthStack.Screen name="SelectLanguage" component={SelectLanguageScreen} />
       <AuthStack.Screen name="AskName" component={AskNameScreen} />
@@ -57,18 +59,24 @@ export const AuthNavigator = () => {
       <AuthStack.Screen name="SelectAddress" component={SelectAddressScreen} />
       <AuthStack.Screen name="AddressType" component={AddressTypeScreen} />
       <AuthStack.Screen name="ApartmentDetails" component={ApartmentDetailsScreen} />
+      <AuthStack.Screen name="HouseDetails" component={HouseDetailsScreen} />
       <AuthStack.Screen name="OfficeDetails" component={OfficeDetailsScreen} />
       <AuthStack.Screen name="GovernmentDetails" component={GovernmentDetailsScreen} />
       <AuthStack.Screen name="AddressSummary" component={AddressSummaryScreen} />
+      <AuthStack.Screen name="CityNotSupported" component={CityNotSupportedScreen} />
     </AuthStack.Navigator>
   );
 };
 
 // Tab Icon Component
-const TabIcon: React.FC<{ icon: string; badge?: number }> = ({ icon, badge }) => {
+const TabIcon: React.FC<{ icon?: string; image?: any; badge?: number }> = ({ icon, image, badge }) => {
   return (
     <View style={styles.tabIconContainer}>
-      <Text style={{ fontSize: 24 }}>{icon}</Text>
+      {image ? (
+        <Image source={image} style={styles.tabImage} resizeMode="contain" />
+      ) : (
+        <Text style={{ fontSize: 24 }}>{icon}</Text>
+      )}
       {badge !== undefined && badge > 0 && (
         <View style={styles.tabBadge}>
           <Text style={styles.tabBadgeText}>{badge}</Text>
@@ -83,6 +91,7 @@ const TabNavigator = () => {
   const { cart } = useCart();
   const { currentOrder } = useOrder();
   const { t } = useLanguage();
+  const insets = useSafeAreaInsets();
   const cartItemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
 
   // Show Tracking tab when there's an active order (not delivered)
@@ -92,23 +101,27 @@ const TabNavigator = () => {
   const hasActiveOrder = currentOrder !== null;
   const ordersBadge = !showTrackingTab && hasActiveOrder ? 1 : 0;
 
+  // Calculate bottom padding for system navigation bar
+  const bottomPadding = Platform.OS === 'android' ? Math.max(insets.bottom, 10) : 8;
+  const tabBarHeight = 60 + bottomPadding;
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.grayText,
+        tabBarInactiveTintColor: '#B8BCC4',
         tabBarStyle: {
           backgroundColor: Colors.white,
           borderTopWidth: 1,
-          borderTopColor: Colors.border,
-          height: 60,
-          paddingBottom: 8,
+          borderTopColor: '#F0F1F3',
+          height: tabBarHeight,
+          paddingBottom: bottomPadding,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: FontSizes.xs,
-          fontWeight: '600',
+          fontSize: 11,
+          fontWeight: '500',
         },
       }}
     >
@@ -117,7 +130,7 @@ const TabNavigator = () => {
         component={HomeScreen}
         options={{
           tabBarLabel: t('tabs.home'),
-          tabBarIcon: () => <TabIcon icon="🏠" />,
+          tabBarIcon: () => <TabIcon image={require('../assets/tab-icons/home-icon.png')} />,
         }}
       />
       <Tab.Screen
@@ -125,7 +138,7 @@ const TabNavigator = () => {
         component={CartScreen}
         options={{
           tabBarLabel: t('tabs.cart'),
-          tabBarIcon: () => <TabIcon icon="🛒" badge={cartItemCount} />,
+          tabBarIcon: () => <TabIcon image={require('../assets/tab-icons/cart-icon.png')} badge={cartItemCount} />,
         }}
       />
       {showTrackingTab && (
@@ -134,7 +147,7 @@ const TabNavigator = () => {
           component={OrderTrackingScreen}
           options={{
             tabBarLabel: t('tabs.tracking'),
-            tabBarIcon: () => <TabIcon icon="🚚" badge={1} />,
+            tabBarIcon: () => <TabIcon image={require('../assets/tab-icons/tracking-icon.png')} badge={1} />,
           }}
         />
       )}
@@ -143,7 +156,7 @@ const TabNavigator = () => {
         component={OrdersScreen}
         options={{
           tabBarLabel: t('tabs.orders'),
-          tabBarIcon: () => <TabIcon icon="📦" badge={ordersBadge} />,
+          tabBarIcon: () => <TabIcon image={require('../assets/tab-icons/orders-icon.png')} badge={ordersBadge} />,
         }}
       />
       <Tab.Screen
@@ -151,7 +164,7 @@ const TabNavigator = () => {
         component={ProfileScreen}
         options={{
           tabBarLabel: t('tabs.profile'),
-          tabBarIcon: () => <TabIcon icon="👤" />,
+          tabBarIcon: () => <TabIcon image={require('../assets/tab-icons/profile-icon.png')} />,
         }}
       />
     </Tab.Navigator>
@@ -173,12 +186,14 @@ export const MainNavigator = () => {
       <RootStack.Screen name="SelectAddress" component={SelectAddressScreen} />
       <RootStack.Screen name="AddressType" component={AddressTypeScreen} />
       <RootStack.Screen name="ApartmentDetails" component={ApartmentDetailsScreen} />
+      <RootStack.Screen name="HouseDetails" component={HouseDetailsScreen} />
       <RootStack.Screen name="OfficeDetails" component={OfficeDetailsScreen} />
       <RootStack.Screen name="GovernmentDetails" component={GovernmentDetailsScreen} />
       <RootStack.Screen name="AddressSummary" component={AddressSummaryScreen} />
       <RootStack.Screen name="PaymentMethod" component={PaymentMethodScreen} />
       <RootStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <RootStack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
+      <RootStack.Screen name="CityNotSupported" component={CityNotSupportedScreen} />
     </RootStack.Navigator>
   );
 };
@@ -189,8 +204,14 @@ interface AppNavigatorProps {
 }
 
 export const AppNavigator: React.FC<AppNavigatorProps> = ({ isAuthenticated, onReady }) => {
+  console.log('🧭 [AppNavigator] Rendering - isAuthenticated:', isAuthenticated);
+  console.log('🧭 [AppNavigator] Will render:', isAuthenticated ? 'MainNavigator' : 'AuthNavigator');
+
   return (
-    <NavigationContainer onReady={onReady}>
+    <NavigationContainer onReady={() => {
+      console.log('🧭 [NavigationContainer] Ready!');
+      onReady?.();
+    }}>
       {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
     </NavigationContainer>
   );
@@ -222,5 +243,9 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 11,
     fontWeight: '700',
+  },
+  tabImage: {
+    width: 36,
+    height: 36,
   },
 });

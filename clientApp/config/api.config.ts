@@ -6,29 +6,51 @@
  */
 
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 export interface ApiConfig {
   baseURL: string;
   timeout: number;
   useMockData: boolean;
+  useLocalBackend: boolean;
 }
+
+// Get the correct localhost URL based on platform
+// - iOS Simulator: localhost works
+// - Android Emulator: 10.0.2.2 (special alias for host machine)
+// - Physical device: use your computer's IP address
+//
+// NOTE: For physical Android devices, use your computer's local IP address
+// Find your IP with: ipconfig (Windows) or ifconfig/ip addr (Mac/Linux)
+const LOCAL_IP = '192.168.1.8'; // Your computer's IP on the local network
+
+const getLocalBackendUrl = () => {
+  if (Platform.OS === 'android') {
+    // Use actual IP for physical devices (also works in emulator)
+    return `http://${LOCAL_IP}:3001/api`;
+  }
+  return 'http://localhost:3001/api'; // iOS simulator
+};
 
 // Environment-based configuration
 const ENV = {
   development: {
-    baseURL: 'http://localhost:3000/api', // Not used - Supabase direct connection
+    baseURL: getLocalBackendUrl(),
     timeout: 15000,
-    useMockData: true, // Using mock data until database is ready
+    useMockData: false,
+    useLocalBackend: true, // ✅ USE LOCAL POSTGRESQL BACKEND
   },
   staging: {
-    baseURL: 'https://staging-api.watergo.com/api', // Your staging API URL
+    baseURL: 'https://staging-api.watergo.com/api',
     timeout: 15000,
     useMockData: false,
+    useLocalBackend: false,
   },
   production: {
-    baseURL: 'https://api.watergo.com/api', // Your production API URL
+    baseURL: 'https://api.watergo.com/api',
     timeout: 10000,
     useMockData: false,
+    useLocalBackend: false,
   },
 };
 
@@ -46,24 +68,29 @@ const currentEnv = getEnvironment();
 // Export current configuration
 export const API_CONFIG: ApiConfig = ENV[currentEnv];
 
+// Debug log at startup
+console.log('[API_CONFIG] Environment:', currentEnv);
+console.log('[API_CONFIG] useLocalBackend:', API_CONFIG.useLocalBackend);
+console.log('[API_CONFIG] useMockData:', API_CONFIG.useMockData);
+
 // API Endpoints - Document expected request/response formats
 export const API_ENDPOINTS = {
-  // Authentication
+  // Authentication (mobile routes)
   AUTH: {
-    SEND_CODE: '/auth/send-code',          // POST { phone: string } -> { success: boolean, message: string }
-    VERIFY_CODE: '/auth/verify-code',      // POST { phone: string, code: string } -> { token: string, user: User }
-    REFRESH_TOKEN: '/auth/refresh-token',  // POST { refreshToken: string } -> { token: string }
-    LOGOUT: '/auth/logout',                // POST -> { success: boolean }
+    SEND_CODE: '/auth/mobile/send-code',          // POST { phone: string } -> { success: boolean, message: string }
+    VERIFY_CODE: '/auth/mobile/verify-code',      // POST { phone: string, code: string } -> { token: string, user: User }
+    REFRESH_TOKEN: '/auth/mobile/refresh',        // POST { refreshToken: string } -> { token: string }
+    LOGOUT: '/auth/mobile/logout',                // POST -> { success: boolean }
   },
 
-  // User Management
+  // User Management (mobile auth routes)
   USER: {
-    PROFILE: '/user/profile',              // GET -> User
-    UPDATE_PROFILE: '/user/profile',       // PUT { name?, language? } -> User
-    ADDRESSES: '/user/addresses',          // GET -> Address[]
-    ADD_ADDRESS: '/user/addresses',        // POST { title, address, lat, lng, isDefault } -> Address
-    UPDATE_ADDRESS: '/user/addresses/:id', // PUT { title?, address?, lat?, lng?, isDefault? } -> Address
-    DELETE_ADDRESS: '/user/addresses/:id', // DELETE -> { success: boolean }
+    PROFILE: '/auth/mobile/profile',       // GET -> User
+    UPDATE_PROFILE: '/auth/mobile/profile', // PUT { name?, language? } -> User
+    ADDRESSES: '/addresses',               // GET -> Address[]
+    ADD_ADDRESS: '/addresses',             // POST { title, address, lat, lng, isDefault } -> Address
+    UPDATE_ADDRESS: '/addresses/:id',      // PUT { title?, address?, lat?, lng?, isDefault? } -> Address
+    DELETE_ADDRESS: '/addresses/:id',      // DELETE -> { success: boolean }
   },
 
   // Firms (Vendors)
@@ -105,4 +132,17 @@ export const shouldUseMockData = (): boolean => {
   return useMockDataOverride !== null
     ? useMockDataOverride
     : API_CONFIG.useMockData;
+};
+
+// Check if should use local backend
+let useLocalBackendOverride: boolean | null = null;
+
+export const setUseLocalBackend = (useLocal: boolean) => {
+  useLocalBackendOverride = useLocal;
+};
+
+export const shouldUseLocalBackend = (): boolean => {
+  return useLocalBackendOverride !== null
+    ? useLocalBackendOverride
+    : API_CONFIG.useLocalBackend;
 };

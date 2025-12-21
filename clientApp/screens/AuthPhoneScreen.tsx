@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
-  View, Text, StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView, TouchableOpacity
+  View, Text, StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView, TouchableOpacity, Alert, ScrollView, Keyboard, TouchableWithoutFeedback
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -33,7 +33,18 @@ const AuthPhoneScreen: React.FC<AuthPhoneScreenProps> = ({ navigation }) => {
       await sendVerificationCode(fullPhone);
       navigation.navigate('VerifyCode', { phone: fullPhone });
     } catch (error: any) {
-      showError(error.message || t('errors.sendCodeFailed') || 'Failed to send verification code');
+      // Check if error is because phone number doesn't exist
+      const errorMessage = error.message || '';
+      if (errorMessage.includes('not found') || errorMessage.includes('does not exist') || errorMessage.includes('User not found')) {
+        // Phone number doesn't exist in database
+        Alert.alert(
+          t('auth.phoneNotFound') || 'Phone Not Found',
+          t('auth.phoneNotFoundMessage') || 'This phone number is not registered. Please sign up first.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        showError(errorMessage || t('errors.sendCodeFailed') || 'Failed to send verification code');
+      }
     } finally {
       setLoading(false);
     }
@@ -56,33 +67,45 @@ const AuthPhoneScreen: React.FC<AuthPhoneScreenProps> = ({ navigation }) => {
         </TouchableOpacity>
 
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
           style={styles.container}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
-          <View style={styles.content}>
-            {/* Phone Icon */}
-            <Text style={styles.phoneIcon}>📱</Text>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.innerContent}>
+                <View style={styles.content}>
+                  {/* Phone Icon */}
+                  <Text style={styles.phoneIcon}>📱</Text>
 
-            <Text style={styles.h1}>{t('auth.enterPhone')}</Text>
-            <Text style={styles.h2}>{t('auth.sendCodeMessage')}</Text>
+                  <Text style={styles.h1}>{t('auth.enterPhone')}</Text>
+                  <Text style={styles.h2}>{t('auth.sendCodeMessage')}</Text>
 
-            <PhoneInputDuolingo
-              value={phone}
-              onChangeText={setPhone}
-              containerStyle={styles.inputWrap}
-            />
-          </View>
+                  <PhoneInputDuolingo
+                    value={phone}
+                    onChangeText={setPhone}
+                    containerStyle={styles.inputWrap}
+                  />
+                </View>
 
-          <View style={styles.footer}>
-            <PrimaryButton
-              title={t('auth.sendCode')}
-              onPress={handleSendCode}
-              disabled={!valid || loading}
-              loading={loading}
-              style={styles.button}
-              textStyle={styles.buttonText}
-            />
-          </View>
+                <View style={styles.footer}>
+                  <PrimaryButton
+                    title={t('auth.sendCode')}
+                    onPress={handleSendCode}
+                    disabled={!valid || loading}
+                    loading={loading}
+                    style={styles.button}
+                    textStyle={styles.buttonText}
+                  />
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
@@ -104,16 +127,25 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: '#0C1633',
   },
-  container: { flex: 1, paddingHorizontal: 24 },
+  container: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  innerContent: {
+    flex: 1,
+    paddingHorizontal: 24,
+    minHeight: '100%',
+  },
   content: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: 8,
+    paddingTop: 20,
   },
   phoneIcon: {
-    fontSize: 200,
-    marginBottom: 20,
+    fontSize: 100,
+    marginBottom: 8,
   },
   h1: {
     fontSize: 32,
@@ -126,7 +158,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#6B7280',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 20,
     paddingHorizontal: 20,
   },
   inputWrap: { width: '100%' },

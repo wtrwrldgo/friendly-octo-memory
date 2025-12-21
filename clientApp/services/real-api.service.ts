@@ -16,6 +16,7 @@ import {
   Address,
   Driver,
 } from '../types';
+import { getFirmLogo, getProductImage } from '../utils/imageMapping';
 
 class RealApiService {
   // Authentication
@@ -65,12 +66,22 @@ class RealApiService {
 
   // Firms
   async getFirms(): Promise<Firm[]> {
-    return await HttpService.get<Firm[]>(API_ENDPOINTS.FIRMS.LIST);
+    const firms = await HttpService.get<Firm[]>(API_ENDPOINTS.FIRMS.LIST);
+    // Map to local asset images
+    return firms.map(firm => ({
+      ...firm,
+      logo: getFirmLogo(firm.name) || firm.logo,
+    }));
   }
 
   async getFirmById(firmId: string): Promise<Firm> {
     const url = API_ENDPOINTS.FIRMS.DETAIL.replace(':id', firmId);
-    return await HttpService.get<Firm>(url);
+    const firm = await HttpService.get<Firm>(url);
+    // Map to local asset image
+    return {
+      ...firm,
+      logo: getFirmLogo(firm.name) || firm.logo,
+    };
   }
 
   // Products
@@ -78,12 +89,32 @@ class RealApiService {
     const url = firmId
       ? `${API_ENDPOINTS.PRODUCTS.LIST}?firmId=${firmId}`
       : API_ENDPOINTS.PRODUCTS.LIST;
-    return await HttpService.get<Product[]>(url);
+    const products = await HttpService.get<Product[]>(url);
+    // Map to local asset images based on firm and volume
+    return products.map(product => ({
+      ...product,
+      image: getProductImage(this.getFirmNameFromProduct(product), product.volume) || product.image,
+    }));
   }
 
   async getProductById(productId: string): Promise<Product> {
     const url = API_ENDPOINTS.PRODUCTS.DETAIL.replace(':id', productId);
-    return await HttpService.get<Product>(url);
+    const product = await HttpService.get<Product>(url);
+    // Map to local asset image
+    return {
+      ...product,
+      image: getProductImage(this.getFirmNameFromProduct(product), product.volume) || product.image,
+    };
+  }
+
+  // Helper to extract firm name from product name
+  private getFirmNameFromProduct(product: Product): string {
+    const name = product.name.toLowerCase();
+    if (name.includes('aqua')) return 'aquawater';
+    if (name.includes('ocean')) return 'oceanwater';
+    if (name.includes('zam')) return 'zamzamwater';
+    if (name.includes('crystal')) return 'crystalwater';
+    return '';
   }
 
   // Orders

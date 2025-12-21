@@ -1,119 +1,190 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Address } from '../types';
-import { Colors, Spacing, FontSizes, BorderRadius } from '../constants/Colors';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ViewStyle,
+  StyleProp,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '../constants/Colors';
 
 interface AddressCardProps {
-  address: Address;
-  onPress: () => void;
-  selected?: boolean;
+  title: string;
+  subtitle: string;
+  onPress?: () => void;
+  onDelete?: () => void;
+  containerStyle?: StyleProp<ViewStyle>;
+  iconSource?: any;
+  isSelected?: boolean;
+  selectedBadgeText?: string;
 }
 
 export const AddressCard: React.FC<AddressCardProps> = ({
-  address,
+  title,
+  subtitle,
   onPress,
-  selected = false,
+  onDelete,
+  containerStyle,
+  iconSource,
+  isSelected = false,
 }) => {
   return (
     <TouchableOpacity
-      style={[styles.container, selected && styles.selected]}
+      style={[styles.card, isSelected && styles.cardSelected, containerStyle]}
+      activeOpacity={0.95}
       onPress={onPress}
-      activeOpacity={0.7}
     >
-      <View style={styles.iconContainer}>
-        <Text style={styles.icon}>
-          {address.isDefault ? '🏠' : '📍'}
-        </Text>
+      {/* Icon */}
+      <View style={[styles.iconWrapper, isSelected && styles.iconWrapperSelected]}>
+        {iconSource ? (
+          <Image source={iconSource} style={styles.icon} resizeMode="contain" />
+        ) : (
+          <Text style={styles.iconFallback}>📍</Text>
+        )}
       </View>
+
+      {/* Content */}
       <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{address.title}</Text>
-          {address.isDefault && (
-            <View style={styles.defaultBadge}>
-              <Text style={styles.defaultText}>Default</Text>
+        <View style={styles.titleRow}>
+          <Text style={[styles.title, isSelected && styles.titleSelected]} numberOfLines={1}>
+            {title}
+          </Text>
+          {isSelected && (
+            <View style={styles.selectedBadge}>
+              <Text style={styles.selectedBadgeText}>Active</Text>
             </View>
           )}
         </View>
-        <Text style={styles.address} numberOfLines={2}>
-          {address.address}
-        </Text>
+        <Text style={styles.subtitle} numberOfLines={2}>{subtitle}</Text>
       </View>
-      {selected && (
-        <View style={styles.checkmark}>
-          <Text style={styles.checkmarkIcon}>✓</Text>
-        </View>
-      )}
+
+      {/* Action */}
+      <View style={styles.actionArea}>
+        {onDelete && !isSelected && (
+          <TouchableOpacity
+            style={styles.deleteBtn}
+            onPress={onDelete}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Text style={styles.deleteIcon}>×</Text>
+          </TouchableOpacity>
+        )}
+        {isSelected && (
+          <View style={styles.checkCircle}>
+            <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+          </View>
+        )}
+      </View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
     flexDirection: 'row',
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1.5,
+    borderColor: '#F1F5F9',
   },
-  selected: {
+  cardSelected: {
     borderColor: Colors.primary,
-    borderWidth: 2,
+    backgroundColor: '#F0F7FF',
+    shadowColor: Colors.primary,
+    shadowOpacity: 0.1,
   },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.gray,
+  iconWrapper: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Spacing.md,
+    marginRight: 14,
+  },
+  iconWrapperSelected: {
+    backgroundColor: '#E0ECFF',
   },
   icon: {
+    width: 36,
+    height: 36,
+  },
+  iconFallback: {
     fontSize: 24,
   },
   content: {
     flex: 1,
   },
-  header: {
+  titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.xs,
+    marginBottom: 4,
   },
   title: {
-    fontSize: FontSizes.md,
-    fontWeight: '600',
-    color: Colors.text,
-    marginRight: Spacing.sm,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
   },
-  defaultBadge: {
+  titleSelected: {
+    color: Colors.primary,
+  },
+  selectedBadge: {
+    marginLeft: 8,
     backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
-  defaultText: {
-    fontSize: FontSizes.xs,
-    color: Colors.white,
-    fontWeight: '500',
+  selectedBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
-  address: {
-    fontSize: FontSizes.sm,
-    color: Colors.grayText,
-    lineHeight: 20,
+  subtitle: {
+    fontSize: 13,
+    color: '#64748B',
+    lineHeight: 18,
   },
-  checkmark: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  actionArea: {
+    marginLeft: 8,
+  },
+  checkCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkmarkIcon: {
-    color: Colors.white,
-    fontSize: FontSizes.sm,
+  checkIcon: {
+    fontSize: 16,
     fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  deleteBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#FEF2F2',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteIcon: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#EF4444',
+    marginTop: -2,
   },
 });

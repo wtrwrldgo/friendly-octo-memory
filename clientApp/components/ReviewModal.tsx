@@ -9,10 +9,10 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
-import { Colors, Spacing, FontSizes, BorderRadius } from '../constants/Colors';
-import { PrimaryButton } from './PrimaryButton';
 import { useLanguage } from '../context/LanguageContext';
+import { Colors, BorderRadius } from '../constants/Colors';
 
 interface ReviewModalProps {
   visible: boolean;
@@ -20,6 +20,7 @@ interface ReviewModalProps {
   onSubmit: (rating: number, comment: string) => void;
   driverName?: string;
   companyName: string;
+  companyLogo: string | number; // Logo URL or require() image
 }
 
 export const ReviewModal: React.FC<ReviewModalProps> = ({
@@ -28,6 +29,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
   onSubmit,
   driverName,
   companyName,
+  companyLogo,
 }) => {
   const { t } = useLanguage();
   const [rating, setRating] = useState(0);
@@ -50,6 +52,14 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
     onClose();
   };
 
+  const getRatingText = () => {
+    if (rating === 0) return '';
+    if (rating <= 2) return 'Poor';
+    if (rating === 3) return 'Average';
+    if (rating === 4) return 'Good';
+    return 'Excellent!';
+  };
+
   const renderStars = () => {
     return (
       <View style={styles.starsContainer}>
@@ -60,9 +70,17 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
             activeOpacity={0.7}
             style={styles.starButton}
           >
-            <Text style={[styles.star, rating >= star && styles.starFilled]}>
-              {rating >= star ? '⭐' : '☆'}
-            </Text>
+            <View style={[
+              styles.starCircle,
+              rating >= star && styles.starCircleActive
+            ]}>
+              <Text style={[
+                styles.starIcon,
+                rating >= star && styles.starIconActive
+              ]}>
+                ★
+              </Text>
+            </View>
           </TouchableOpacity>
         ))}
       </View>
@@ -90,53 +108,64 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>{t('review.title')}</Text>
-              <TouchableOpacity onPress={handleSkip} style={styles.closeButton}>
-                <Text style={styles.closeText}>✕</Text>
-              </TouchableOpacity>
+            {/* Close Button */}
+            <TouchableOpacity onPress={handleSkip} style={styles.closeButton}>
+              <Text style={styles.closeText}>✕</Text>
+            </TouchableOpacity>
+
+            {/* Driver Avatar */}
+            <View style={styles.avatarContainer}>
+              <View style={styles.avatarWrapper}>
+                <Image
+                  source={require('../assets/driver-avatar.png')}
+                  style={styles.avatarImage}
+                  resizeMode="cover"
+                />
+              </View>
             </View>
 
-            {/* Emoji Illustration */}
-            <View style={styles.emojiContainer}>
-              <Text style={styles.emoji}>
-                {rating === 0 ? '😊' : rating <= 2 ? '😞' : rating === 3 ? '😐' : rating === 4 ? '😊' : '🤩'}
-              </Text>
-            </View>
-
-            {/* Question */}
-            <Text style={styles.question}>{t('review.rateDelivery')}</Text>
+            {/* Title */}
+            <Text style={styles.title}>Rate Your Experience</Text>
+            <Text style={styles.subtitle}>
+              How was your delivery with {driverName || 'your driver'}?
+            </Text>
 
             {/* Star Rating */}
             {renderStars()}
 
-            {/* Driver Info (if available) */}
-            {driverName && (
-              <View style={styles.infoCard}>
-                <Text style={styles.infoLabel}>{t('review.rateDriver')}</Text>
-                <View style={styles.infoRow}>
-                  <Text style={styles.driverEmoji}>👨‍💼</Text>
-                  <Text style={styles.infoValue}>{driverName}</Text>
-                </View>
-              </View>
+            {/* Rating Text */}
+            {rating > 0 && (
+              <Text style={styles.ratingText}>{getRatingText()}</Text>
             )}
 
             {/* Company Info */}
-            <View style={styles.infoCard}>
-              <Text style={styles.infoLabel}>{t('review.rateCompany')}</Text>
-              <View style={styles.infoRow}>
-                <Text style={styles.companyEmoji}>💧</Text>
-                <Text style={styles.infoValue}>{companyName}</Text>
+            <View style={styles.companyCard}>
+              <View style={styles.companyInfo}>
+                <Text style={styles.companyLabel}>Company</Text>
+                <View style={styles.companyRow}>
+                  <View style={styles.companyLogoWrapper}>
+                    <Image
+                      source={typeof companyLogo === 'string'
+                        ? { uri: companyLogo }
+                        : companyLogo
+                      }
+                      style={styles.companyLogo}
+                      resizeMode="cover"
+                    />
+                  </View>
+                  <Text style={styles.companyName}>{companyName}</Text>
+                </View>
               </View>
             </View>
 
             {/* Comment Input */}
-            <Text style={styles.commentLabel}>{t('review.addComment')}</Text>
+            <Text style={styles.commentLabel}>
+              Tell us more (Optional)
+            </Text>
             <TextInput
               style={styles.commentInput}
-              placeholder={t('review.commentPlaceholder')}
-              placeholderTextColor={Colors.grayText}
+              placeholder="Share your experience with others..."
+              placeholderTextColor="#9BA0B8"
               multiline
               numberOfLines={4}
               value={comment}
@@ -146,12 +175,21 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
 
             {/* Buttons */}
             <View style={styles.buttonsContainer}>
-              <PrimaryButton
-                title={t('review.submitReview')}
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  rating === 0 && styles.submitButtonDisabled
+                ]}
                 onPress={handleSubmit}
-              />
+                disabled={rating === 0}
+              >
+                <Text style={styles.submitButtonText}>
+                  Submit Review
+                </Text>
+              </TouchableOpacity>
+
               <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-                <Text style={styles.skipText}>{t('review.skipReview')}</Text>
+                <Text style={styles.skipText}>Maybe later</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -168,125 +206,197 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   modalContent: {
     backgroundColor: Colors.white,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: Spacing.lg,
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Platform.OS === 'ios' ? Spacing.xxl : Spacing.lg,
-    maxHeight: '85%',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-  },
-  title: {
-    fontSize: FontSizes.xxl,
-    fontWeight: '700',
-    color: Colors.text,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    maxHeight: '90%',
   },
   closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F0F2F5',
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F4F7FF',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
   },
   closeText: {
     fontSize: 20,
-    color: Colors.grayText,
+    color: '#8A8FA6',
     fontWeight: '600',
   },
-  emojiContainer: {
+  avatarContainer: {
     alignItems: 'center',
-    marginVertical: Spacing.lg,
+    marginTop: 20,
+    marginBottom: 24,
   },
-  emoji: {
-    fontSize: 80,
+  avatarWrapper: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    overflow: 'hidden',
+    backgroundColor: '#E5EDFF',
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
+    shadowColor: '#2F6BFF',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
   },
-  question: {
-    fontSize: FontSizes.lg,
-    fontWeight: '600',
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: '800',
     color: Colors.text,
     textAlign: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 15,
+    color: '#8A8FA6',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 22,
   },
   starsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: Spacing.xl,
-    gap: Spacing.sm,
+    marginBottom: 16,
+    gap: 12,
   },
   starButton: {
-    padding: Spacing.xs,
+    padding: 4,
   },
-  star: {
-    fontSize: 48,
-    color: '#E0E0E0',
+  starCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#F4F7FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#E5E9F2',
   },
-  starFilled: {
-    color: '#FFD700',
+  starCircleActive: {
+    backgroundColor: '#FFD700',
+    borderColor: '#FFD700',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  infoCard: {
-    backgroundColor: '#F5F7FA',
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
+  starIcon: {
+    fontSize: 28,
+    color: '#D6DEFF',
   },
-  infoLabel: {
-    fontSize: FontSizes.sm,
-    color: Colors.grayText,
-    marginBottom: Spacing.xs,
+  starIconActive: {
+    color: '#FFFFFF',
   },
-  infoRow: {
-    flexDirection: 'row',
+  ratingText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#2EC973',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  companyCard: {
+    backgroundColor: '#F4F7FF',
+    borderRadius: BorderRadius.lg,
+    padding: 16,
+    marginBottom: 24,
+  },
+  companyInfo: {
     alignItems: 'center',
   },
-  driverEmoji: {
-    fontSize: 24,
-    marginRight: Spacing.sm,
+  companyLabel: {
+    fontSize: 13,
+    color: '#8A8FA6',
+    marginBottom: 8,
   },
-  companyEmoji: {
-    fontSize: 24,
-    marginRight: Spacing.sm,
+  companyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
-  infoValue: {
-    fontSize: FontSizes.md,
-    fontWeight: '600',
+  companyLogoWrapper: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+  },
+  companyLogo: {
+    width: '100%',
+    height: '100%',
+  },
+  companyName: {
+    fontSize: 17,
+    fontWeight: '700',
     color: Colors.text,
   },
   commentLabel: {
-    fontSize: FontSizes.md,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     color: Colors.text,
-    marginBottom: Spacing.sm,
+    marginBottom: 12,
   },
   commentInput: {
-    backgroundColor: '#F5F7FA',
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    fontSize: FontSizes.md,
+    backgroundColor: '#F4F7FF',
+    borderRadius: BorderRadius.lg,
+    padding: 16,
+    fontSize: 15,
     color: Colors.text,
     minHeight: 100,
-    marginBottom: Spacing.lg,
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   buttonsContainer: {
-    marginTop: Spacing.md,
+    marginTop: 8,
+  },
+  submitButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: 18,
+    alignItems: 'center',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#D6DEFF',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  submitButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: Colors.white,
   },
   skipButton: {
-    marginTop: Spacing.md,
+    marginTop: 16,
     alignItems: 'center',
-    padding: Spacing.sm,
+    padding: 12,
   },
   skipText: {
-    fontSize: FontSizes.md,
-    color: Colors.grayText,
+    fontSize: 15,
+    color: '#8A8FA6',
     fontWeight: '600',
   },
 });

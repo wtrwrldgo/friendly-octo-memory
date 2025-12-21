@@ -1,71 +1,108 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ImageSourcePropType } from 'react-native';
+import { Colors } from '../constants/Colors';
 import { Product } from '../types';
-import { Colors, Spacing } from '../constants/Colors';
+import { getProductImageByName } from '../utils/imageMapping';
 import { useLanguage } from '../context/LanguageContext';
 
-interface ProductCardProps {
+type Props = {
   product: Product;
   onAdd: () => void;
-  quantity?: number;
-  onIncrement?: () => void;
-  onDecrement?: () => void;
-}
+  quantity: number;
+  onIncrement: () => void;
+  onDecrement: () => void;
+};
 
-export const ProductCard: React.FC<ProductCardProps> = ({
+export const ProductCard: React.FC<Props> = ({
   product,
   onAdd,
-  quantity = 0,
+  quantity,
   onIncrement,
   onDecrement,
 }) => {
   const { t } = useLanguage();
+  const hasInCart = quantity > 0;
+  const [imageError, setImageError] = useState(false);
+
+  // Get local asset by product name (works in APK)
+  const localImage = getProductImageByName(product.name, product.volume);
+
+  // Determine image source - prioritize local assets for APK
+  const getImageSource = (): ImageSourcePropType | null => {
+    if (imageError) return null;
+    // Try local asset first (most reliable for APK)
+    if (localImage) return localImage;
+    // Fallback to bundled asset
+    if (typeof product.image === 'number') return product.image;
+    // Fallback to URL (for remote images)
+    if (typeof product.image === 'string' && product.image) return { uri: product.image };
+    return null;
+  };
+
+  const imageSource = getImageSource();
+
   return (
-    <View style={styles.container}>
-      {/* Product Image with Circular Background */}
+    <View style={styles.card}>
+      {/* Top image */}
       <View style={styles.imageWrapper}>
-        <View style={styles.circleBackground} />
-        <Image
-          source={{ uri: product.image }}
-          style={styles.image}
-          resizeMode="contain"
-        />
+        {imageSource ? (
+          <Image
+            source={imageSource}
+            style={styles.image}
+            resizeMode="contain"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <View style={styles.imagePlaceholder}>
+            <Text style={styles.imagePlaceholderText}>
+              {product.name?.[0] ?? '💧'}
+            </Text>
+          </View>
+        )}
       </View>
 
-      {/* Product Info */}
-      <View style={styles.content}>
-        <Text style={styles.name} numberOfLines={2}>
+      {/* Title + Volume Badge */}
+      <View style={styles.titleRow}>
+        <Text style={styles.title} numberOfLines={2}>
           {product.name}
         </Text>
-        <Text style={styles.volume}>{product.volume}</Text>
-        <Text style={styles.price}>{product.price.toLocaleString()} UZS</Text>
+        {product.volume && (
+          <View style={styles.volumeBadge}>
+            <Text style={styles.volumeText}>{product.volume}</Text>
+          </View>
+        )}
       </View>
 
-      {/* Add Button or Quantity Controls */}
-      {quantity === 0 ? (
+      {/* Price */}
+      <Text style={styles.price}>{product.price.toLocaleString()} <Text style={styles.currency}>UZS</Text></Text>
+
+      {/* Add Button / Counter */}
+      {!hasInCart ? (
         <TouchableOpacity
-          style={styles.addButton}
+          style={styles.addBtn}
           onPress={onAdd}
           activeOpacity={0.8}
         >
-          <Text style={styles.addButtonText}>{t('product.add')}</Text>
+          <Text style={styles.addText}>{t('product.add')}</Text>
         </TouchableOpacity>
       ) : (
-        <View style={styles.quantityContainer}>
+        <View style={styles.counterWrapper}>
           <TouchableOpacity
-            style={styles.quantityButton}
+            style={styles.counterBtn}
             onPress={onDecrement}
             activeOpacity={0.7}
           >
-            <Text style={styles.quantityButtonText}>-</Text>
+            <Text style={styles.counterSign}>−</Text>
           </TouchableOpacity>
-          <Text style={styles.quantity}>{quantity}</Text>
+
+          <Text style={styles.counterValue}>{quantity}</Text>
+
           <TouchableOpacity
-            style={styles.quantityButton}
+            style={styles.counterBtn}
             onPress={onIncrement}
             activeOpacity={0.7}
           >
-            <Text style={styles.quantityButtonText}>+</Text>
+            <Text style={styles.counterSign}>+</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -74,100 +111,136 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.white,
-    borderRadius: 24,
-    padding: Spacing.lg,
-    marginBottom: Spacing.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 16,
-    elevation: 2,
+  card: {
     width: '48%',
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
   },
+
   imageWrapper: {
     width: '100%',
-    height: 200,
+    height: 130,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
-    position: 'relative',
+    marginBottom: 10,
+    backgroundColor: '#F8F9FB',
+    borderRadius: 10,
+    overflow: 'hidden',
   },
-  circleBackground: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: '#E8F4F8',
-  },
+
   image: {
-    width: 180,
-    height: 180,
-    zIndex: 1,
+    width: 110,
+    height: 110,
   },
-  content: {
-    marginBottom: Spacing.md,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: 6,
-    lineHeight: 22,
-    minHeight: 44,
-  },
-  volume: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: Colors.grayText,
-    marginBottom: 8,
-  },
-  price: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: Spacing.md,
-  },
-  addButton: {
-    backgroundColor: '#4E7FFF',
-    paddingVertical: 14,
-    borderRadius: 16,
-    alignItems: 'center',
+
+  imagePlaceholder: {
+    width: 110,
+    height: 110,
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#EEF2F6',
+    borderRadius: 10,
   },
-  addButtonText: {
-    color: Colors.white,
-    fontSize: 16,
+
+  imagePlaceholderText: {
+    fontSize: 36,
+    color: Colors.primary,
+    fontWeight: '700',
+  },
+
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+
+  title: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.text,
+    flex: 1,
+    lineHeight: 17,
+  },
+
+  volumeBadge: {
+    backgroundColor: '#F0F4F8',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 5,
+    marginLeft: 6,
+  },
+
+  volumeText: {
+    fontSize: 10,
+    color: '#6B7280',
     fontWeight: '600',
   },
-  quantityContainer: {
+
+  price: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: Colors.text,
+    marginBottom: 12,
+    letterSpacing: -0.3,
+  },
+
+  currency: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#9CA3AF',
+  },
+
+  addBtn: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 11,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+
+  addText: {
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  counterWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#4E7FFF',
-    borderRadius: 16,
-    paddingVertical: 8,
-    paddingHorizontal: Spacing.sm,
-  },
-  quantityButton: {
-    width: 32,
-    height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: Colors.primary,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
     borderRadius: 10,
   },
-  quantityButtonText: {
-    fontSize: 20,
-    color: Colors.white,
-    fontWeight: '700',
+
+  counterBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  quantity: {
-    fontSize: 18,
+
+  counterSign: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+
+  counterValue: {
+    fontSize: 14,
     fontWeight: '700',
     color: Colors.white,
-    minWidth: 30,
+    minWidth: 24,
     textAlign: 'center',
   },
 });

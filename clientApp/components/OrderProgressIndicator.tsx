@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { OrderStage } from '../types';
 import { Colors, Spacing, FontSizes } from '../constants/Colors';
 import { useLanguage } from '../context/LanguageContext';
@@ -54,7 +55,7 @@ export const OrderProgressIndicator: React.FC<OrderProgressIndicatorProps> = ({
               isInactive && styles.circleInactive,
             ]}
           >
-            {isCompleted && <Text style={styles.checkmark}>✓</Text>}
+            {isCompleted && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
             {isActive && (
               <View style={styles.activeIndicator}>
                 <View style={styles.activeInnerCircle} />

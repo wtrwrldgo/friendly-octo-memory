@@ -7,12 +7,13 @@ import {
   TextInputProps,
   ViewStyle,
 } from 'react-native';
-import { Colors, Spacing, FontSizes, BorderRadius } from '../constants/Colors';
+import { Colors, Spacing, FontSizes } from '../constants/Colors';
 
 interface TextFieldProps extends TextInputProps {
   label?: string;
   error?: string;
   containerStyle?: ViewStyle;
+  icon?: string;
 }
 
 export const TextField: React.FC<TextFieldProps> = ({
@@ -20,16 +21,25 @@ export const TextField: React.FC<TextFieldProps> = ({
   error,
   containerStyle,
   style,
+  icon,
   ...inputProps
 }) => {
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <TextInput
-        style={[styles.input, error ? styles.inputError : null, style]}
-        placeholderTextColor={Colors.grayText}
-        {...inputProps}
-      />
+      <View style={styles.inputContainer}>
+        {icon && <Text style={styles.icon}>{icon}</Text>}
+        <TextInput
+          style={[
+            styles.input,
+            icon && styles.inputWithIcon,
+            error ? styles.inputError : null,
+            style
+          ]}
+          placeholderTextColor="#A0AEC0"
+          {...inputProps}
+        />
+      </View>
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
@@ -37,23 +47,43 @@ export const TextField: React.FC<TextFieldProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: Spacing.md,
+    marginBottom: 0,
   },
   label: {
-    fontSize: FontSizes.sm,
+    fontSize: 15,
     color: Colors.text,
-    marginBottom: Spacing.xs,
-    fontWeight: '500',
+    marginBottom: 10,
+    fontWeight: '600',
+  },
+  inputContainer: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  icon: {
+    position: 'absolute',
+    left: 18,
+    fontSize: 20,
+    zIndex: 1,
   },
   input: {
-    height: 56,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    fontSize: FontSizes.md,
+    flex: 1,
+    height: 62,
+    borderWidth: 2,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    fontSize: 16,
     color: Colors.text,
-    backgroundColor: Colors.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    shadowColor: Colors.primary,
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 5,
+  },
+  inputWithIcon: {
+    paddingLeft: 52,
   },
   inputError: {
     borderColor: Colors.error,

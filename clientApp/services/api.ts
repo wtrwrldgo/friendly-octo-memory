@@ -7,9 +7,10 @@
  * This is the primary interface that the app uses for all API calls.
  */
 
-import { shouldUseMockData } from '../config/api.config';
+import { shouldUseMockData, shouldUseLocalBackend } from '../config/api.config';
 import MockApiService from './mock-api.service';
 import SimpleSupabaseApiService from './simple-supabase-api.service';
+import LocalApiService from './local-api.service';
 import StorageService from './storage.service';
 import {
   Firm,
@@ -24,9 +25,22 @@ import {
 class ApiService {
   // Get the appropriate service based on configuration
   private getService() {
-    // For MVP launch: use Simple Supabase API (no edge functions needed!)
-    // This works immediately without deploying edge functions
-    return shouldUseMockData() ? MockApiService : SimpleSupabaseApiService;
+    // Priority: Mock > Local > Supabase
+    const useMock = shouldUseMockData();
+    const useLocal = shouldUseLocalBackend();
+
+    console.log('[ApiService] Routing decision:', { useMock, useLocal });
+
+    if (useMock) {
+      console.log('[ApiService] Using MockApiService');
+      return MockApiService;
+    }
+    if (useLocal) {
+      console.log('[ApiService] Using LocalApiService');
+      return LocalApiService; // ✅ Uses local PostgreSQL backend
+    }
+    console.log('[ApiService] Using SimpleSupabaseApiService');
+    return SimpleSupabaseApiService;
   }
 
   // Authentication
@@ -157,6 +171,8 @@ class ApiService {
     firmId: string;
     addressId: string;
     total: number;
+    preferredDeliveryTime?: string | null; // ISO string or null for "Now"
+    paymentMethod?: 'cash' | 'card';
   }): Promise<Order> {
     try {
       return await this.getService().createOrder(orderData);
@@ -231,6 +247,25 @@ class ApiService {
     }
   }
 
+  // Push Notifications
+  async registerPushToken(token: string, platform: string): Promise<{ success: boolean }> {
+    try {
+      return await this.getService().registerPushToken(token, platform);
+    } catch (error: any) {
+      console.error('Failed to register push token:', error);
+      return { success: false };
+    }
+  }
+
+  async unregisterPushToken(token: string): Promise<{ success: boolean }> {
+    try {
+      return await this.getService().unregisterPushToken(token);
+    } catch (error: any) {
+      console.error('Failed to unregister push token:', error);
+      return { success: false };
+    }
+  }
+
   // Helper method to check if using mock data
   isUsingMockData(): boolean {
     return shouldUseMockData();
@@ -270,6 +305,8 @@ export const createOrder = (orderData: {
   firmId: string;
   addressId: string;
   total: number;
+  preferredDeliveryTime?: string | null;
+  paymentMethod?: 'cash' | 'card';
 }) => new ApiService().createOrder(orderData);
 
 export const getOrderById = (orderId: string) => new ApiService().getOrderById(orderId);

@@ -2,7 +2,12 @@
  * Yandex MapKit Configuration
  */
 
-export const YANDEX_MAPKIT_KEY = '34c20e7b-cade-43bd-a252-fea9b47389e6';
+import Constants from 'expo-constants';
+
+export const YANDEX_MAPKIT_KEY =
+  Constants.expoConfig?.extra?.yandexMapkitKey ||
+  process.env.EXPO_PUBLIC_YANDEX_MAPKIT_KEY ||
+  '99c47a34-bfad-4945-a1ae-d0ee6bff4e0a'; // Fallback to .env value
 
 /**
  * Default location - Nukus, Uzbekistan

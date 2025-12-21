@@ -697,12 +697,28 @@ class SimpleSupabaseApiService {
   }
 
   // ============================================
+  // PUSH NOTIFICATIONS
+  // ============================================
+
+  async registerPushToken(token: string, platform: string): Promise<{ success: boolean }> {
+    // Supabase doesn't have push token support in this version
+    console.log('[Supabase] Register push token:', token.substring(0, 20), platform);
+    return { success: true };
+  }
+
+  async unregisterPushToken(token: string): Promise<{ success: boolean }> {
+    console.log('[Supabase] Unregister push token:', token.substring(0, 20));
+    return { success: true };
+  }
+
+  // ============================================
   // HELPER METHODS
   // ============================================
 
   private mapOrderData(data: any): Order {
     return {
       id: data.id,
+      orderNumber: data.order_number || `WG-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
       stage: data.stage as OrderStage,
       items: (data.order_items || []).map((item: any) => ({
         product: {
@@ -717,7 +733,11 @@ class SimpleSupabaseApiService {
         },
         quantity: item.quantity
       })),
+      subtotal: parseFloat(data.subtotal || data.total),
+      deliveryFee: parseFloat(data.delivery_fee || 0),
+      serviceFee: parseFloat(data.service_fee || 0),
       total: parseFloat(data.total),
+      paymentMethod: (data.payment_method as 'cash' | 'card' | 'wallet') || 'cash',
       firm: {
         id: data.firm.id,
         name: data.firm.name,
@@ -745,7 +765,8 @@ class SimpleSupabaseApiService {
         company: data.driver.company || 'Unknown'
       } : null,
       createdAt: new Date(data.created_at),
-      estimatedDelivery: new Date(data.estimated_delivery)
+      estimatedDelivery: new Date(data.estimated_delivery),
+      preferredDeliveryTime: data.preferred_delivery_time ? new Date(data.preferred_delivery_time) : null
     };
   }
 }

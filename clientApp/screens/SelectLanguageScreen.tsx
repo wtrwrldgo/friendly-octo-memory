@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, Pressable, Image, Animated, Easing, Platform
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -66,9 +67,6 @@ const SelectLanguageScreen: React.FC<Props> = ({ navigation }) => {
           })}
         </View>
 
-        {/* HINT */}
-        <Text style={styles.hint}>{t('auth.languageHint') || 'You can change the language later in Settings.'}</Text>
-
         {/* CTA */}
         <Pressable onPress={onContinue} disabled={!selected} style={[styles.button, !selected && { opacity: 0.5 }]}>
           <Text style={styles.buttonText}>{t('auth.continue') || 'Continue'}</Text>
@@ -108,7 +106,7 @@ function LanguageCard({
         <Text style={styles.languageName}>{name}</Text>
 
         {/* checkmark for active */}
-        {active && <Text style={styles.check}>✓</Text>}
+        {active && <Ionicons name="checkmark-circle" size={24} color="#2F7BFF" />}
       </Pressable>
     </Animated.View>
   );
@@ -160,13 +158,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
     color: '#2F7BFF',
-  },
-
-  hint: {
-    textAlign: 'center',
-    color: '#6B7280',
-    fontSize: 13,
-    marginBottom: 10,
   },
 
   button: {

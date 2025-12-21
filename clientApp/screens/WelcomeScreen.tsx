@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../types';
 import { useLanguage } from '../context/LanguageContext';
@@ -30,6 +31,7 @@ type Slide = {
 };
 
 const DOT_SIZE = 8;
+const ONBOARDING_COMPLETED_KEY = '@watergo_onboarding_completed';
 
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
   const { t } = useLanguage();
@@ -64,16 +66,20 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
     [index, isLast, SLIDES, t]
   );
 
-  const goNext = useCallback(() => {
+  const goNext = useCallback(async () => {
     if (isLast) {
-      navigation.navigate('AskName');
+      // Mark onboarding as completed
+      await AsyncStorage.setItem(ONBOARDING_COMPLETED_KEY, 'true');
+      navigation.navigate('AuthPhone');
       return;
     }
     listRef.current?.scrollToIndex({ index: index + 1, animated: true });
   }, [index, isLast, navigation]);
 
-  const skip = useCallback(() => {
-    navigation.navigate('AskName');
+  const skip = useCallback(async () => {
+    // Mark onboarding as completed
+    await AsyncStorage.setItem(ONBOARDING_COMPLETED_KEY, 'true');
+    navigation.navigate('AuthPhone');
   }, [navigation]);
 
   return (
@@ -149,6 +155,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
             <Pressable style={styles.primaryBtn} onPress={goNext}>
               <Text style={styles.primaryText}>{primaryCta}</Text>
             </Pressable>
+
           </View>
         </View>
       </SafeAreaView>
@@ -273,18 +280,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '800',
     fontSize: 18,
-  },
-  secondaryBtn: {
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryText: {
-    color: '#6B7280',
-    fontWeight: '700',
-    fontSize: 16,
   },
 });
 

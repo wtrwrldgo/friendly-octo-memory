@@ -1,14 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useLanguage } from '../context/LanguageContext';
 import { Product } from '../types';
-import { Colors, Spacing, FontSizes } from '../constants/Colors';
+import { Colors, Spacing } from '../constants/Colors';
 import { HeaderBar } from '../components/HeaderBar';
 import { ProductCard } from '../components/ProductCard';
 import { useCart } from '../context/CartContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useOrder } from '../context/OrderContext';
 import { getProductsByFirm } from '../services/api';
+import ActiveOrderPopup from '../components/ActiveOrderPopup';
+import { getFirmLogo } from '../utils/imageMapping';
 
 const FirmDetailsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -16,8 +28,42 @@ const FirmDetailsScreen: React.FC = () => {
   const { firm } = route.params;
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showActiveOrderPopup, setShowActiveOrderPopup] = useState(false);
+
   const { cart, addToCart, incrementQuantity, decrementQuantity, getItemQuantity } = useCart();
+  const { hasActiveOrder, currentOrder } = useOrder();
   const { t } = useLanguage();
+  const insets = useSafeAreaInsets();
+
+  // Get single banner image
+  const getBannerSource = () => {
+    const localLogo = getFirmLogo(firm.name);
+    if (localLogo) return localLogo;
+    if (typeof firm.logo === 'number') return firm.logo;
+    if (typeof firm.logo === 'string' && firm.logo) return { uri: firm.logo };
+    return null;
+  };
+
+  const bannerSource = getBannerSource();
+
+  // Handle add to cart with active order check
+  const handleAddToCart = (product: Product) => {
+    if (hasActiveOrder) {
+      setShowActiveOrderPopup(true);
+      return;
+    }
+    addToCart(product, firm);
+  };
+
+  // Handle increment with active order check
+  const handleIncrement = (productId: string) => {
+    if (hasActiveOrder) {
+      setShowActiveOrderPopup(true);
+      return;
+    }
+    incrementQuantity(productId);
+  };
 
   useEffect(() => {
     loadProducts();
@@ -29,78 +75,129 @@ const FirmDetailsScreen: React.FC = () => {
       setProducts(data);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadProducts();
+  }, []);
+
+  const cartTotalUZS = Math.round(cart.total);
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <HeaderBar title={firm.name} onBack={() => navigation.goBack()} />
 
-      {/* Firm Info Banner */}
-      <View style={styles.firmInfo}>
-        {/* Full PNG Banner (75% of space) */}
-        <Image
-          source={{ uri: firm.logo.trim() }}
-          style={styles.logoBanner}
-          resizeMode="cover"
-        />
+      {/* Brand Banner - static, simple header */}
+      <View style={styles.bannerContainer}>
+        {bannerSource ? (
+          <Image source={bannerSource} style={styles.bannerImage} resizeMode="cover" />
+        ) : (
+          <View style={styles.bannerPlaceholder}>
+            <Text style={styles.bannerPlaceholderText}>{firm.name?.[0] ?? 'W'}</Text>
+          </View>
+        )}
+      </View>
 
-        {/* Info Overlay at Bottom (25% of space) */}
-        <View style={styles.infoOverlay}>
-          <View style={styles.nameRatingRow}>
-            <Text style={styles.firmName}>{firm.name}</Text>
-            <View style={styles.ratingBadge}>
-              <Text style={styles.ratingValue}>{firm.rating.toFixed(1)}</Text>
-              <Text style={styles.ratingStar}>★</Text>
-            </View>
-          </View>
-          <View style={styles.infoRow}>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>{t('firmDetails.delivery')}</Text>
-              <Text style={styles.infoValue}>{firm.deliveryTime}</Text>
-            </View>
-            <View style={styles.infoDivider} />
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>{t('firmDetails.minOrder')}</Text>
-              <Text style={styles.infoValue}>{firm.minOrder.toLocaleString()} UZS</Text>
-            </View>
-          </View>
+      {/* Company Info - flat, integrated */}
+      <View style={styles.infoBar}>
+        <View style={styles.infoItem}>
+          <Image
+            source={require('../assets/ui-icons/delivery-icon.png')}
+            style={styles.infoIcon}
+            resizeMode="contain"
+          />
+          <Text style={styles.infoValue}>{firm.deliveryTime}</Text>
+        </View>
+        <View style={styles.infoDivider} />
+        <View style={styles.infoItem}>
+          <Image
+            source={require('../assets/ui-icons/address-icon.png')}
+            style={styles.infoIcon}
+            resizeMode="contain"
+          />
+          <Text style={styles.infoValue}>{firm.location || 'Nukus'}</Text>
+        </View>
+        <View style={styles.infoDivider} />
+        <View style={styles.infoItem}>
+          <Image
+            source={require('../assets/ui-icons/star-rating.png')}
+            style={styles.infoIcon}
+            resizeMode="contain"
+          />
+          <Text style={styles.ratingValue}>{(Number(firm.rating) || 0).toFixed(1)}</Text>
         </View>
       </View>
 
       {/* Products Grid */}
-      <FlatList
-        key="product-grid-2-columns"
-        data={products}
-        renderItem={({ item }) => (
-          <ProductCard
-            product={item}
-            onAdd={() => addToCart(item, firm)}
-            quantity={getItemQuantity(item.id)}
-            onIncrement={() => incrementQuantity(item.id)}
-            onDecrement={() => decrementQuantity(item.id)}
-          />
-        )}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={[
-          styles.list,
-          cart.items.length > 0 && styles.listWithCart
-        ]}
-        refreshing={loading}
-      />
+      {loading ? (
+        <View style={styles.loadingWrapper}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          key="product-grid-2-columns"
+          data={products}
+          renderItem={({ item }) => (
+            <ProductCard
+              product={item}
+              onAdd={() => handleAddToCart(item)}
+              quantity={getItemQuantity(item.id)}
+              onIncrement={() => handleIncrement(item.id)}
+              onDecrement={() => decrementQuantity(item.id)}
+            />
+          )}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={[
+            styles.list,
+            cart.items.length > 0 && styles.listWithCart,
+            products.length === 0 && styles.emptyListPadding,
+          ]}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>No products available</Text>
+              <Text style={styles.emptySubtitle}>
+                This firm doesn't have any products yet
+              </Text>
+            </View>
+          }
+        />
+      )}
 
-      {/* Cart Button */}
+      {/* Cart Info Card */}
       {cart.items.length > 0 && (
         <TouchableOpacity
-          style={styles.cartButton}
+          style={[styles.cartCard, { bottom: Math.max(Spacing.lg, insets.bottom + 12) }]}
           onPress={() => navigation.navigate('CartTab')}
+          activeOpacity={0.85}
         >
-          <Text style={styles.cartText}>{t('firmDetails.viewCart')} ({cart.items.length})</Text>
-          <Text style={styles.cartTotal}>${cart.total.toFixed(2)}</Text>
+          <View style={styles.cartIconWrapper}>
+            <Image source={require('../assets/tab-icons/cart-icon.png')} style={styles.cartIcon} resizeMode="contain" />
+            <View style={styles.cartBadge}>
+              <Text style={styles.cartBadgeText}>{cart.items.length}</Text>
+            </View>
+          </View>
+          <View style={styles.cartContent}>
+            <Text style={styles.cartTitle}>{t('cart.title')}</Text>
+            <Text style={styles.cartSubtitle}>{cart.items.length} {t('cart.items')}</Text>
+          </View>
+          <Text style={styles.cartTotal}>{t('cart.total')}: {cartTotalUZS.toLocaleString()} UZS</Text>
         </TouchableOpacity>
       )}
+
+      {/* Active Order Popup */}
+      <ActiveOrderPopup
+        visible={showActiveOrderPopup}
+        onClose={() => setShowActiveOrderPopup(false)}
+        onTrackOrder={() => navigation.navigate('OrderTracking', { orderId: currentOrder?.id })}
+      />
     </SafeAreaView>
   );
 };
@@ -110,118 +207,160 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.gray,
   },
-  firmInfo: {
-    height: 320,
-    position: 'relative',
-    overflow: 'hidden',
+  // Banner - static, simple brand header
+  bannerContainer: {
+    height: 175,
+    backgroundColor: '#F5F7FA',
   },
-  logoBanner: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '65%', // PNG fills 65% of banner height
+  bannerImage: {
     width: '100%',
+    height: '100%',
   },
-  infoOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '35%', // More space for info (35% instead of 25%)
+  bannerPlaceholder: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F5F7FA',
+  },
+  bannerPlaceholderText: {
+    fontSize: 48,
+    fontWeight: '700',
+    color: Colors.primary,
+    opacity: 0.3,
+  },
+  // Info bar - flat, integrated with page
+  infoBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.white,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  nameRatingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
-  },
-  firmName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: Colors.text,
-    flex: 1,
-  },
-  ratingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF3E0',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  ratingValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: Colors.text,
-    marginRight: 3,
-  },
-  ratingStar: {
-    fontSize: 14,
-    color: '#FF9800',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
+    justifyContent: 'center',
   },
-  infoLabel: {
-    fontSize: 12,
-    color: Colors.grayText,
-    marginBottom: 2,
-    fontWeight: '500',
+  infoIcon: {
+    width: 18,
+    height: 18,
+    marginRight: 6,
+    opacity: 0.7,
   },
   infoValue: {
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  ratingValue: {
+    fontSize: 13,
     fontWeight: '600',
-    color: Colors.text,
+    color: '#F59E0B',
   },
   infoDivider: {
     width: 1,
-    height: 30,
-    backgroundColor: Colors.border,
-    marginHorizontal: Spacing.md,
+    height: 16,
+    backgroundColor: '#E5E7EB',
   },
   list: {
-    padding: Spacing.md,
-    paddingBottom: Spacing.md,
+    padding: 16,
   },
   row: {
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.xs,
   },
   listWithCart: {
-    paddingBottom: 120, // Extra padding when cart button is visible (cart button height + spacing)
+    paddingBottom: 100,
   },
-  cartButton: {
+  emptyListPadding: {
+    flexGrow: 1,
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 40,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    color: Colors.grayText,
+    textAlign: 'center',
+    paddingHorizontal: 24,
+  },
+  loadingWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cartCard: {
     position: 'absolute',
-    bottom: Spacing.lg,
-    left: Spacing.lg,
-    right: Spacing.lg,
+    left: Spacing.md,
+    right: Spacing.md,
+    height: 58,
     backgroundColor: Colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: Spacing.md,
-    borderRadius: 12,
+    paddingHorizontal: 12,
+    borderRadius: 16,
   },
-  cartText: {
-    fontSize: FontSizes.md,
+  cartIconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  cartIcon: {
+    width: 20,
+    height: 20,
+    tintColor: '#FFFFFF',
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: -3,
+    right: -3,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  cartBadgeText: {
+    fontSize: 10,
     fontWeight: '600',
-    color: Colors.white,
+    color: Colors.primary,
+  },
+  cartContent: {
+    flex: 1,
+  },
+  cartTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 1,
+  },
+  cartSubtitle: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: 'rgba(255,255,255,0.75)',
   },
   cartTotal: {
-    fontSize: FontSizes.lg,
-    fontWeight: '700',
-    color: Colors.white,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
 

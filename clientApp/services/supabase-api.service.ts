@@ -255,8 +255,7 @@ class SupabaseApiService {
       const { data, error } = await supabase
         .from('firms')
         .select('*')
-        .eq('is_active', true)
-        .order('rating', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
@@ -563,6 +562,7 @@ class SupabaseApiService {
   private mapOrderData(data: any): Order {
     return {
       id: data.id,
+      orderNumber: data.order_number || `WG-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
       stage: data.stage as OrderStage,
       items: (data.order_items || []).map((item: any) => ({
         product: {
@@ -577,7 +577,11 @@ class SupabaseApiService {
         },
         quantity: item.quantity
       })),
+      subtotal: parseFloat(data.subtotal || data.total),
+      deliveryFee: parseFloat(data.delivery_fee || 0),
+      serviceFee: parseFloat(data.service_fee || 0),
       total: parseFloat(data.total),
+      paymentMethod: (data.payment_method as 'cash' | 'card' | 'wallet') || 'cash',
       firm: {
         id: data.firm.id,
         name: data.firm.name,
@@ -605,7 +609,8 @@ class SupabaseApiService {
         company: data.driver.company || 'Unknown'
       } : null,
       createdAt: new Date(data.created_at),
-      estimatedDelivery: new Date(data.estimated_delivery)
+      estimatedDelivery: new Date(data.estimated_delivery),
+      preferredDeliveryTime: data.preferred_delivery_time ? new Date(data.preferred_delivery_time) : null
     };
   }
 }

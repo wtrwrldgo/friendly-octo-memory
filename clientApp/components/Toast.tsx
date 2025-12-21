@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import { Text, StyleSheet, Animated, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, FontSizes } from '../constants/Colors';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
@@ -78,17 +79,17 @@ export const Toast: React.FC<ToastProps> = ({
     }
   };
 
-  const getIcon = () => {
+  const getIconName = (): keyof typeof Ionicons.glyphMap => {
     switch (type) {
       case 'success':
-        return '✓';
+        return 'checkmark';
       case 'error':
-        return '✕';
+        return 'close';
       case 'warning':
-        return '⚠';
+        return 'warning';
       case 'info':
       default:
-        return 'ℹ';
+        return 'information';
     }
   };
 
@@ -104,7 +105,9 @@ export const Toast: React.FC<ToastProps> = ({
         onPress={hideToast}
         activeOpacity={0.9}
       >
-        <Text style={styles.icon}>{getIcon()}</Text>
+        <View style={styles.iconCircle}>
+          <Ionicons name={getIconName()} size={18} color={getBackgroundColor()} />
+        </View>
         <Text style={styles.message} numberOfLines={2}>
           {message}
         </Text>
@@ -132,10 +135,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.md,
   },
-  icon: {
-    fontSize: 20,
-    color: Colors.white,
+  iconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: Spacing.sm,
+  },
+  icon: {
+    fontSize: 18,
     fontWeight: 'bold',
   },
   message: {

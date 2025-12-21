@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView,
-  TextInput, Image, Pressable
+  TextInput, Image, Pressable, ScrollView
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -18,7 +18,7 @@ type VerifyCodeScreenProps = {
   route: RouteProp<AuthStackParamList, 'VerifyCode'>;
 };
 
-const CODE_LENGTH = 4;
+const CODE_LENGTH = 6;
 const RESEND_SECONDS = 60;
 
 const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({ navigation, route }) => {
@@ -29,7 +29,7 @@ const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({ navigation, route }
   const inputRef = useRef<TextInput>(null);
   const { t } = useLanguage();
   const { showError, showSuccess } = useToast();
-  const { user, setUser } = useUser();
+  const { user, setUser, loadAddressesFromAPI } = useUser();
 
   // Countdown timer
   useEffect(() => {
@@ -63,12 +63,57 @@ const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({ navigation, route }
     try {
       setLoading(true);
       const result = await verifyCode(phone, code);
-      // Merge the existing user data (name, etc.) with the API response
-      setUser({ ...user, ...result.user });
+
+      // Set user data first
+      const mergedUser = {
+        ...result.user,
+        name: result.user.name || user?.name || 'Guest',
+        language: user?.language || result.user.language || 'en',
+      };
+      setUser(mergedUser);
       showSuccess(t('auth.verify') || 'Verified!');
-      navigation.navigate('SelectAddress');
+
+      // Always try to load addresses from API to check if returning user
+      console.log('Loading addresses from API...');
+      await loadAddressesFromAPI();
+
+      // Check if user has addresses saved - if yes, they're a returning user
+      // The addresses state will be updated by loadAddressesFromAPI
+      // App.tsx will handle navigation based on isAuthenticated state
+      // If addresses exist -> go to Home (handled by App.tsx)
+      // If no addresses -> need to go through onboarding
+
+      // For new users, navigate based on what they need
+      const hasProperName = mergedUser.name && mergedUser.name !== 'Guest' && mergedUser.name !== 'User';
+
+      if (!hasProperName) {
+        // User needs to enter their name first
+        navigation.navigate('AskName');
+      } else {
+        // User has a name - check if they need to add an address
+        // loadAddressesFromAPI was called above, but for new users it will return empty
+        // We need to navigate to AddressSelect for new users without addresses
+        // A small delay to let the addresses state update
+        setTimeout(() => {
+          // If user has addresses (returning user), App.tsx will switch to MainNavigator
+          // If user has no addresses (new user), navigate to AddressSelect
+          navigation.navigate('AddressSelect');
+        }, 100);
+      }
     } catch (e: any) {
-      showError(e?.message || t('errors.invalidCode') || 'Invalid code, try again');
+      // Check if error is related to invalid/incorrect code
+      const errorMsg = e?.message?.toLowerCase() || '';
+      const isInvalidCode = errorMsg.includes('invalid') ||
+                           errorMsg.includes('incorrect') ||
+                           errorMsg.includes('wrong') ||
+                           errorMsg.includes('expired') ||
+                           errorMsg.includes('code');
+
+      if (isInvalidCode) {
+        showError(t('errors.invalidCode') || 'Invalid code. Please try again.');
+      } else {
+        showError(t('errors.networkError') || 'Something went wrong. Please try again.');
+      }
       setCode('');
       inputRef.current?.focus();
     } finally {
@@ -112,80 +157,90 @@ const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({ navigation, route }
     >
       <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
           style={styles.container}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
-          <View style={styles.content}>
-            {/* Water drop with envelope mascot */}
-            <Image
-              source={{ uri: 'https://i.ibb.co/hFF6mPZT/Chat-GPT-Image-8-2025-15-50-19.png' }}
-              style={styles.hero}
-              resizeMode="contain"
-              accessibilityIgnoresInvertColors
-            />
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            <View style={styles.innerContent}>
+              <View style={styles.content}>
+                {/* Water drop with envelope mascot */}
+                <Image
+                  source={require('../assets/illustrations/verify-phone.png')}
+                  style={styles.hero}
+                  resizeMode="contain"
+                  accessibilityIgnoresInvertColors
+                />
 
-            <Text style={styles.h1}>
-              {t('auth.enterCodeTitle') || 'Enter the code\nwe sent to'}
-            </Text>
-            <Text style={styles.phone}>{phonePretty || phone}</Text>
+                <Text style={styles.h1}>
+                  {t('auth.enterCodeTitle') || 'Enter the code\nwe sent to'}
+                </Text>
+                <Text style={styles.phone}>{phonePretty || phone}</Text>
 
-            {/* Code input boxes */}
-            <Pressable onPress={() => inputRef.current?.focus()} style={{ width: '100%' }}>
-              <View style={styles.codeRow}>
-                {Array.from({ length: CODE_LENGTH }).map((_, i) => {
-                  const char = code[i] ?? '';
-                  const isActive = i === code.length;
-                  return (
-                    <View key={i} style={[styles.codeBox, isActive && styles.codeBoxActive]}>
-                      <Text style={styles.codeChar}>{char}</Text>
-                    </View>
-                  );
-                })}
+                {/* Code input boxes */}
+                <Pressable onPress={() => inputRef.current?.focus()} style={{ width: '100%' }}>
+                  <View style={styles.codeRow}>
+                    {Array.from({ length: CODE_LENGTH }).map((_, i) => {
+                      const char = code[i] ?? '';
+                      const isActive = i === code.length;
+                      return (
+                        <View key={i} style={[styles.codeBox, isActive && styles.codeBoxActive]}>
+                          <Text style={styles.codeChar}>{char}</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </Pressable>
+
+                <TextInput
+                  ref={inputRef}
+                  value={code}
+                  onChangeText={handleChange}
+                  autoFocus
+                  keyboardType="number-pad"
+                  textContentType="oneTimeCode"
+                  maxLength={CODE_LENGTH}
+                  importantForAutofill="yes"
+                  style={styles.hiddenInput}
+                />
+
+                <View style={{ height: 14 }} />
+
+                {/* Resend Code Button */}
+                <Pressable disabled={seconds > 0} onPress={handleResend}>
+                  <Text style={[styles.resendLine, seconds > 0 && { opacity: 0.4 }]}>
+                    {seconds > 0
+                      ? `${t('auth.resendIn') || 'Resend code in'} ${formatTimer(seconds)}`
+                      : t('auth.resendCode') || 'Resend code'
+                    }
+                  </Text>
+                </Pressable>
+
+                {/* Change Number Link */}
+                <Pressable onPress={handleChangeNumber}>
+                  <Text style={styles.link}>
+                    {t('auth.changeNumber') || 'Change number'}
+                  </Text>
+                </Pressable>
               </View>
-            </Pressable>
 
-            <TextInput
-              ref={inputRef}
-              value={code}
-              onChangeText={handleChange}
-              autoFocus
-              keyboardType="number-pad"
-              textContentType="oneTimeCode"
-              maxLength={CODE_LENGTH}
-              importantForAutofill="yes"
-              style={styles.hiddenInput}
-            />
-
-            <View style={{ height: 14 }} />
-
-            {/* Resend Code Button */}
-            <Pressable disabled={seconds > 0} onPress={handleResend}>
-              <Text style={[styles.resendLine, seconds > 0 && { opacity: 0.4 }]}>
-                {seconds > 0
-                  ? `${t('auth.resendIn') || 'Resend code in'} ${formatTimer(seconds)}`
-                  : t('auth.resendCode') || 'Resend code'
-                }
-              </Text>
-            </Pressable>
-
-            {/* Change Number Link */}
-            <Pressable onPress={handleChangeNumber}>
-              <Text style={styles.link}>
-                {t('auth.changeNumber') || 'Change number'}
-              </Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.footer}>
-            <PrimaryButton
-              title={t('auth.continue') || 'Continue'}
-              onPress={handleContinue}
-              disabled={!filled || loading}
-              loading={loading}
-              style={styles.button}
-              textStyle={styles.buttonText}
-            />
-          </View>
+              <View style={styles.footer}>
+                <PrimaryButton
+                  title={t('auth.continue') || 'Continue'}
+                  onPress={handleContinue}
+                  disabled={!filled || loading}
+                  loading={loading}
+                  style={styles.button}
+                  textStyle={styles.buttonText}
+                />
+              </View>
+            </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
@@ -198,20 +253,29 @@ function formatTimer(s: number) {
   return `${mm}:${ss}`;
 }
 
-const BOX = 64;
-const RADIUS = 20;
+const BOX = 48;
+const RADIUS = 14;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 24 },
+  container: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  innerContent: {
+    flex: 1,
+    paddingHorizontal: 24,
+    minHeight: '100%',
+  },
   content: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
+    paddingTop: 20,
   },
   hero: {
-    width: 200,
-    height: 200,
+    width: 160,
+    height: 160,
     marginBottom: 8,
   },
   h1: {

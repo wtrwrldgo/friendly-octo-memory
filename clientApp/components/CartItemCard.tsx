@@ -19,7 +19,11 @@ export const CartItemCard: React.FC<CartItemCardProps> = ({
   return (
     <View style={styles.container}>
       {/* Product Image */}
-      <Image source={{ uri: item.product.image }} style={styles.image} />
+      {typeof item.product.image === 'string' ? (
+        <Image source={{ uri: item.product.image }} style={styles.image} resizeMode="contain" />
+      ) : (
+        <Image source={item.product.image} style={styles.image} resizeMode="contain" />
+      )}
 
       {/* Product Info */}
       <View style={styles.content}>
@@ -44,7 +48,7 @@ export const CartItemCard: React.FC<CartItemCardProps> = ({
           {item.product.price.toLocaleString()} UZS
         </Text>
         <TouchableOpacity onPress={onRemove} style={styles.deleteButton}>
-          <Text style={styles.deleteIcon}>🗑️</Text>
+          <Text style={styles.deleteIcon}>×</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -94,7 +98,7 @@ const styles = StyleSheet.create({
   quantityButton: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: BorderRadius.sm,
     backgroundColor: Colors.gray,
     justifyContent: 'center',
     alignItems: 'center',
@@ -123,9 +127,19 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   deleteButton: {
-    padding: 4,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.error,
+    borderWidth: 2,
+    borderColor: Colors.error,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   deleteIcon: {
-    fontSize: 24,
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.white,
+    lineHeight: 18,
   },
 });

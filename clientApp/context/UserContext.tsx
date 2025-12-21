@@ -13,6 +13,7 @@ interface UserContextType {
   setSelectedAddress: (address: Address | null) => void;
   updateUser: (updates: Partial<User>) => void;
   addAddress: (address: Omit<Address, 'id'>) => Promise<Address>;
+  loadAddressesFromAPI: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -37,7 +38,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (BYPASS_AUTH) {
         setUser(MOCK_USER);
         setAddresses([MOCK_ADDRESS]);
-        setSelectedAddress(MOCK_ADDRESS);
+        // Don't pre-select address - user should select manually
+        setSelectedAddress(null);
         setIsLoaded(true);
         return;
       }
@@ -49,8 +51,22 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       ]);
 
       if (userData) setUser(JSON.parse(userData));
-      if (addressesData) setAddresses(JSON.parse(addressesData));
-      if (selectedAddressData) setSelectedAddress(JSON.parse(selectedAddressData));
+
+      const parsedAddresses = addressesData ? JSON.parse(addressesData) : [];
+      setAddresses(parsedAddresses);
+
+      // Only set selected address if it exists in the addresses array
+      if (selectedAddressData) {
+        const parsedSelectedAddress = JSON.parse(selectedAddressData);
+        const addressExists = parsedAddresses.some((addr: Address) => addr.id === parsedSelectedAddress.id);
+        if (addressExists) {
+          setSelectedAddress(parsedSelectedAddress);
+        } else {
+          // Address was deleted, clear selection
+          setSelectedAddress(null);
+          await AsyncStorage.removeItem(SELECTED_ADDRESS_STORAGE_KEY);
+        }
+      }
     } catch (error) {
       console.error('Failed to load persisted user data:', error);
     } finally {
@@ -91,6 +107,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const updateUser = (updates: Partial<User>) => {
     if (user) {
       setUser({ ...user, ...updates });
+    } else {
+      // Create a new user object during signup if user doesn't exist yet
+      setUser({
+        id: '',
+        name: updates.name || 'Guest',
+        phone: updates.phone || '',
+        language: updates.language || 'en',
+        ...updates,
+      } as User);
     }
   };
 
@@ -117,6 +142,20 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Load addresses from API (used after login for returning users)
+  const loadAddressesFromAPI = async (): Promise<void> => {
+    try {
+      console.log('UserContext - Loading addresses from API...');
+      const apiAddresses = await ApiService.getUserAddresses();
+      console.log('UserContext - Loaded addresses from API:', apiAddresses.length);
+      if (apiAddresses && apiAddresses.length > 0) {
+        setAddresses(apiAddresses);
+      }
+    } catch (error) {
+      console.error('UserContext - Failed to load addresses from API:', error);
+    }
+  };
+
   const setSelectedAddressWithLogging = (address: Address | null) => {
     console.log('Setting selected address:', address);
     setSelectedAddress(address);
@@ -133,6 +172,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setSelectedAddress: setSelectedAddressWithLogging,
         updateUser,
         addAddress,
+        loadAddressesFromAPI,
       }}
     >
       {children}

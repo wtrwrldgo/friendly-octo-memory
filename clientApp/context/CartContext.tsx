@@ -12,6 +12,10 @@ interface CartContextType {
   decrementQuantity: (productId: string) => void;
   clearCart: () => void;
   getItemQuantity: (productId: string) => number;
+  // Active order blocking
+  activeOrderPopupVisible: boolean;
+  showActiveOrderPopup: () => void;
+  hideActiveOrderPopup: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -23,6 +27,10 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     firm: null,
   });
   const [isLoaded, setIsLoaded] = useState(false);
+  const [activeOrderPopupVisible, setActiveOrderPopupVisible] = useState(false);
+
+  const showActiveOrderPopup = () => setActiveOrderPopupVisible(true);
+  const hideActiveOrderPopup = () => setActiveOrderPopupVisible(false);
 
   // Load cart from storage on mount
   useEffect(() => {
@@ -178,6 +186,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         decrementQuantity,
         clearCart,
         getItemQuantity,
+        activeOrderPopupVisible,
+        showActiveOrderPopup,
+        hideActiveOrderPopup,
       }}
     >
       {children}

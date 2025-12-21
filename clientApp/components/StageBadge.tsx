@@ -5,6 +5,7 @@ import { Colors, Spacing, FontSizes, BorderRadius } from '../constants/Colors';
 
 interface StageBadgeProps {
   stage: OrderStage;
+  showIcon?: boolean;
 }
 
 const STAGE_CONFIG = {
@@ -23,14 +24,24 @@ const STAGE_CONFIG = {
     icon: '🚗',
     color: Colors.primary,
   },
+  [OrderStage.COURIER_ARRIVED]: {
+    label: 'Courier Arrived',
+    icon: '🚪',
+    color: Colors.primary,
+  },
   [OrderStage.DELIVERED]: {
     label: 'Delivered',
     icon: '✅',
     color: Colors.success,
   },
+  [OrderStage.CANCELLED]: {
+    label: 'Cancelled',
+    icon: '❌',
+    color: Colors.error,
+  },
 };
 
-export const StageBadge: React.FC<StageBadgeProps> = ({ stage }) => {
+export const StageBadge: React.FC<StageBadgeProps> = ({ stage, showIcon = true }) => {
   const config = STAGE_CONFIG[stage] || STAGE_CONFIG[OrderStage.ORDER_PLACED];
 
   if (!config) {
@@ -39,7 +50,7 @@ export const StageBadge: React.FC<StageBadgeProps> = ({ stage }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: config.color + '20' }]}>
-      <Text style={styles.icon}>{config.icon}</Text>
+      {showIcon && <Text style={styles.icon}>{config.icon}</Text>}
       <Text style={[styles.label, { color: config.color }]}>
         {config.label}
       </Text>

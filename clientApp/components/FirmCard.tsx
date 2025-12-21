@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Firm } from '../types';
-import { Colors, Spacing } from '../constants/Colors';
 import { useLanguage } from '../context/LanguageContext';
+import { Colors, BorderRadius, CardShadow } from '../constants/Colors';
+import { getFirmLogo } from '../utils/imageMapping';
 
 interface FirmCardProps {
   firm: Firm;
@@ -11,72 +12,97 @@ interface FirmCardProps {
 
 export const FirmCard: React.FC<FirmCardProps> = ({ firm, onPress }) => {
   const { t } = useLanguage();
-  return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={onPress}
-      activeOpacity={0.9}
-    >
-      {/* Header Section with Full PNG */}
-      <View style={styles.header}>
-        {/* Full PNG Logo as Background */}
-        <Image
-          source={{ uri: firm.logo.trim() }}
-          style={styles.logoFull}
-          resizeMode="cover"
-        />
+  const [imageError, setImageError] = useState(false);
 
-        {/* Firm Name Badge (top-left) */}
-        <View style={styles.nameBadge}>
-          <Text style={styles.nameBadgeText}>{firm.name.toUpperCase()}</Text>
-        </View>
+  // Get local asset by firm name (works in APK)
+  const localLogo = getFirmLogo(firm.name);
+
+  // Get image source - prioritize local assets for APK
+  const getImageSource = () => {
+    if (imageError) return null;
+    // Try local asset first (most reliable for APK)
+    if (localLogo) return localLogo;
+    // Fallback to homeBanner if it's a bundled asset
+    if (firm.homeBanner && typeof firm.homeBanner === 'number') return firm.homeBanner;
+    // Fallback to logo if it's a bundled asset
+    if (firm.logo && typeof firm.logo === 'number') return firm.logo;
+    // Fallback to URL (for remote images)
+    if (firm.homeBanner && typeof firm.homeBanner === 'string') return { uri: firm.homeBanner };
+    if (firm.logo && typeof firm.logo === 'string') return { uri: firm.logo };
+    return null;
+  };
+
+  const imageSource = getImageSource();
+
+  return (
+    <View style={styles.card}>
+      {/* Brand Banner */}
+      <View style={styles.banner}>
+        {imageSource ? (
+          <Image
+            source={imageSource}
+            style={styles.bannerImage}
+            resizeMode="cover"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <View style={[styles.bannerImage, styles.bannerPlaceholder]}>
+            <Text style={styles.bannerPlaceholderText}>{firm.name?.[0] ?? 'W'}</Text>
+          </View>
+        )}
       </View>
 
-      {/* White Info Section */}
+      {/* Info Section */}
       <View style={styles.infoSection}>
-        {/* Firm Name and Rating Row */}
-        <View style={styles.nameRatingRow}>
-          <Text style={styles.firmName} numberOfLines={1}>
-            {firm.name}
-          </Text>
-          <View style={styles.ratingContainer}>
-            <Text style={styles.star}>⭐</Text>
-            <Text style={styles.rating}>{firm.rating.toFixed(1)}</Text>
+        {/* Meta row */}
+        <View style={styles.metaRow}>
+          <View style={styles.metaItem}>
+            <Image
+              source={require('../assets/ui-icons/delivery-icon.png')}
+              style={styles.metaIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.metaText}>{firm.deliveryTime}</Text>
+          </View>
+          <View style={styles.metaDivider} />
+          <View style={styles.metaItem}>
+            <Image
+              source={require('../assets/ui-icons/address-icon.png')}
+              style={styles.metaIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.metaText}>{firm.location || 'Nukus'}</Text>
+          </View>
+          <View style={styles.metaDivider} />
+          <View style={styles.metaItem}>
+            <Image
+              source={require('../assets/ui-icons/star-rating.png')}
+              style={styles.metaIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.ratingText}>{(Number(firm.rating) || 0).toFixed(1)}</Text>
           </View>
         </View>
 
-        {/* Time and Location Row */}
-        <View style={styles.detailsRow}>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailIcon}>🕐</Text>
-            <Text style={styles.detailText}>{firm.deliveryTime}</Text>
-          </View>
-          {firm.location && (
-            <>
-              <View style={styles.detailDot} />
-              <View style={styles.detailItem}>
-                <Text style={styles.detailIcon}>📍</Text>
-                <Text style={styles.detailText}>{firm.location}</Text>
-              </View>
-            </>
-          )}
-        </View>
-
-        {/* Promotional Badges */}
+        {/* Chips */}
         {firm.promotions && firm.promotions.length > 0 && (
-          <View style={styles.promosRow}>
+          <View style={styles.chipsRow}>
             {firm.promotions.map((promo, index) => (
               <View
                 key={index}
                 style={[
-                  styles.promoBadge,
-                  promo.color === 'green' ? styles.promoBadgeGreen : styles.promoBadgeBlue,
+                  styles.chip,
+                  promo.color === 'green'
+                    ? { backgroundColor: '#E8F5E9' }
+                    : { backgroundColor: '#E3F2FD' }
                 ]}
               >
                 <Text
                   style={[
-                    styles.promoText,
-                    promo.color === 'green' ? styles.promoTextGreen : styles.promoTextBlue,
+                    styles.chipText,
+                    promo.color === 'green'
+                      ? { color: '#0F9D58' }
+                      : { color: '#1E88E5' }
                   ]}
                 >
                   {promo.label}
@@ -85,166 +111,124 @@ export const FirmCard: React.FC<FirmCardProps> = ({ firm, onPress }) => {
             ))}
           </View>
         )}
-
-        {/* CTA Button */}
-        <TouchableOpacity style={styles.ctaButton} onPress={onPress} activeOpacity={0.8}>
-          <Text style={styles.ctaButtonText}>{t('firmDetails.goToProducts')}</Text>
-        </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+
+      {/* CTA Button */}
+      <TouchableOpacity
+        style={styles.ctaButton}
+        activeOpacity={0.85}
+        onPress={onPress}
+      >
+        <Text style={styles.ctaText}>{t('firmDetails.goToProducts')}</Text>
+        <Text style={styles.ctaArrow}>→</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
     backgroundColor: Colors.white,
-    borderRadius: 20,
-    marginBottom: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    marginBottom: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+    ...CardShadow,
   },
-  // Header Section
-  header: {
-    height: 240,
-    position: 'relative',
-    overflow: 'hidden',
+  banner: {
+    height: 150,
+    width: '100%',
+    backgroundColor: '#F0F4F8',
   },
-  logoFull: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+  bannerImage: {
     width: '100%',
     height: '100%',
   },
-  nameBadge: {
-    position: 'absolute',
-    top: Spacing.md,
-    left: Spacing.md,
-    backgroundColor: Colors.white, // Required for efficient shadow rendering
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  nameBadgeText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.primary,
-    letterSpacing: 0.5,
-  },
-  // Info Section
-  infoSection: {
-    padding: Spacing.lg,
-    backgroundColor: Colors.white,
-  },
-  nameRatingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-  firmName: {
-    flex: 1,
-    fontSize: 24,
-    fontWeight: '700',
-    color: Colors.text,
-    marginRight: Spacing.sm,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF9E6',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  star: {
-    fontSize: 16,
-    marginRight: 4,
-  },
-  rating: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0C1633',
-  },
-  detailsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  detailIcon: {
-    fontSize: 16,
-    marginRight: 6,
-  },
-  detailText: {
-    fontSize: 15,
-    color: Colors.grayText,
-    fontWeight: '500',
-  },
-  detailDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.grayText,
-    marginHorizontal: Spacing.sm,
-  },
-  promosRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: Spacing.md,
-  },
-  promoBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  promoBadgeGreen: {
-    backgroundColor: '#E8F5E9',
-  },
-  promoBadgeBlue: {
-    backgroundColor: '#E3F2FD',
-  },
-  promoText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  promoTextGreen: {
-    color: '#2E7D32',
-  },
-  promoTextBlue: {
-    color: '#1976D2',
-  },
-  ctaButton: {
-    backgroundColor: Colors.primary, // Required for efficient shadow rendering
-    paddingVertical: 14,
-    borderRadius: 12,
+  bannerPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#E8EEF4',
+  },
+  bannerPlaceholderText: {
+    fontSize: 44,
+    fontWeight: '700',
+    color: Colors.primary,
+    opacity: 0.6,
+  },
+  infoSection: {
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  metaDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: Colors.border,
+  },
+  metaIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 6,
+  },
+  metaText: {
+    fontSize: 14,
+    color: Colors.text,
+    fontWeight: '500',
+  },
+  ratingText: {
+    fontSize: 14,
+    color: '#F59E0B',
+    fontWeight: '600',
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    marginTop: 10,
+    gap: 8,
+  },
+  chip: {
+    borderRadius: BorderRadius.sm,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+  },
+  chipText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  ctaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    marginHorizontal: 14,
+    marginTop: 12,
+    marginBottom: 14,
+    paddingVertical: 12,
+    borderRadius: BorderRadius.md,
     shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 4,
   },
-  ctaButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
+  ctaText: {
     color: Colors.white,
-    letterSpacing: 0.5,
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  ctaArrow: {
+    color: Colors.white,
+    fontWeight: '600',
+    fontSize: 18,
+    marginLeft: 8,
   },
 });

@@ -4,10 +4,11 @@ import {
   Text,
   Pressable,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   Image,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -23,21 +24,10 @@ type Option = {
 
 // OPTIONS will be generated inside component to access translations
 
-// Progress Dot Component
-const Dot = ({ active, wide = false }: { active?: boolean; wide?: boolean }) => (
-  <View
-    style={[
-      styles.dot,
-      wide && { width: 22 },
-      { backgroundColor: active ? '#3B82F6' : '#E2E8F0' },
-    ]}
-  />
-);
-
-// Radio Button Component
-const Radio = ({ active }: { active: boolean }) => (
-  <View style={[styles.radio, { borderColor: active ? '#3B82F6' : '#E5E7EB' }]}>
-    {active && <View style={styles.radioInner} />}
+// Checkmark Component for selected state
+const Checkmark = ({ active }: { active: boolean }) => (
+  <View style={[styles.checkmark, active && styles.checkmarkActive]}>
+    {active && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
   </View>
 );
 
@@ -59,19 +49,20 @@ const OptionCard = memo(
       style={[
         styles.card,
         active && styles.cardActive,
-        active && { borderColor: '#3B82F6' },
       ]}
     >
-      {item.icon ? (
-        <Image source={item.icon} style={styles.iconImage} resizeMode="contain" />
-      ) : (
-        <Text style={styles.emoji}>{item.emoji}</Text>
-      )}
+      <View style={[styles.iconWrapper, active && styles.iconWrapperActive]}>
+        {item.icon ? (
+          <Image source={item.icon} style={styles.iconImage} resizeMode="contain" />
+        ) : (
+          <Text style={styles.emoji}>{item.emoji}</Text>
+        )}
+      </View>
       <View style={styles.textContainer}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text style={[styles.cardTitle, active && styles.cardTitleActive]}>{item.title}</Text>
         {!!item.hint && <Text style={styles.cardHint}>{item.hint}</Text>}
       </View>
-      <Radio active={active} />
+      <Checkmark active={active} />
     </Pressable>
   )
 );
@@ -143,34 +134,28 @@ export default function AddressTypeScreen() {
       navigation.navigate('OfficeDetails', { addressData: updatedAddressData });
     } else if (selected === 'government') {
       navigation.navigate('GovernmentDetails', { addressData: updatedAddressData });
+    } else if (selected === 'house') {
+      navigation.navigate('HouseDetails', { addressData: updatedAddressData });
     } else {
-      // For private house, go directly to summary (no floors/entrance needed)
       navigation.navigate('AddressSummary', { addressData: updatedAddressData });
     }
   };
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Header with Progress */}
+      {/* Header */}
       <View style={styles.header}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={10}>
+        <View style={styles.headerRow}>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={10} style={styles.backButton}>
             <Text style={styles.backArrow}>←</Text>
           </Pressable>
 
           {/* Cancel button for authenticated users */}
           {!isSignupFlow && (
-            <Pressable onPress={handleCancel} hitSlop={10}>
+            <Pressable onPress={handleCancel} hitSlop={10} style={styles.cancelButton}>
               <Text style={styles.cancelText}>✕</Text>
             </Pressable>
           )}
-        </View>
-
-        <View style={styles.progress}>
-          <Dot active />
-          <Dot active />
-          <Dot active wide />
-          <Dot />
         </View>
 
         <Text style={styles.title}>{t('auth.selectAddressType')}</Text>
@@ -209,103 +194,148 @@ export default function AddressTypeScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#F7F9FC'
+    backgroundColor: '#F7F9FC',
   },
 
-  // Header
+  // Header - More compact
   header: {
     paddingHorizontal: 20,
-    paddingTop: 6,
-    paddingBottom: 8
+    paddingTop: 4,
+    paddingBottom: 12,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  backButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#0C1633',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   backArrow: {
-    fontSize: 24,
-    color: '#0C1633'
+    fontSize: 20,
+    color: '#0C1633',
+    fontWeight: '500',
+  },
+  cancelButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#0C1633',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   cancelText: {
-    fontSize: 24,
-    color: '#0C1633',
-    fontWeight: '600',
-  },
-  progress: {
-    flexDirection: 'row',
-    gap: 6,
-    marginTop: 8
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3
+    fontSize: 18,
+    color: '#9CA3AF',
+    fontWeight: '500',
   },
   title: {
     marginTop: 16,
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 26,
+    fontWeight: '700',
     color: '#0C1633',
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
   },
   subtitle: {
-    marginTop: 6,
+    marginTop: 4,
     fontSize: 14,
-    color: '#6B7280'
+    color: '#9CA3AF',
+    lineHeight: 20,
   },
 
-  // Card
+  // Card - Cleaner, more clickable
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    padding: 16,
-    borderRadius: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: 16,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E8ECF2',
-    marginTop: 12,
-    shadowColor: '#000',
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+    marginTop: 10,
+    shadowColor: '#0C1633',
     shadowOpacity: 0.04,
     shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   cardActive: {
-    backgroundColor: '#EDF3FF',
-    borderWidth: 2,
+    backgroundColor: '#F8FAFF',
+    borderColor: '#3B82F6',
+  },
+  iconWrapper: {
+    width: 72,
+    height: 72,
+    borderRadius: 16,
+    backgroundColor: '#F5F7FA',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapperActive: {
+    backgroundColor: '#EBF3FF',
   },
   textContainer: {
     flex: 1,
+    justifyContent: 'center',
   },
   emoji: {
-    fontSize: 46,
+    fontSize: 40,
   },
   iconImage: {
-    width: 70,
-    height: 70,
+    width: 56,
+    height: 56,
   },
   cardTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0C1633'
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0C1633',
+    marginBottom: 2,
+  },
+  cardTitleActive: {
+    color: '#2563EB',
   },
   cardHint: {
-    marginTop: 2,
     fontSize: 13,
-    color: '#6B7280'
+    color: '#9CA3AF',
+    lineHeight: 18,
   },
 
-  // Radio
-  radio: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+  // Checkmark - Cleaner radio style
+  checkmark: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 2,
+    borderColor: '#D1D5DB',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFF',
+    backgroundColor: '#FFFFFF',
   },
-  radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  checkmarkActive: {
     backgroundColor: '#3B82F6',
+    borderColor: '#3B82F6',
+  },
+  checkmarkIcon: {
+    fontSize: 13,
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
 
   // Sticky Button
@@ -314,25 +344,30 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 24,
     backgroundColor: '#F7F9FC',
   },
   nextBtn: {
     backgroundColor: '#3B82F6',
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: 14,
     alignItems: 'center',
     shadowColor: '#3B82F6',
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
   nextBtnDisabled: {
-    backgroundColor: '#AFC7FF',
+    backgroundColor: '#CBD5E1',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   nextText: {
-    color: '#FFF',
-    fontSize: 17,
-    fontWeight: '800'
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
