@@ -23,7 +23,7 @@ import CallFirmModal from '../components/CallFirmModal';
 import CancelledOrderModal from '../components/CancelledOrderModal';
 import OrderReturnedToQueueModal from '../components/OrderReturnedToQueueModal';
 import OrderDeletedModal from '../components/OrderDeletedModal';
-import { getFirmLogo } from '../utils/imageMapping';
+import { getFirmLogo, getProductImageByName } from '../utils/imageMapping';
 import { useStageSounds } from '../hooks/useStageSounds';
 
 type Stage = 'placed' | 'queue' | 'on_the_way' | 'courier_arrived' | 'delivered';
@@ -482,6 +482,7 @@ const OrderTrackingScreen: React.FC = () => {
               source={illustrationSource}
               style={styles.vanImage}
               resizeMode="contain"
+              fadeDuration={0}
             />
           </View>
 
@@ -514,12 +515,10 @@ const OrderTrackingScreen: React.FC = () => {
               <View style={styles.itemLeft}>
                 <View style={styles.itemImageWrapper}>
                   <Image
-                    source={typeof item.product.image === 'string'
-                      ? { uri: item.product.image }
-                      : item.product.image
-                    }
+                    source={getProductImageByName(item.product.name, item.product.volume)}
                     style={styles.itemImage}
                     resizeMode="contain"
+                    fadeDuration={0}
                   />
                 </View>
                 <View>

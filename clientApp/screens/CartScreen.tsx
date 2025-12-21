@@ -629,7 +629,7 @@ const CartScreen: React.FC = () => {
       case 'apartment': return require('../assets/address/apartment-3d.png');
       case 'government': return require('../assets/address/government-3d.png');
       case 'office': return require('../assets/address/office-3d.png');
-      default: return null;
+      default: return require('../assets/ui-icons/address-icon.png');
     }
   };
 
@@ -782,6 +782,7 @@ const CartScreen: React.FC = () => {
                 source={getProductImageByName(item.product.name, item.product.volume)}
                 style={s.productImg}
                 resizeMode="contain"
+                fadeDuration={0}
               />
             </View>
 
@@ -856,7 +857,7 @@ const CartScreen: React.FC = () => {
         />
 
         <OptionRow
-          iconImage={cartSelectedAddress ? getAddress3DIcon(cartSelectedAddress.addressType) : require('../assets/ui-icons/address-icon.png')}
+          iconImage={getAddress3DIcon(cartSelectedAddress?.addressType)}
           title={cartSelectedAddress ? cartSelectedAddress.title : 'Mánzil'}
           subtitle={
             cartSelectedAddress

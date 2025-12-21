@@ -12,6 +12,7 @@ import {
   Modal,
   TextInput,
   ActivityIndicator,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { updateUserProfile } from '../services/api';
@@ -438,52 +439,57 @@ const ProfileScreen: React.FC = () => {
       <Modal
         visible={showEditNameModal}
         transparent
-        animationType="fade"
+        animationType="slide"
         onRequestClose={() => setShowEditNameModal(false)}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowEditNameModal(false)}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidingView}
         >
-          <View style={styles.editNameModalContent} onStartShouldSetResponder={() => true}>
-            <View style={styles.modalHandle} />
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowEditNameModal(false)}
+          >
+            <View style={styles.editNameModalContent} onStartShouldSetResponder={() => true}>
+              <View style={styles.modalHandle} />
 
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{t('profile.editName') || 'Edit Name'}</Text>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{t('profile.editName') || 'Edit Name'}</Text>
+                <TouchableOpacity
+                  onPress={() => setShowEditNameModal(false)}
+                  style={styles.closeButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Text style={styles.closeIcon}>×</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TextInput
+                style={styles.nameInput}
+                value={editName}
+                onChangeText={setEditName}
+                placeholder={t('profile.enterName') || 'Enter your name'}
+                placeholderTextColor="#9CA3AF"
+                autoFocus
+                maxLength={50}
+              />
+
               <TouchableOpacity
-                onPress={() => setShowEditNameModal(false)}
-                style={styles.closeButton}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+                onPress={handleSaveName}
+                disabled={isSaving}
+                activeOpacity={0.8}
               >
-                <Text style={styles.closeIcon}>×</Text>
+                {isSaving ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.saveButtonText}>{t('common.save') || 'Save'}</Text>
+                )}
               </TouchableOpacity>
             </View>
-
-            <TextInput
-              style={styles.nameInput}
-              value={editName}
-              onChangeText={setEditName}
-              placeholder={t('profile.enterName') || 'Enter your name'}
-              placeholderTextColor="#9CA3AF"
-              autoFocus
-              maxLength={50}
-            />
-
-            <TouchableOpacity
-              style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-              onPress={handleSaveName}
-              disabled={isSaving}
-              activeOpacity={0.8}
-            >
-              {isSaving ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <Text style={styles.saveButtonText}>{t('common.save') || 'Save'}</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
@@ -575,6 +581,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#E0E7FF',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   editNameModalContent: {
     position: 'absolute',
