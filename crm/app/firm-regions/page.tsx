@@ -148,12 +148,12 @@ export default function FirmRegionsPage() {
   ]);
 
   useEffect(() => {
-    if (user?.type === "admin") {
-      router.push("/");
+    if (!user) {
+      router.push("/login");
     }
   }, [user, router]);
 
-  if (user?.type !== "firm") {
+  if (!user) {
     return null;
   }
 
@@ -321,7 +321,7 @@ export default function FirmRegionsPage() {
   };
 
   return (
-    <div className="p-8 min-h-screen dark:bg-gray-900">
+    <div className="p-8 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <div className="flex items-center justify-between mb-6">
         <PageHeader
           title="Regions & Districts"
@@ -329,7 +329,7 @@ export default function FirmRegionsPage() {
         />
         <button
           onClick={openCreateRegionModal}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg transition-all"
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-blue-500/30 transition-all hover:scale-105"
         >
           <Plus className="w-5 h-5" />
           Add Region

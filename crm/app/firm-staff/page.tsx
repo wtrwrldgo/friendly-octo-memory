@@ -9,10 +9,12 @@ import PageHeader from "@/components/PageHeader";
 import Modal from "@/components/Modal";
 import { Staff, StaffRole } from "@/types";
 import { UserCircle, Mail, Phone, MapPin, CheckCircle, XCircle, Plus, Edit, Trash2, Save } from "lucide-react";
+import { firmApi } from "@/lib/firmApi";
 
 export default function FirmStaffPage() {
-  const { user } = useAuth();
+  const { user, firm } = useAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<StaffRole | "ALL">("ALL");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
@@ -24,84 +26,60 @@ export default function FirmStaffPage() {
     city: "",
     active: true,
   });
+  const [staff, setStaff] = useState<Staff[]>([]);
 
-  const [staff, setStaff] = useState<Staff[]>([
-    {
-      id: "staff-001",
-      firmId: "1",
-      name: "Dilshod Karimov",
-      role: "OWNER",
-      phone: "+998901234567",
-      email: "dilshod@aquapure.uz",
-      city: "Tashkent",
-      active: true,
-      createdAt: "2023-01-15T10:00:00Z",
-    },
-    {
-      id: "staff-002",
-      firmId: "1",
-      name: "Aziza Rahimova",
-      role: "MANAGER",
-      phone: "+998901234568",
-      email: "aziza@aquapure.uz",
-      city: "Tashkent",
-      active: true,
-      createdAt: "2023-02-20T10:00:00Z",
-    },
-    {
-      id: "staff-003",
-      firmId: "1",
-      name: "Sardor Alimov",
-      role: "OPERATOR",
-      phone: "+998901234569",
-      email: "sardor@aquapure.uz",
-      city: "Tashkent",
-      active: true,
-      createdAt: "2023-03-10T10:00:00Z",
-    },
-    {
-      id: "staff-004",
-      firmId: "1",
-      name: "Nigora Nazarova",
-      role: "OPERATOR",
-      phone: "+998901234570",
-      email: "nigora@aquapure.uz",
-      city: "Samarkand",
-      active: true,
-      createdAt: "2023-04-05T10:00:00Z",
-    },
-    {
-      id: "staff-005",
-      firmId: "1",
-      name: "Rustam Yusupov",
-      role: "MANAGER",
-      phone: "+998901234571",
-      email: "rustam@aquapure.uz",
-      city: "Samarkand",
-      active: false,
-      createdAt: "2023-05-12T10:00:00Z",
-    },
-    {
-      id: "staff-006",
-      firmId: "1",
-      name: "Malika Akbarova",
-      role: "OPERATOR",
-      phone: "+998901234572",
-      email: "malika@aquapure.uz",
-      city: "Bukhara",
-      active: true,
-      createdAt: "2023-06-18T10:00:00Z",
-    },
-  ]);
-
+  // Fetch real staff from Express.js backend
   useEffect(() => {
-    if (user?.type === "admin") {
-      router.push("/");
+    if (!user) {
+      router.push("/login");
+      return;
     }
-  }, [user, router]);
 
-  if (user?.type !== "firm") {
+    const fetchStaff = async () => {
+      try {
+        const firmId = user.firmId || firm?.id;
+        if (!firmId) return;
+
+        const response = await firmApi.getStaff(firmId);
+        const data = response?.data || response || [];
+
+        if (Array.isArray(data)) {
+          const mappedStaff = data.map((s: any) => ({
+            id: s.id,
+            firmId: s.firmId || firmId,
+            name: s.name,
+            role: s.role as StaffRole,
+            phone: s.phone || "",
+            email: s.email || "",
+            city: s.city || "",
+            active: s.active !== false,
+            createdAt: s.createdAt,
+          }));
+          setStaff(mappedStaff);
+        }
+      } catch (error) {
+        console.error("Failed to fetch staff:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStaff();
+  }, [user, firm, router]);
+
+  if (!user) {
     return null;
+  }
+
+  if (loading) {
+    return (
+      <div className="p-8 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading staff...</p>
+        </div>
+      </div>
+    );
   }
 
   const openCreateModal = () => {
@@ -196,7 +174,7 @@ export default function FirmStaffPage() {
   };
 
   return (
-    <div className="p-8 min-h-screen dark:bg-gray-900">
+    <div className="p-8 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <div className="flex items-center justify-between mb-8">
         <PageHeader
           title="Staff Management"
@@ -204,7 +182,7 @@ export default function FirmStaffPage() {
         />
         <button
           onClick={openCreateModal}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg transition-all"
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-blue-500/30 transition-all hover:scale-105"
         >
           <Plus className="w-5 h-5" />
           Add Staff Member

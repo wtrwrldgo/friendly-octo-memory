@@ -4,20 +4,27 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import PageHeader from "@/components/PageHeader";
 import Modal from "@/components/Modal";
 import { Client, ClientType } from "@/types";
-import { Building2, Store, Landmark, Plus, Edit, Trash2, Save, Navigation } from "lucide-react";
+import {
+  Users, Building2, Store, Landmark, Plus, Edit2, Trash2, Save,
+  Navigation, Search, RefreshCw, Phone, Mail, MapPin,
+  ShoppingCart, DollarSign, X, XCircle
+} from "lucide-react";
+import { db } from "@/lib/db";
 
 export default function FirmClientsPage() {
-  const { user } = useAuth();
+  const { user, firm } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<ClientType>("B2C");
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<ClientType | "ALL">("ALL");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [selectedClientAddress, setSelectedClientAddress] = useState("");
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -25,97 +32,77 @@ export default function FirmClientsPage() {
     address: "",
     type: "B2C" as ClientType,
   });
+  const [clients, setClients] = useState<Client[]>([]);
 
-  const [clients, setClients] = useState<Client[]>([
-    {
-      id: "c1",
-      name: "Aziz Karimov",
-      phone: "+998901234567",
-      email: "aziz@example.com",
-      address: "Chilanzar 10, apt 45, Tashkent",
-      firmId: "1",
-      type: "B2C",
-      totalOrders: 45,
-      revenue: 1350,
-      createdAt: "2024-01-15T10:00:00Z",
-      lastOrderAt: new Date().toISOString(),
-    },
-    {
-      id: "c2",
-      name: "Nigora Rahimova",
-      phone: "+998901234568",
-      email: "nigora@example.com",
-      address: "Yunusabad 5, house 12, Tashkent",
-      firmId: "1",
-      type: "B2C",
-      totalOrders: 32,
-      revenue: 960,
-      createdAt: "2024-02-10T10:00:00Z",
-      lastOrderAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-      id: "c3",
-      name: "Tech Solutions LLC",
-      phone: "+998712345678",
-      email: "office@techsolutions.uz",
-      address: "Amir Temur 45, Business Center, Tashkent",
-      firmId: "1",
-      type: "B2B",
-      totalOrders: 150,
-      revenue: 15000,
-      createdAt: "2023-12-01T10:00:00Z",
-      lastOrderAt: new Date(Date.now() - 172800000).toISOString(),
-    },
-    {
-      id: "c4",
-      name: "Tashkent City Hall",
-      phone: "+998712501010",
-      email: "procurement@tashkent.gov.uz",
-      address: "Mustakillik Square 1, Tashkent",
-      firmId: "1",
-      type: "B2G",
-      totalOrders: 250,
-      revenue: 35000,
-      createdAt: "2023-11-15T10:00:00Z",
-      lastOrderAt: new Date(Date.now() - 259200000).toISOString(),
-    },
-    {
-      id: "c5",
-      name: "Green Cafe Network",
-      phone: "+998901112233",
-      email: "supply@greencafe.uz",
-      address: "Shaykhantahur 12, Tashkent",
-      firmId: "1",
-      type: "B2B",
-      totalOrders: 89,
-      revenue: 8900,
-      createdAt: "2024-01-20T10:00:00Z",
-      lastOrderAt: new Date(Date.now() - 43200000).toISOString(),
-    },
-    {
-      id: "c6",
-      name: "Ministry of Education",
-      phone: "+998712345679",
-      email: "logistics@edu.gov.uz",
-      address: "Buyuk Turon 31, Tashkent",
-      firmId: "1",
-      type: "B2G",
-      totalOrders: 180,
-      revenue: 27000,
-      createdAt: "2023-10-01T10:00:00Z",
-      lastOrderAt: new Date(Date.now() - 345600000).toISOString(),
-    },
-  ]);
+  const fetchClients = async () => {
+    try {
+      setLoading(true);
+      const firmId = user?.firmId || firm?.id;
+      if (!firmId) return;
+
+      const { data, error } = await db.getClients(firmId);
+      if (error) {
+        console.error("Failed to fetch clients:", error);
+        return;
+      }
+
+      if (data) {
+        const mappedClients = data.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          phone: c.phone,
+          email: c.email || "",
+          address: c.addresses?.[0]?.address || "No address",
+          firmId: firmId,
+          type: "B2C" as ClientType,
+          totalOrders: c._count?.orders || c.ordersCount || 0,
+          revenue: c.totalSpent || 0,
+          createdAt: c.createdAt,
+          lastOrderAt: c.lastOrderAt || c.createdAt,
+        }));
+        setClients(mappedClients);
+      }
+    } catch (error) {
+      console.error("Failed to fetch clients:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (user?.type === "admin") {
-      router.push("/");
+    if (!user) {
+      router.push("/login");
+      return;
     }
-  }, [user, router]);
+    fetchClients();
+  }, [user, firm, router]);
 
-  if (user?.type !== "firm") {
-    return null;
-  }
+  const stats = useMemo(() => ({
+    total: clients.length,
+    b2c: clients.filter(c => c.type === "B2C").length,
+    b2b: clients.filter(c => c.type === "B2B").length,
+    b2g: clients.filter(c => c.type === "B2G").length,
+    totalRevenue: clients.reduce((sum, c) => sum + c.revenue, 0),
+    totalOrders: clients.reduce((sum, c) => sum + c.totalOrders, 0),
+  }), [clients]);
+
+  const filteredClients = useMemo(() => {
+    return clients.filter(client => {
+      if (activeTab !== "ALL" && client.type !== activeTab) return false;
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        return (
+          client.name?.toLowerCase().includes(query) ||
+          client.phone?.toLowerCase().includes(query) ||
+          client.email?.toLowerCase().includes(query) ||
+          client.address?.toLowerCase().includes(query)
+        );
+      }
+      return true;
+    });
+  }, [clients, activeTab, searchQuery]);
+
+  if (!user) return null;
 
   const openCreateModal = () => {
     setEditingClient(null);
@@ -124,7 +111,7 @@ export default function FirmClientsPage() {
       phone: "",
       email: "",
       address: "",
-      type: activeTab,
+      type: activeTab === "ALL" ? "B2C" : activeTab,
     });
     setIsModalOpen(true);
   };
@@ -143,27 +130,21 @@ export default function FirmClientsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (editingClient) {
-      // Update
       setClients(clients.map(c =>
-        c.id === editingClient.id
-          ? { ...c, ...formData }
-          : c
+        c.id === editingClient.id ? { ...c, ...formData } : c
       ));
     } else {
-      // Create
       const newClient: Client = {
         id: `c${clients.length + 1}`,
         ...formData,
-        firmId: "1",
+        firmId: user?.firmId || firm?.id || "1",
         totalOrders: 0,
         revenue: 0,
         createdAt: new Date().toISOString(),
       };
       setClients([...clients, newClient]);
     }
-
     setIsModalOpen(false);
   };
 
@@ -178,177 +159,314 @@ export default function FirmClientsPage() {
     setIsMapModalOpen(true);
   };
 
-  const filteredClients = clients.filter((c) => c.type === activeTab);
-  const b2cClients = clients.filter((c) => c.type === "B2C");
-  const b2bClients = clients.filter((c) => c.type === "B2B");
-  const b2gClients = clients.filter((c) => c.type === "B2G");
-
-  const totalRevenue = filteredClients.reduce((sum, c) => sum + c.revenue, 0);
-  const totalOrders = filteredClients.reduce((sum, c) => sum + c.totalOrders, 0);
-
   return (
-    <div className="p-8 min-h-screen dark:bg-gray-900">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-8 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      <div className="flex items-center justify-between mb-6">
         <PageHeader
           title="Clients"
-          description="Manage your B2B, B2C, and B2G clients"
+          description="Manage B2B, B2C, and B2G clients"
         />
-        <button
-          onClick={openCreateModal}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg transition-all"
-        >
-          <Plus className="w-5 h-5" />
-          Add Client
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-blue-500/30 transition-all hover:scale-105"
+          >
+            <Plus className="w-5 h-5" />
+            Add Client
+          </button>
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 mb-8">
-        <button
-          onClick={() => setActiveTab("B2C")}
-          className={`flex items-center gap-3 px-6 py-4 rounded-2xl transition-all ${
-            activeTab === "B2C"
-              ? "bg-blue-600 text-white shadow-lg shadow-blue-500/25"
-              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700"
-          }`}
-        >
-          <Store className="w-5 h-5" />
-          <div className="text-left">
-            <p className="font-semibold">B2C Clients</p>
-            <p className="text-sm opacity-80">{b2cClients.length} customers</p>
+      <div className="mb-8">
+        {/* Stats Cards - Premium Design */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
+          <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
+            <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
+            <div className="relative flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-100">Total Clients</p>
+                <p className="text-4xl font-bold text-white mt-2">{stats.total}</p>
+              </div>
+              <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+            </div>
           </div>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("B2B")}
-          className={`flex items-center gap-3 px-6 py-4 rounded-2xl transition-all ${
-            activeTab === "B2B"
-              ? "bg-purple-600 text-white shadow-lg shadow-purple-500/25"
-              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700"
-          }`}
-        >
-          <Building2 className="w-5 h-5" />
-          <div className="text-left">
-            <p className="font-semibold">B2B Clients</p>
-            <p className="text-sm opacity-80">{b2bClients.length} businesses</p>
+          <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-cyan-400 to-cyan-500 shadow-xl shadow-cyan-500/25 hover:shadow-2xl hover:shadow-cyan-500/40 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
+            <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
+            <div className="relative flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-cyan-100">B2C Customers</p>
+                <p className="text-4xl font-bold text-white mt-2">{stats.b2c}</p>
+              </div>
+              <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
+                <Store className="w-6 h-6 text-white" />
+              </div>
+            </div>
           </div>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("B2G")}
-          className={`flex items-center gap-3 px-6 py-4 rounded-2xl transition-all ${
-            activeTab === "B2G"
-              ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/25"
-              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700"
-          }`}
-        >
-          <Landmark className="w-5 h-5" />
-          <div className="text-left">
-            <p className="font-semibold">B2G Clients</p>
-            <p className="text-sm opacity-80">{b2gClients.length} government</p>
+          <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-xl shadow-purple-500/25 hover:shadow-2xl hover:shadow-purple-500/40 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
+            <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
+            <div className="relative flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-purple-100">Total Orders</p>
+                <p className="text-4xl font-bold text-white mt-2">{stats.totalOrders}</p>
+              </div>
+              <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
+                <ShoppingCart className="w-6 h-6 text-white" />
+              </div>
+            </div>
           </div>
-        </button>
+          <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/40 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
+            <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
+            <div className="relative flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-emerald-100">Total Revenue</p>
+                <p className="text-4xl font-bold text-white mt-2">${stats.totalRevenue.toLocaleString()}</p>
+              </div>
+              <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
+                <DollarSign className="w-6 h-6 text-white" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search and Filter - Premium Design */}
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl border border-gray-200/50 dark:border-gray-700/50 p-5 mb-6 shadow-xl shadow-gray-200/50 dark:shadow-none">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                <Search className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search by name, phone, email, or address..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-14 pr-4 py-3.5 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
+              />
+            </div>
+
+            {/* Filter Chips */}
+            <div className="flex flex-wrap items-center gap-2">
+              {[
+                { value: "ALL", label: "All", icon: Users, color: "blue" },
+                { value: "B2C", label: "B2C", icon: Store, color: "cyan" },
+                { value: "B2B", label: "B2B", icon: Building2, color: "purple" },
+                { value: "B2G", label: "B2G", icon: Landmark, color: "emerald" },
+              ].map((filter) => {
+                const Icon = filter.icon;
+                const isActive = activeTab === filter.value;
+                return (
+                  <button
+                    key={filter.value}
+                    onClick={() => setActiveTab(filter.value as ClientType | "ALL")}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-105"
+                        : "bg-gray-100/80 dark:bg-gray-700/80 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:scale-105"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {filter.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Refresh Button */}
+            <button
+              onClick={() => fetchClients()}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all font-semibold shadow-sm hover:shadow-md"
+              title="Refresh clients"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+          </div>
+
+          {/* Results count */}
+          {(searchQuery || activeTab !== "ALL") && (
+            <div className="flex items-center justify-between mt-5 pt-5 border-t border-gray-200/50 dark:border-gray-700/50">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Found <span className="font-bold text-gray-900 dark:text-white bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg">{filteredClients.length}</span> of {clients.length} clients
+              </p>
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setActiveTab("ALL");
+                }}
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 font-semibold flex items-center gap-1 hover:gap-2 transition-all"
+              >
+                Clear all filters
+                <XCircle className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Clients Table */}
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl shadow-gray-200/50 dark:shadow-none overflow-hidden border border-gray-200/50 dark:border-gray-700/50">
+          {loading ? (
+            <div className="flex items-center justify-center py-24">
+              <div className="text-center">
+                <div className="relative w-16 h-16 mx-auto mb-6">
+                  <div className="absolute inset-0 rounded-full border-4 border-blue-200 dark:border-blue-900"></div>
+                  <div className="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
+                </div>
+                <p className="text-gray-600 dark:text-gray-400 font-medium">Loading clients...</p>
+              </div>
+            </div>
+          ) : filteredClients.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24">
+              <div className="relative mb-6">
+                <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-3xl flex items-center justify-center shadow-lg">
+                  <Users className="w-12 h-12 text-gray-400" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <Search className="w-4 h-4 text-white" />
+                </div>
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 text-xl font-semibold mb-2">
+                {clients.length === 0 ? "No clients yet" : "No clients found"}
+              </p>
+              <p className="text-gray-500 dark:text-gray-500 text-sm">
+                {clients.length === 0 ? "Add your first client to get started" : "Try adjusting your search or filter criteria"}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                  <tr>
+                    <th className="px-4 py-4 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12">
+                      #
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Client
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Contact
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Address
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Orders
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Revenue
+                    </th>
+                    <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
+                  {filteredClients.map((client, index) => {
+                    const typeConfig: Record<string, { bg: string; text: string; icon: any }> = {
+                      B2C: { bg: "bg-cyan-50 dark:bg-cyan-900/20", text: "text-cyan-600 dark:text-cyan-400", icon: Store },
+                      B2B: { bg: "bg-purple-50 dark:bg-purple-900/20", text: "text-purple-600 dark:text-purple-400", icon: Building2 },
+                      B2G: { bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-600 dark:text-emerald-400", icon: Landmark },
+                    };
+                    const typeStyle = typeConfig[client.type] || typeConfig.B2C;
+                    const TypeIcon = typeStyle.icon;
+
+                    return (
+                      <tr
+                        key={client.id}
+                        className="hover:bg-gray-50/80 dark:hover:bg-gray-700/30 transition-colors"
+                      >
+                        <td className="px-4 py-4 text-center">
+                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium">
+                            {index + 1}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${typeStyle.bg}`}>
+                              <TypeIcon className={`w-5 h-5 ${typeStyle.text}`} />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900 dark:text-white text-sm">
+                                {client.name}
+                              </p>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${typeStyle.bg} ${typeStyle.text}`}>
+                                {client.type}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
+                              <Phone className="w-3.5 h-3.5 text-gray-400" />
+                              {client.phone}
+                            </div>
+                            {client.email && (
+                              <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                                <Mail className="w-3 h-3" />
+                                {client.email}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-2 max-w-[200px]">
+                            <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                            <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{client.address}</p>
+                            <button
+                              onClick={() => openMapModal(client.address)}
+                              className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors flex-shrink-0"
+                              title="View on Yandex Map"
+                            >
+                              <Navigation className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="font-semibold text-gray-900 dark:text-white">
+                            {client.totalOrders}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                            ${client.revenue.toLocaleString()}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => openEditModal(client)}
+                              className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                              title="Edit"
+                            >
+                              <Edit2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(client.id)}
+                              className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Clients</p>
-          <p className="text-3xl font-bold text-navy-900 dark:text-white">{filteredClients.length}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Orders</p>
-          <p className="text-3xl font-bold text-blue-600">{totalOrders}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Revenue</p>
-          <p className="text-3xl font-bold text-green-600">${totalRevenue.toLocaleString()}</p>
-        </div>
-      </div>
-
-      {/* Clients Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-card overflow-hidden border border-gray-100 dark:border-gray-700">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gradient-to-r from-gray-50 to-gray-100/50 dark:from-gray-700 dark:to-gray-800/50 border-b border-gray-200 dark:border-gray-600">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Client</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Address</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Orders</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Revenue</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Last Order</th>
-                <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {filteredClients.map((client) => (
-                <tr key={client.id} className="hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-colors duration-150">
-                  <td className="px-6 py-5">
-                    <p className="font-bold text-navy-900 dark:text-white">{client.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Since {new Date(client.createdAt).toLocaleDateString()}
-                    </p>
-                  </td>
-                  <td className="px-6 py-5">
-                    <p className="text-sm text-gray-700 dark:text-gray-300">{client.phone}</p>
-                    {client.email && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{client.email}</p>
-                    )}
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-gray-700 dark:text-gray-300 max-w-xs truncate">
-                        {client.address}
-                      </p>
-                      <button
-                        onClick={() => openMapModal(client.address)}
-                        className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors flex-shrink-0"
-                        title="View on Yandex Map"
-                      >
-                        <Navigation className="w-4 h-4 text-red-600 dark:text-red-400" />
-                      </button>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5">
-                    <span className="text-lg font-semibold text-gray-900 dark:text-white">{client.totalOrders}</span>
-                  </td>
-                  <td className="px-6 py-5">
-                    <span className="text-lg font-semibold text-green-600 dark:text-green-400">
-                      ${client.revenue.toLocaleString()}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5 text-gray-600 dark:text-gray-400 text-sm">
-                    {client.lastOrderAt
-                      ? new Date(client.lastOrderAt).toLocaleDateString()
-                      : "Never"}
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => openEditModal(client)}
-                        className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <Edit className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(client.id)}
-                        className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Modal */}
+      {/* Add/Edit Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -363,7 +481,8 @@ export default function FirmClientsPage() {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter client name"
+              className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               required
             />
           </div>
@@ -375,7 +494,7 @@ export default function FirmClientsPage() {
             <select
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value as ClientType })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               required
             >
               <option value="B2C">B2C - Consumer</option>
@@ -392,7 +511,8 @@ export default function FirmClientsPage() {
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="+998 XX XXX XX XX"
+              className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               required
             />
           </div>
@@ -405,7 +525,8 @@ export default function FirmClientsPage() {
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="client@example.com"
+              className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
           </div>
 
@@ -416,7 +537,8 @@ export default function FirmClientsPage() {
             <textarea
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter delivery address"
+              className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               rows={3}
               required
             />
@@ -426,43 +548,42 @@ export default function FirmClientsPage() {
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="flex-1 px-6 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex-1 px-6 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all hover:scale-105"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-blue-500/30 transition-all hover:scale-105"
             >
               <Save className="w-5 h-5" />
-              {editingClient ? "Update" : "Create"}
+              {editingClient ? "Update Client" : "Add Client"}
             </button>
           </div>
         </form>
       </Modal>
 
-      {/* Yandex Map Modal */}
+      {/* Map Modal */}
       <Modal
         isOpen={isMapModalOpen}
         onClose={() => setIsMapModalOpen(false)}
-        title="Client Location on Yandex Maps"
-        size="lg"
+        title="Client Location"
       >
         <div className="space-y-4">
-          {/* Address Display with Yandex Red Theme */}
+          {/* Address Display */}
           <div className="flex items-start gap-3 p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl border border-red-200 dark:border-red-800">
             <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
               <Navigation className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Delivery Address</p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">{selectedClientAddress}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Uzbekistan</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">{selectedClientAddress}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Uzbekistan</p>
             </div>
           </div>
 
-          {/* Embedded Yandex Map with Custom Pin */}
-          <div className="w-full h-96 rounded-2xl overflow-hidden border-2 border-red-200 dark:border-red-800 bg-gray-100 dark:bg-gray-800 shadow-lg relative">
+          {/* Embedded Map */}
+          <div className="w-full h-80 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
             <iframe
               width="100%"
               height="100%"
@@ -471,15 +592,7 @@ export default function FirmClientsPage() {
               src={`https://yandex.com/map-widget/v1/?ll=69.2401%2C41.2995&z=15&l=map&pt=69.2401,41.2995,pm2wtm`}
               allowFullScreen
               title="Client Location on Yandex Maps"
-              className="w-full h-full"
             />
-            {/* Custom Pin Overlay Indicator */}
-            <div className="absolute top-4 right-4 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 shadow-lg border border-red-200 dark:border-red-700">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse"></div>
-                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Client Location</span>
-              </div>
-            </div>
           </div>
 
           {/* Action Buttons */}
@@ -488,23 +601,17 @@ export default function FirmClientsPage() {
               href={`https://yandex.com/maps/?text=${encodeURIComponent(selectedClientAddress + ", Uzbekistan")}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-red-500/25"
+              className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 rounded-2xl text-white font-semibold transition-all shadow-lg shadow-red-500/25 hover:scale-105"
             >
               <Navigation className="w-4 h-4" />
-              Navigate in Yandex Maps
+              Open in Yandex Maps
             </a>
             <button
               onClick={() => setIsMapModalOpen(false)}
-              className="px-6 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="px-6 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all hover:scale-105"
             >
               Close
             </button>
-          </div>
-
-          {/* Yandex Maps Branding */}
-          <div className="flex items-center justify-center gap-2 pt-2 pb-1">
-            <p className="text-xs text-gray-500 dark:text-gray-400">Powered by</p>
-            <span className="text-sm font-bold text-red-600 dark:text-red-500">Yandex Maps</span>
           </div>
         </div>
       </Modal>

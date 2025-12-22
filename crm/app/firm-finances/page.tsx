@@ -142,12 +142,12 @@ export default function FirmFinancesPage() {
   ]);
 
   useEffect(() => {
-    if (user?.type === "admin") {
-      router.push("/");
+    if (!user) {
+      router.push("/login");
     }
   }, [user, router]);
 
-  if (user?.type !== "firm") {
+  if (!user) {
     return null;
   }
 
@@ -280,7 +280,7 @@ export default function FirmFinancesPage() {
   };
 
   return (
-    <div className="p-8 min-h-screen dark:bg-gray-900">
+    <div className="p-8 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <div className="flex items-center justify-between mb-8">
         <PageHeader
           title="Financial Management"
@@ -288,7 +288,7 @@ export default function FirmFinancesPage() {
         />
         <button
           onClick={openCreateModal}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg transition-all"
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-blue-500/30 transition-all hover:scale-105"
         >
           <Plus className="w-5 h-5" />
           Add Transaction
@@ -315,7 +315,7 @@ export default function FirmFinancesPage() {
       {/* Profit Summary Cards by Time Period */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
         {/* Today */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700 shadow-card">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400">Today</h3>
             <Calendar className="w-4 h-4 text-gray-400" />
@@ -345,7 +345,7 @@ export default function FirmFinancesPage() {
         </div>
 
         {/* This Week */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700 shadow-card">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400">This Week</h3>
             <Calendar className="w-4 h-4 text-gray-400" />
@@ -375,7 +375,7 @@ export default function FirmFinancesPage() {
         </div>
 
         {/* This Month */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700 shadow-card">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400">This Month</h3>
             <Calendar className="w-4 h-4 text-gray-400" />
@@ -405,7 +405,7 @@ export default function FirmFinancesPage() {
         </div>
 
         {/* This Year */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-200 dark:border-gray-700 shadow-card">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400">This Year</h3>
             <Calendar className="w-4 h-4 text-gray-400" />
@@ -529,7 +529,7 @@ export default function FirmFinancesPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-card overflow-hidden border border-gray-100 dark:border-gray-700">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl shadow-gray-200/50 dark:shadow-none overflow-hidden border border-gray-200/50 dark:border-gray-700/50">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100/50 dark:from-gray-700 dark:to-gray-800/50 border-b border-gray-200 dark:border-gray-600">
