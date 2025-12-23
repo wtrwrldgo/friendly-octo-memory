@@ -1,11 +1,12 @@
 // file: types/index.ts
 
-export type FirmStatus = "ACTIVE" | "SUSPENDED";
+export type FirmStatus = "ACTIVE" | "SUSPENDED" | "DRAFT" | "PENDING_REVIEW";
 export type DriverStatus = "ONLINE" | "OFFLINE" | "DELIVERING";
-export type OrderStatus = "PENDING" | "ASSIGNED" | "ON_THE_WAY" | "DELIVERED" | "CANCELLED";
+export type OrderStatus = "PENDING" | "ASSIGNED" | "ON_THE_WAY" | "DELIVERED" | "CANCELLED" | "DELIVERING" | "CONFIRMED" | "PREPARING";
 export type StaffRole = "OPERATOR" | "MANAGER" | "OWNER";
 export type AccountType = "PLATFORM_ADMIN" | "FIRM_OWNER";
 export type ClientType = "B2B" | "B2C" | "B2G";
+export type PaymentMethod = "CASH" | "CARD" | "OTHER";
 
 export interface Firm {
   id: string;
@@ -16,6 +17,15 @@ export interface Firm {
   ordersCount: number;
   driversCount: number;
   createdAt: string;
+  submittedAt?: string;
+  approvedAt?: string;
+  logoUrl?: string;
+  isVisibleInClientApp?: boolean;
+  description?: string;
+  rejectionReason?: string;
+  phone?: string;
+  email?: string;
+  productsCount?: number;
 }
 
 export interface Driver {
@@ -27,6 +37,14 @@ export interface Driver {
   status: DriverStatus;
   carPlate: string;
   city?: string;
+  isOnline?: boolean;
+  driverNumber?: number;
+  vehicleNumber?: string;
+  lastSeenAt?: string;
+  lastLocation?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 export interface Order {
@@ -34,9 +52,18 @@ export interface Order {
   firmId: string;
   firmName?: string;
   clientName: string;
+  clientPhone?: string;
   address: string;
   status: OrderStatus;
   createdAt: string;
+  total?: number;
+  driverId?: string;
+  driverName?: string;
+  items?: OrderItem[];
+  orderNumber?: number;
+  assignedAt?: string;
+  deliveredAt?: string;
+  paymentMethod?: PaymentMethod;
 }
 
 export interface Client {
