@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Pressable,
   Image,
   Dimensions,
+  Keyboard,
 } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -35,6 +36,17 @@ export default function ApartmentDetailsScreen() {
   const [apartment, setApartment] = useState('');
   const [comment, setComment] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  // Hide hero image when keyboard is open
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const canSubmit = useMemo(() => apartment.trim().length > 0 && !isSaving, [apartment, isSaving]);
 
@@ -111,7 +123,7 @@ export default function ApartmentDetailsScreen() {
         {/* Header */}
         <View style={styles.headerRow}>
           <Pressable onPress={handleBack} hitSlop={12} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color="#0C1633" />
+            <Ionicons name={Platform.OS === 'ios' ? 'chevron-back' : 'arrow-back'} size={24} color="#0C1633" />
           </Pressable>
         </View>
 
@@ -125,14 +137,16 @@ export default function ApartmentDetailsScreen() {
           <Text style={styles.title}>{t('auth.apartmentDetails')}</Text>
           <Text style={styles.subtitle}>{t('auth.apartmentDetailsHelp')}</Text>
 
-          {/* Hero Image - Full width */}
-          <View style={styles.heroContainer}>
-            <Image
-              source={require('../assets/illustrations/apartment.png')}
-              style={styles.heroImage}
-              resizeMode="cover"
-            />
-          </View>
+          {/* Hero Image - Hidden when keyboard is open */}
+          {!keyboardVisible && (
+            <View style={styles.heroContainer}>
+              <Image
+                source={require('../assets/illustrations/apartment.png')}
+                style={styles.heroImage}
+                resizeMode="cover"
+              />
+            </View>
+          )}
 
           {/* Apartment Number (required) - FIRST for priority */}
           <Text style={styles.label}>
@@ -146,7 +160,6 @@ export default function ApartmentDetailsScreen() {
               placeholder={t('auth.apartmentPlaceholder')}
               placeholderTextColor="#9CA3AF"
               style={styles.input}
-              maxLength={10}
               returnKeyType="next"
             />
           </View>
@@ -164,7 +177,6 @@ export default function ApartmentDetailsScreen() {
                   placeholder={t('auth.floorPlaceholder')}
                   placeholderTextColor="#9CA3AF"
                   style={styles.inputSmall}
-                  maxLength={3}
                 />
               </View>
             </View>
@@ -180,7 +192,6 @@ export default function ApartmentDetailsScreen() {
                   placeholder={t('auth.entrancePlaceholder')}
                   placeholderTextColor="#9CA3AF"
                   style={styles.inputSmall}
-                  maxLength={3}
                 />
               </View>
             </View>

@@ -6,9 +6,10 @@ import {
   StyleSheet,
   FlatList,
   Image,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -71,6 +72,7 @@ export default function AddressTypeScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { t } = useLanguage();
+  const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState<AddressType | null>(null);
 
   // Get address data from previous screen
@@ -147,7 +149,7 @@ export default function AddressTypeScreen() {
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={10} style={styles.backButton}>
-            <Text style={styles.backArrow}>←</Text>
+            <Ionicons name={Platform.OS === 'ios' ? 'chevron-back' : 'arrow-back'} size={24} color="#1E293B" />
           </Pressable>
 
           {/* Cancel button for authenticated users */}
@@ -178,7 +180,7 @@ export default function AddressTypeScreen() {
       />
 
       {/* Sticky Next Button */}
-      <View style={styles.sticky}>
+      <View style={[styles.sticky, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
         <Pressable
           onPress={onNext}
           disabled={!selected}

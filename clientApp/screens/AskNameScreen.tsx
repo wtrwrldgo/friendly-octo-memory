@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, KeyboardAvoidingView, Platform, Image, SafeAreaView, TouchableOpacity
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../types';
@@ -39,7 +40,7 @@ const AskNameScreen: React.FC<AskNameScreenProps> = ({ navigation }) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <Ionicons name={Platform.OS === 'ios' ? 'chevron-back' : 'arrow-back'} size={24} color="#1E293B" />
         </TouchableOpacity>
 
         <KeyboardAvoidingView
@@ -129,6 +130,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     height: 68,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderColor: 'rgba(59, 130, 246, 0.2)',
   },
   footer: { paddingBottom: 20, paddingTop: 4 },
   button: {

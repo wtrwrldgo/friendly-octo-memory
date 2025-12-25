@@ -11,9 +11,11 @@ import {
   Image,
   Keyboard,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { YaMap, Marker } from 'react-native-yamap';
+import { YaMap, Marker, Circle, Animation } from 'react-native-yamap';
 import { MapFallbackUI } from '../components/MapFallbackUI';
 
 interface CameraPosition {
@@ -37,6 +39,7 @@ export default function SelectAddressScreen() {
   const { addresses, user } = useUser();
   const { t } = useLanguage();
   const { showError } = useToast();
+  const insets = useSafeAreaInsets();
 
   // State
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -45,7 +48,7 @@ export default function SelectAddressScreen() {
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [isGeocoding, setIsGeocoding] = useState<boolean>(false);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
-  const [, setMapReady] = useState<boolean>(false);
+  const [mapReady, setMapReady] = useState<boolean>(false);
   const [isFetchingLocation, setIsFetchingLocation] = useState<boolean>(false);
   const [showFallback, setShowFallback] = useState<boolean>(false);
 
@@ -58,6 +61,19 @@ export default function SelectAddressScreen() {
   // Refs
   const mapRef = useRef<any>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isAnimatingRef = useRef<boolean>(false); // Lock to prevent camera position updates during animation
+
+  // Map loading timeout - show fallback if map doesn't load within 8 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!mapReady) {
+        console.log('📍 Map loading timeout - showing fallback UI');
+        setShowFallback(true);
+      }
+    }, 8000);
+
+    return () => clearTimeout(timer);
+  }, [mapReady]);
 
   // Set initial map position on mount
   useEffect(() => {
@@ -74,6 +90,7 @@ export default function SelectAddressScreen() {
             );
           } catch (error) {
             console.error('Error calling setCenter:', error);
+            setShowFallback(true);
           }
         });
       }
@@ -107,15 +124,31 @@ export default function SelectAddressScreen() {
         const defaultPosition: CameraPosition = {
           lat: DEFAULT_LOCATION.latitude,
           lon: DEFAULT_LOCATION.longitude,
-          zoom: 16,
+          zoom: 18,
         };
         setCameraPosition(defaultPosition);
+
+        // Lock camera updates during animation
+        isAnimatingRef.current = true;
+
         if (mapRef.current) {
-          mapRef.current?.setCenter(
+          mapRef.current.setCenter(
             { lat: DEFAULT_LOCATION.latitude, lon: DEFAULT_LOCATION.longitude },
-            16, 0, 0, 1000
+            18,    // zoom
+            0,     // azimuth
+            0,     // tilt
+            500,   // duration in ms
+            Animation.SMOOTH
           );
+
+          // Release lock after animation completes
+          setTimeout(() => {
+            isAnimatingRef.current = false;
+          }, 600);
+        } else {
+          isAnimatingRef.current = false;
         }
+
         await reverseGeocode(DEFAULT_LOCATION.latitude, DEFAULT_LOCATION.longitude);
         return;
       }
@@ -130,21 +163,34 @@ export default function SelectAddressScreen() {
       const userPosition: CameraPosition = {
         lat: latitude,
         lon: longitude,
-        zoom: 16,
+        zoom: 18,
       };
 
       setCameraPosition(userPosition);
 
       if (mapRef.current) {
-        requestAnimationFrame(() => {
-          mapRef.current?.setCenter(
+        // Lock camera updates during animation
+        isAnimatingRef.current = true;
+
+        console.log('📍 GPS: Calling setCenter with zoom 18...');
+        try {
+          mapRef.current.setCenter(
             { lat: latitude, lon: longitude },
-            16,
-            0,
-            0,
-            1000,
+            18,    // zoom
+            0,     // azimuth
+            0,     // tilt
+            500,   // duration in ms
+            Animation.SMOOTH
           );
-        });
+          console.log('📍 GPS: setCenter called successfully');
+        } catch (e) {
+          console.log('📍 GPS: setCenter error:', e);
+        }
+
+        // Release lock after animation completes
+        setTimeout(() => {
+          isAnimatingRef.current = false;
+        }, 600);
       }
 
       await reverseGeocode(latitude, longitude);
@@ -321,35 +367,65 @@ export default function SelectAddressScreen() {
   const handleSuggestionPress = (suggestion: SearchSuggestion) => {
     Keyboard.dismiss();
 
-    requestAnimationFrame(() => {
-      const newPosition: CameraPosition = {
-        lat: suggestion.lat,
-        lon: suggestion.lon,
-        zoom: 16,
-      };
+    const newPosition: CameraPosition = {
+      lat: suggestion.lat,
+      lon: suggestion.lon,
+      zoom: 18,
+    };
 
-      setCameraPosition(newPosition);
+    setCameraPosition(newPosition);
 
-      if (mapRef.current) {
-        mapRef.current?.setCenter(
-          { lat: suggestion.lat, lon: suggestion.lon },
-          16,
-          0,
-          0,
-          500
-        );
+    // Lock camera updates during animation
+    isAnimatingRef.current = true;
+
+    console.log('📍 handleSuggestionPress called:', { lat: suggestion.lat, lon: suggestion.lon });
+    console.log('📍 mapRef.current exists:', !!mapRef.current);
+
+    if (mapRef.current) {
+      console.log('📍 Calling setCenter with zoom 18...');
+      try {
+        // Use fitMarkers for more reliable camera control
+        mapRef.current.fitMarkers([{ lat: suggestion.lat, lon: suggestion.lon }]);
+
+        // Then set zoom after a short delay
+        setTimeout(() => {
+          if (mapRef.current) {
+            console.log('📍 Setting zoom to 17...');
+            mapRef.current.setZoom(17, 0.5, Animation.SMOOTH);
+          }
+        }, 300);
+
+        console.log('📍 fitMarkers called successfully');
+      } catch (e) {
+        console.log('📍 setCenter error:', e);
       }
 
-      setLocalSelectedAddress({
-        lat: suggestion.lat,
-        lon: suggestion.lon,
-        address: suggestion.title,
-      });
+      // Release lock after animation completes
+      setTimeout(() => {
+        isAnimatingRef.current = false;
+        console.log('📍 Animation lock released');
 
-      setSearchQuery('');
-      setSuggestions([]);
-      setShowSuggestions(false);
+        // Debug: Check actual camera position
+        if (mapRef.current) {
+          mapRef.current.getCameraPosition((pos: any) => {
+            console.log('📍 Actual camera position after animation:', pos);
+          });
+        }
+      }, 1000);
+    } else {
+      console.log('📍 mapRef.current is null!');
+      isAnimatingRef.current = false;
+    }
+
+    setLocalSelectedAddress({
+      lat: suggestion.lat,
+      lon: suggestion.lon,
+      address: suggestion.title,
     });
+
+    setSearchQuery('');
+    setSuggestions([]);
+    setShowSuggestions(false);
   };
 
   const handleUseAddress = () => {
@@ -428,7 +504,7 @@ export default function SelectAddressScreen() {
       <View style={styles.container}>
         {isAuthenticated && (
           <TouchableOpacity style={styles.backButton} onPress={handleCancel} activeOpacity={0.8}>
-            <Text style={styles.backButtonText}>←</Text>
+            <Ionicons name={Platform.OS === 'ios' ? 'chevron-back' : 'arrow-back'} size={24} color="#1E293B" />
           </TouchableOpacity>
         )}
         <MapFallbackUI
@@ -473,6 +549,9 @@ export default function SelectAddressScreen() {
           }
         }}
         onCameraPositionChange={(event: any) => {
+          // Skip state updates during programmatic animation to prevent conflicts
+          if (isAnimatingRef.current) return;
+
           if (event?.nativeEvent) {
             const { lat, lon, zoom } = event.nativeEvent;
             if (lat && lon && zoom !== undefined) {
@@ -483,12 +562,23 @@ export default function SelectAddressScreen() {
         onMapPress={handleMapPress}
       >
         {localSelectedAddress && (
-          <Marker
-            point={{ lat: localSelectedAddress.lat, lon: localSelectedAddress.lon }}
-            source={require('../assets/pin.png')}
-            scale={1.5}
-            anchor={{ x: 0.5, y: 1 }}
-          />
+          <>
+            {/* Circle highlight around selected location */}
+            <Circle
+              center={{ lat: localSelectedAddress.lat, lon: localSelectedAddress.lon }}
+              radius={20}
+              fillColor="rgba(59, 130, 246, 0.15)"
+              strokeColor="rgba(59, 130, 246, 0.5)"
+              strokeWidth={2}
+            />
+            {/* Location marker pin */}
+            <Marker
+              point={{ lat: localSelectedAddress.lat, lon: localSelectedAddress.lon }}
+              source={require('../assets/ui-icons/blue-pin.png')}
+              scale={0.5}
+              anchor={{ x: 0.5, y: 1 }}
+            />
+          </>
         )}
       </YaMap>
 
@@ -497,7 +587,11 @@ export default function SelectAddressScreen() {
         <View style={styles.headerContent} pointerEvents="box-none">
           {isAuthenticated && (
             <TouchableOpacity style={styles.backButton} onPress={handleCancel} activeOpacity={0.8}>
-              <Text style={styles.backButtonText}>←</Text>
+              <Ionicons
+                name={Platform.OS === 'ios' ? 'chevron-back' : 'arrow-back'}
+                size={24}
+                color="#1E293B"
+              />
             </TouchableOpacity>
           )}
 
@@ -597,7 +691,7 @@ export default function SelectAddressScreen() {
       </View>
 
       {/* Bottom Sheet */}
-      <View style={styles.bottomSheet}>
+      <View style={[styles.bottomSheet, { paddingBottom: Math.max(insets.bottom, 20) + 16 }]}>
         {isGeocoding ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color={Colors.primary} />
@@ -849,6 +943,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     color: '#1E293B',
+    textAlign: 'center',
+    lineHeight: 28,
+    includeFontPadding: false,
   },
   zoomDivider: {
     height: 1,

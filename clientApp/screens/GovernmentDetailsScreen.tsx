@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   TouchableOpacity,
   Platform,
   Dimensions,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -33,6 +35,17 @@ export default function GovernmentDetailsScreen() {
   const [floor, setFloor] = useState('');
   const [officeNumber, setOfficeNumber] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  // Hide hero image when keyboard is open
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const onNext = async () => {
     if (!isValid || !addressData || isSaving) return;
@@ -98,24 +111,31 @@ export default function GovernmentDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color="#0C1633" />
+          <Ionicons name={Platform.OS === 'ios' ? 'chevron-back' : 'arrow-back'} size={24} color="#0C1633" />
         </Pressable>
 
         <Text style={styles.title}>{t('auth.governmentDetails')}</Text>
         <Text style={styles.subtitle}>{t('auth.governmentDetailsHelp')}</Text>
       </View>
 
-      {/* Hero Image - Full width */}
-      <View style={styles.heroContainer}>
-        <Image
-          source={require('../assets/illustrations/government-building.png')}
-          style={styles.heroImage}
-          resizeMode="cover"
-        />
-      </View>
+      {/* Hero Image - Hidden when keyboard is open */}
+      {!keyboardVisible && (
+        <View style={styles.heroContainer}>
+          <Image
+            source={require('../assets/illustrations/government-building.png')}
+            style={styles.heroImage}
+            resizeMode="cover"
+          />
+        </View>
+      )}
 
       {/* Form */}
       <ScrollView
@@ -187,6 +207,7 @@ export default function GovernmentDetailsScreen() {
           </LinearGradient>
         </TouchableOpacity>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

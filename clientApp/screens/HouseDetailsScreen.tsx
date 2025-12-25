@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Pressable,
   Image,
   Dimensions,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -32,6 +33,17 @@ export default function HouseDetailsScreen() {
 
   const [houseNumber, setHouseNumber] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  // Hide hero image when keyboard is open
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const canSubmit = useMemo(() => houseNumber.trim().length > 0 && !isSaving, [houseNumber, isSaving]);
 
@@ -107,18 +119,20 @@ export default function HouseDetailsScreen() {
         {/* Back Button Row */}
         <View style={styles.headerRow}>
           <Pressable onPress={handleBack} hitSlop={12} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color="#0C1633" />
+            <Ionicons name={Platform.OS === 'ios' ? 'chevron-back' : 'arrow-back'} size={24} color="#0C1633" />
           </Pressable>
         </View>
 
-        {/* Hero Image - Full width, rounded corners */}
-        <View style={styles.heroContainer}>
-          <Image
-            source={require('../assets/illustrations/house.png')}
-            style={styles.heroImage}
-            resizeMode="cover"
-          />
-        </View>
+        {/* Hero Image - Hidden when keyboard is open */}
+        {!keyboardVisible && (
+          <View style={styles.heroContainer}>
+            <Image
+              source={require('../assets/illustrations/house.png')}
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
+          </View>
+        )}
 
       <ScrollView
         contentContainerStyle={styles.container}
@@ -142,7 +156,6 @@ export default function HouseDetailsScreen() {
               placeholder={t('auth.houseNumberPlaceholder')}
               placeholderTextColor="#9CA3AF"
               style={styles.input}
-              maxLength={10}
               returnKeyType="done"
               onSubmitEditing={submit}
             />
