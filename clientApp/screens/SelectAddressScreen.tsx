@@ -132,19 +132,20 @@ export default function SelectAddressScreen() {
         isAnimatingRef.current = true;
 
         if (mapRef.current) {
-          mapRef.current.setCenter(
-            { lat: DEFAULT_LOCATION.latitude, lon: DEFAULT_LOCATION.longitude },
-            18,    // zoom
-            0,     // azimuth
-            0,     // tilt
-            500,   // duration in ms
-            Animation.SMOOTH
-          );
+          // Use fitMarkers for more reliable camera control (same as search)
+          mapRef.current.fitMarkers([{ lat: DEFAULT_LOCATION.latitude, lon: DEFAULT_LOCATION.longitude }]);
+
+          // Then set zoom after a short delay
+          setTimeout(() => {
+            if (mapRef.current) {
+              mapRef.current.setZoom(17, 0.5, Animation.SMOOTH);
+            }
+          }, 300);
 
           // Release lock after animation completes
           setTimeout(() => {
             isAnimatingRef.current = false;
-          }, 600);
+          }, 1000);
         } else {
           isAnimatingRef.current = false;
         }
@@ -172,25 +173,28 @@ export default function SelectAddressScreen() {
         // Lock camera updates during animation
         isAnimatingRef.current = true;
 
-        console.log('📍 GPS: Calling setCenter with zoom 18...');
+        console.log('📍 GPS: Using fitMarkers + setZoom approach...');
         try {
-          mapRef.current.setCenter(
-            { lat: latitude, lon: longitude },
-            18,    // zoom
-            0,     // azimuth
-            0,     // tilt
-            500,   // duration in ms
-            Animation.SMOOTH
-          );
-          console.log('📍 GPS: setCenter called successfully');
+          // Use fitMarkers for more reliable camera control (same as search)
+          mapRef.current.fitMarkers([{ lat: latitude, lon: longitude }]);
+
+          // Then set zoom after a short delay
+          setTimeout(() => {
+            if (mapRef.current) {
+              console.log('📍 GPS: Setting zoom to 17...');
+              mapRef.current.setZoom(17, 0.5, Animation.SMOOTH);
+            }
+          }, 300);
+
+          console.log('📍 GPS: fitMarkers called successfully');
         } catch (e) {
-          console.log('📍 GPS: setCenter error:', e);
+          console.log('📍 GPS: fitMarkers error:', e);
         }
 
         // Release lock after animation completes
         setTimeout(() => {
           isAnimatingRef.current = false;
-        }, 600);
+        }, 1000);
       }
 
       await reverseGeocode(latitude, longitude);
