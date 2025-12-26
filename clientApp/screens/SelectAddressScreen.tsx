@@ -944,12 +944,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   zoomButtonText: {
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: 26,
+    fontWeight: '500',
     color: '#1E293B',
     textAlign: 'center',
-    lineHeight: 28,
+    lineHeight: 44,
     includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   zoomDivider: {
     height: 1,

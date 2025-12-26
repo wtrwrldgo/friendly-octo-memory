@@ -230,7 +230,7 @@ export default function ApartmentDetailsScreen() {
             </LinearGradient>
           </TouchableOpacity>
 
-          <View style={{ height: 24 }} />
+          <View style={{ height: keyboardVisible ? 40 : 24 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
