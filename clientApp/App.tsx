@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ActivityIndicator, Platform } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { AppNavigator } from './navigation/AppNavigator';
 import { UserProvider, useUser } from './context/UserContext';
@@ -13,6 +13,68 @@ import { YANDEX_MAPKIT_KEY } from './config/mapkit.config';
 
 // Yandex MapKit will be initialized in AppContent component
 let mapKitInitialized = false;
+
+// Animated Loading Screen Component
+const LoadingScreen: React.FC = () => {
+  const dot1 = useRef(new Animated.Value(0)).current;
+  const dot2 = useRef(new Animated.Value(0)).current;
+  const dot3 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animateDot = (dot: Animated.Value, delay: number) => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(dot, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot, {
+            toValue: 0,
+            duration: 300,
+            easing: Easing.in(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    };
+
+    animateDot(dot1, 0);
+    animateDot(dot2, 200);
+    animateDot(dot3, 400);
+  }, []);
+
+  const getDotStyle = (anim: Animated.Value) => ({
+    opacity: anim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.3, 1],
+    }),
+    transform: [{
+      scale: anim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.8, 1.2],
+      }),
+    }],
+  });
+
+  return (
+    <View style={styles.loadingContainer}>
+      <View style={styles.loadingCenter}>
+        <Text style={styles.loadingTitle}>
+          <Text style={styles.loadingTitleWater}>Water</Text>
+          <Text style={styles.loadingTitleGo}>Go</Text>
+        </Text>
+        <View style={styles.dotsContainer}>
+          <Animated.View style={[styles.dot, getDotStyle(dot1)]} />
+          <Animated.View style={[styles.dot, getDotStyle(dot2)]} />
+          <Animated.View style={[styles.dot, getDotStyle(dot3)]} />
+        </View>
+      </View>
+    </View>
+  );
+};
 
 // Main App Component with Providers
 const App: React.FC = () => {
@@ -36,51 +98,50 @@ const App: React.FC = () => {
 
 // App Content with Navigation
 const AppContent: React.FC = () => {
-  const { user, addresses } = useUser();
+  const { user, addresses, isLoaded } = useUser();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [appIsReady, setAppIsReady] = useState(false);
+  const [mapKitReady, setMapKitReady] = useState(false);
+  const [minLoadingComplete, setMinLoadingComplete] = useState(false);
 
-  // Initialize Yandex MapKit and prepare app
+  // Initialize Yandex MapKit
   useEffect(() => {
-    async function prepare() {
+    async function initMapKit() {
       try {
-        // Initialize Yandex MapKit once
         if (!mapKitInitialized) {
           console.log('🗺️ [AppContent] Initializing Yandex MapKit...');
-          console.log('🗺️ [AppContent] API Key:', YANDEX_MAPKIT_KEY);
           try {
-            // Set locale BEFORE initialize (required by MapKit)
             YaMap.setLocale('en_US');
-            console.log('✅ [AppContent] Locale set to en_US');
-
-            // Initialize MapKit with API key
             YaMap.init(YANDEX_MAPKIT_KEY);
-
             mapKitInitialized = true;
-            console.log('✅ [AppContent] Yandex MapKit initialized successfully!');
+            console.log('✅ [AppContent] Yandex MapKit initialized!');
           } catch (initError) {
             console.error('❌ [AppContent] YaMap.init() failed:', initError);
           }
-        } else {
-          console.log('ℹ️ [AppContent] YaMap already initialized, skipping');
         }
-
-        // App is ready immediately - no artificial delay
-        setAppIsReady(true);
+        setMapKitReady(true);
       } catch (e) {
         console.warn(e);
+        setMapKitReady(true);
       }
     }
-
-    prepare();
+    initMapKit();
   }, []);
 
-  // Watch for authentication state changes
+  // Minimum loading screen display time (1.5 seconds for animation)
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinLoadingComplete(true);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Watch for authentication state changes (only after user data is loaded)
+  useEffect(() => {
+    if (!isLoaded) return;
+
     // Check if user is authenticated:
     // 1. Has user ID (from backend)
     // 2. Has proper name (not 'Guest')
-    // Note: Address is only required for initial onboarding, not to stay logged in
     const hasUserId = !!user?.id;
     const hasProperName = !!user?.name && user.name !== 'Guest' && user.name !== 'User';
     const isFullyAuthenticated = hasUserId && hasProperName;
@@ -90,31 +151,15 @@ const AppContent: React.FC = () => {
     console.log('🔐 [Auth Check] User Name:', user?.name);
     console.log('🔐 [Auth Check] Addresses:', addresses.length);
     console.log('🔐 [Auth Check] Is Authenticated:', isFullyAuthenticated);
-  }, [user?.id, user?.name]);
+  }, [isLoaded, user?.id, user?.name, addresses.length]);
 
-  console.log('🚀 [AppContent] Render - appIsReady:', appIsReady, 'isAuthenticated:', isAuthenticated);
+  // App is ready when: MapKit initialized, user data loaded, and minimum loading time passed
+  const appIsReady = mapKitReady && isLoaded && minLoadingComplete;
+
+  console.log('🚀 [AppContent] mapKitReady:', mapKitReady, 'isLoaded:', isLoaded, 'minLoading:', minLoadingComplete, 'auth:', isAuthenticated);
 
   if (!appIsReady) {
-    console.log('⏳ [AppContent] App not ready yet, showing loading screen');
-    return (
-      <View style={styles.container}>
-        <View style={styles.topLoader}>
-          <ActivityIndicator size="large" color="#62B7FF" />
-        </View>
-        <View style={styles.center}>
-          <Image
-            source={require('./assets/watergo-loading.png')}
-            style={styles.mascot}
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>
-            <Text style={styles.titleWater}>Water</Text>
-            <Text style={styles.titleGo}>Go</Text>
-          </Text>
-          <Text style={styles.sub}>Loading...</Text>
-        </View>
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   console.log('✅ [AppContent] App ready! Rendering AppNavigator');
@@ -122,43 +167,39 @@ const AppContent: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  // Minimal Uber-style loading screen
+  loadingContainer: {
     flex: 1,
-    backgroundColor: '#E9F7FF',
+    backgroundColor: '#FFFFFF',
   },
-  safe: {
-    flex: 1,
-  },
-  topLoader: {
-    height: 72,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: Platform.OS === 'ios' ? 4 : 12,
-  },
-  center: {
+  loadingCenter: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  mascot: {
-    width: 320,
-    height: 320,
-    marginBottom: 16,
+  loadingTitle: {
+    fontSize: 36,
+    fontWeight: '700',
+    letterSpacing: -0.5,
   },
-  title: {
-    fontSize: 64,
+  loadingTitleWater: {
+    color: '#0C1633',
+    fontWeight: '700',
+  },
+  loadingTitleGo: {
+    color: '#3B66FF',
     fontWeight: '800',
   },
-  titleWater: {
-    color: '#0C1633',
+  dotsContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
+    gap: 8,
   },
-  titleGo: {
-    color: '#62B7FF',
-  },
-  sub: {
-    fontSize: 28,
-    color: '#6B7280',
-    marginTop: 8,
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#3B66FF',
   },
 });
 
