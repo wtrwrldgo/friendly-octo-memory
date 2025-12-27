@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, KeyboardAvoidingView, Platform, Image, SafeAreaView, TouchableOpacity
+  View, Text, StyleSheet, KeyboardAvoidingView, Platform, Image, SafeAreaView, TouchableOpacity, Keyboard, ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,9 +17,20 @@ type AskNameScreenProps = {
 
 const AskNameScreen: React.FC<AskNameScreenProps> = ({ navigation }) => {
   const [name, setName] = useState('');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const { updateUser } = useUser();
   const { t } = useLanguage();
   const valid = useMemo(() => name.trim().length >= 2, [name]);
+
+  // Hide mascot when keyboard is open
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const handleContinue = async () => {
     if (!valid) return;
@@ -58,41 +69,55 @@ const AskNameScreen: React.FC<AskNameScreenProps> = ({ navigation }) => {
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.container}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
-          <View style={styles.content}>
-            <Image
-              source={require('../assets/illustrations/ask-name.png')}
-              style={styles.mascot}
-              resizeMode="contain"
-              accessibilityIgnoresInvertColors
-            />
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            <View style={styles.content}>
+              {/* Hide mascot when keyboard is open */}
+              {!keyboardVisible && (
+                <Image
+                  source={require('../assets/illustrations/ask-name.png')}
+                  style={styles.mascot}
+                  resizeMode="contain"
+                  accessibilityIgnoresInvertColors
+                />
+              )}
 
-            <Text style={styles.h1}>
-              {t('auth.heyThere')} <Text style={{ fontSize: 28 }}>👋</Text>
-            </Text>
-            <Text style={styles.h2}>{t('auth.whatShouldWeCallYou')}</Text>
+              <Text style={styles.h1}>
+                {t('auth.heyThere')} <Text style={{ fontSize: 28 }}>👋</Text>
+              </Text>
+              <Text style={styles.h2}>{t('auth.whatShouldWeCallYou')}</Text>
 
-            <TextField
-              label=""
-              value={name}
-              onChangeText={setName}
-              placeholder={t('auth.namePlaceholder')}
-              containerStyle={styles.inputWrap}
-              style={styles.input}
-              returnKeyType="done"
-              onSubmitEditing={handleContinue}
-            />
-          </View>
+              <TextField
+                label=""
+                value={name}
+                onChangeText={setName}
+                placeholder={t('auth.namePlaceholder')}
+                containerStyle={styles.inputWrap}
+                style={styles.input}
+                returnKeyType="done"
+                onSubmitEditing={handleContinue}
+              />
 
-          <View style={styles.footer}>
-            <PrimaryButton
-              title={t('auth.continue')}
-              onPress={handleContinue}
-              disabled={!valid}
-              style={styles.button}
-              textStyle={styles.buttonText}
-            />
-          </View>
+              {/* Spacing between input and button */}
+              <View style={{ height: keyboardVisible ? 20 : 0 }} />
+            </View>
+
+            <View style={[styles.footer, keyboardVisible && styles.footerKeyboard]}>
+              <PrimaryButton
+                title={t('auth.continue')}
+                onPress={handleContinue}
+                disabled={!valid}
+                style={styles.button}
+                textStyle={styles.buttonText}
+              />
+            </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
@@ -115,11 +140,16 @@ const styles = StyleSheet.create({
     color: '#0C1633',
   },
   container: { flex: 1, paddingHorizontal: 24 },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
+  },
   content: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
+    paddingTop: 60,
   },
   mascot: { width: 280, height: 280, marginBottom: 6 },
   h1: {
@@ -145,7 +175,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.5)',
     borderColor: 'rgba(59, 130, 246, 0.2)',
   },
-  footer: { paddingBottom: 20, paddingTop: 4 },
+  footer: {
+    paddingBottom: 20,
+    paddingTop: 16,
+  },
+  footerKeyboard: {
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
   button: {
     height: 64,
     borderRadius: 22,
