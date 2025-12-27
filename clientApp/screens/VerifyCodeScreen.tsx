@@ -73,32 +73,40 @@ const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({ navigation, route }
       setUser(mergedUser);
       showSuccess(t('auth.verify') || 'Verified!');
 
-      // Always try to load addresses from API to check if returning user
+      // Load addresses from API to check if returning user
       console.log('Loading addresses from API...');
       await loadAddressesFromAPI();
 
-      // Check if user has addresses saved - if yes, they're a returning user
-      // The addresses state will be updated by loadAddressesFromAPI
-      // App.tsx will handle navigation based on isAuthenticated state
-      // If addresses exist -> go to Home (handled by App.tsx)
-      // If no addresses -> need to go through onboarding
+      // Check if this is a returning user (has addresses in the API response)
+      // We need to fetch addresses again to get the count since state updates are async
+      const ApiService = require('../services/api').default;
+      let userAddresses: any[] = [];
+      try {
+        userAddresses = await ApiService.getUserAddresses();
+        console.log('Fetched addresses for auth check:', userAddresses.length);
+      } catch (err) {
+        console.log('Could not fetch addresses:', err);
+      }
 
-      // For new users, navigate based on what they need
       const hasProperName = mergedUser.name && mergedUser.name !== 'Guest' && mergedUser.name !== 'User';
+      const hasAddresses = userAddresses && userAddresses.length > 0;
 
-      if (!hasProperName) {
-        // User needs to enter their name first
+      console.log('🔐 [VerifyCode] hasProperName:', hasProperName, 'hasAddresses:', hasAddresses);
+
+      if (hasProperName && hasAddresses) {
+        // RETURNING USER: Has name and addresses
+        // Don't navigate - App.tsx will automatically switch to MainNavigator
+        console.log('🔐 [VerifyCode] Returning user detected - letting App.tsx handle navigation');
+        // Just wait a moment for state to update, App.tsx will switch to Home
+        return;
+      } else if (!hasProperName) {
+        // NEW USER: Needs to enter name first
+        console.log('🔐 [VerifyCode] New user - navigating to AskName');
         navigation.navigate('AskName');
       } else {
-        // User has a name - check if they need to add an address
-        // loadAddressesFromAPI was called above, but for new users it will return empty
-        // We need to navigate to AddressSelect for new users without addresses
-        // A small delay to let the addresses state update
-        setTimeout(() => {
-          // If user has addresses (returning user), App.tsx will switch to MainNavigator
-          // If user has no addresses (new user), navigate to AddressSelect
-          navigation.navigate('AddressSelect');
-        }, 100);
+        // User has name but no addresses - go to address selection
+        console.log('🔐 [VerifyCode] User needs address - navigating to SelectAddress');
+        navigation.navigate('SelectAddress', { isFirstAddress: true });
       }
     } catch (e: any) {
       // Check if error is related to invalid/incorrect code
@@ -253,8 +261,8 @@ function formatTimer(s: number) {
   return `${mm}:${ss}`;
 }
 
-const BOX = 48;
-const RADIUS = 14;
+const BOX = 52;
+const RADIUS = 16;
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -295,8 +303,8 @@ const styles = StyleSheet.create({
   codeRow: {
     width: '100%',
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 6,
+    justifyContent: 'center',
+    gap: 8,
     marginBottom: 8,
   },
   codeBox: {
@@ -306,18 +314,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
   codeBoxActive: {
     borderWidth: 2,
-    borderColor: 'rgba(47,123,255,0.6)',
+    borderColor: '#2F7BFF',
   },
   codeChar: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700',
     color: '#0C1633',
   },

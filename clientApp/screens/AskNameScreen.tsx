@@ -21,10 +21,22 @@ const AskNameScreen: React.FC<AskNameScreenProps> = ({ navigation }) => {
   const { t } = useLanguage();
   const valid = useMemo(() => name.trim().length >= 2, [name]);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!valid) return;
-    updateUser({ name: name.trim() });
-    navigation.navigate('SelectAddress');
+    const trimmedName = name.trim();
+    updateUser({ name: trimmedName });
+
+    // Also save name to API
+    try {
+      const ApiService = require('../services/api').default;
+      await ApiService.updateUserProfile({ name: trimmedName });
+      console.log('Name saved to API:', trimmedName);
+    } catch (err) {
+      console.log('Could not save name to API:', err);
+    }
+
+    // Navigate to SelectAddress for first address setup
+    navigation.navigate('SelectAddress', { isFirstAddress: true });
   };
 
   return (

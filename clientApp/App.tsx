@@ -142,9 +142,11 @@ const AppContent: React.FC = () => {
     // Check if user is authenticated:
     // 1. Has user ID (from backend)
     // 2. Has proper name (not 'Guest')
+    // 3. Has at least one address (completed onboarding)
     const hasUserId = !!user?.id;
     const hasProperName = !!user?.name && user.name !== 'Guest' && user.name !== 'User';
-    const isFullyAuthenticated = hasUserId && hasProperName;
+    const hasAddresses = addresses.length > 0;
+    const isFullyAuthenticated = hasUserId && hasProperName && hasAddresses;
     setIsAuthenticated(isFullyAuthenticated);
 
     console.log('🔐 [Auth Check] User ID:', user?.id);
