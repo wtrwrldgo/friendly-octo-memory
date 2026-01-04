@@ -5,6 +5,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useFirmData } from "@/contexts/FirmDataContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import {
@@ -16,6 +17,7 @@ import {
 export default function FirmDashboardPage() {
   const { user, firm, loading: authLoading } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const {
     orders: allOrders,
     ordersLoading,
@@ -62,7 +64,7 @@ export default function FirmDashboardPage() {
       <div className={`min-h-screen flex items-center justify-center ${theme === "dark" ? "bg-gray-950" : "bg-gray-50"}`}>
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className={`mt-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Loading...</p>
+          <p className={`mt-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>{t.common.loading}</p>
         </div>
       </div>
     );
@@ -79,7 +81,7 @@ export default function FirmDashboardPage() {
   }).length;
 
   const now = new Date();
-  const greeting = now.getHours() < 12 ? "Good morning" : now.getHours() < 18 ? "Good afternoon" : "Good evening";
+  const greeting = now.getHours() < 12 ? t.dashboard.goodMorning : now.getHours() < 18 ? t.dashboard.goodAfternoon : t.dashboard.goodEvening;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('uz-UZ').format(value) + ' UZS';
@@ -116,7 +118,7 @@ export default function FirmDashboardPage() {
               className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
             >
               <Plus className="w-5 h-5" />
-              <span>New Order</span>
+              <span>{t.dashboard.newOrder}</span>
             </button>
           </div>
         </div>
@@ -134,7 +136,7 @@ export default function FirmDashboardPage() {
                 <span className="text-xs font-medium text-green-600 dark:text-green-400">+12%</span>
               </div>
             </div>
-            <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>Total Revenue</p>
+            <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>{t.dashboard.totalRevenue}</p>
             <p className={`text-lg md:text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
               {formatCurrency(stats.revenue)}
             </p>
@@ -148,11 +150,11 @@ export default function FirmDashboardPage() {
               </div>
               {pendingOrders > 0 && (
                 <span className="px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-xs font-medium text-yellow-600 dark:text-yellow-400">
-                  {pendingOrders} pending
+                  {pendingOrders} {t.dashboard.pending}
                 </span>
               )}
             </div>
-            <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>Total Orders</p>
+            <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>{t.dashboard.totalOrders}</p>
             <p className={`text-lg md:text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
               {stats.ordersCount}
             </p>
@@ -166,10 +168,10 @@ export default function FirmDashboardPage() {
               </div>
               <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                <span className="text-xs font-medium text-green-600 dark:text-green-400">{onlineDrivers} online</span>
+                <span className="text-xs font-medium text-green-600 dark:text-green-400">{onlineDrivers} {t.dashboard.online}</span>
               </span>
             </div>
-            <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>Active Drivers</p>
+            <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>{t.dashboard.activeDrivers}</p>
             <p className={`text-lg md:text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
               {stats.driversCount}
             </p>
@@ -182,7 +184,7 @@ export default function FirmDashboardPage() {
                 <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
-            <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>Total Clients</p>
+            <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>{t.dashboard.totalClients}</p>
             <p className={`text-lg md:text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
               {stats.clientsCount}
             </p>
@@ -198,7 +200,7 @@ export default function FirmDashboardPage() {
             }`}
           >
             <Package className={`w-5 h-5 ${theme === "dark" ? "text-blue-400" : "text-blue-600"}`} />
-            <span className={`text-xs font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Orders</span>
+            <span className={`text-xs font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>{t.nav.orders}</span>
           </button>
           <button
             onClick={() => router.push("/firm-drivers")}
@@ -207,7 +209,7 @@ export default function FirmDashboardPage() {
             }`}
           >
             <Truck className={`w-5 h-5 ${theme === "dark" ? "text-orange-400" : "text-orange-600"}`} />
-            <span className={`text-xs font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Drivers</span>
+            <span className={`text-xs font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>{t.nav.drivers}</span>
           </button>
           <button
             onClick={() => router.push("/firm-clients")}
@@ -216,7 +218,7 @@ export default function FirmDashboardPage() {
             }`}
           >
             <Users className={`w-5 h-5 ${theme === "dark" ? "text-purple-400" : "text-purple-600"}`} />
-            <span className={`text-xs font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Clients</span>
+            <span className={`text-xs font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>{t.nav.clients}</span>
           </button>
           <button
             onClick={() => router.push("/firm-products")}
@@ -225,7 +227,7 @@ export default function FirmDashboardPage() {
             }`}
           >
             <BarChart3 className={`w-5 h-5 ${theme === "dark" ? "text-green-400" : "text-green-600"}`} />
-            <span className={`text-xs font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Products</span>
+            <span className={`text-xs font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>{t.nav.products}</span>
           </button>
         </div>
 
@@ -238,17 +240,17 @@ export default function FirmDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                    Recent Orders
+                    {t.dashboard.recentOrders}
                   </h2>
                   <p className={`text-sm ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
-                    {todayOrders} orders today
+                    {todayOrders} {t.dashboard.ordersToday}
                   </p>
                 </div>
                 <button
                   onClick={() => router.push("/firm-orders")}
                   className={`flex items-center gap-1 text-sm font-medium ${theme === "dark" ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-700"}`}
                 >
-                  View All
+                  {t.dashboard.viewAll}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -257,7 +259,7 @@ export default function FirmDashboardPage() {
             {orders.length === 0 ? (
               <div className="p-8 text-center">
                 <ShoppingCart className={`w-12 h-12 mx-auto mb-3 ${theme === "dark" ? "text-gray-700" : "text-gray-300"}`} />
-                <p className={theme === "dark" ? "text-gray-500" : "text-gray-500"}>No orders yet</p>
+                <p className={theme === "dark" ? "text-gray-500" : "text-gray-500"}>{t.dashboard.noOrders}</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -303,14 +305,14 @@ export default function FirmDashboardPage() {
               <div className="flex items-center gap-2 mb-4">
                 <Target className={`w-5 h-5 ${theme === "dark" ? "text-purple-400" : "text-purple-600"}`} />
                 <h3 className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                  Today&apos;s Performance
+                  {t.dashboard.todaysPerformance}
                 </h3>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-sm mb-1.5">
-                    <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Orders Completed</span>
+                    <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>{t.dashboard.ordersCompleted}</span>
                     <span className={`font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                       {Math.floor(stats.ordersCount * 0.7)}/{stats.ordersCount}
                     </span>
@@ -322,7 +324,7 @@ export default function FirmDashboardPage() {
 
                 <div>
                   <div className="flex justify-between text-sm mb-1.5">
-                    <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Driver Availability</span>
+                    <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>{t.dashboard.driverAvailability}</span>
                     <span className={`font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                       {onlineDrivers}/{stats.driversCount}
                     </span>
@@ -344,7 +346,7 @@ export default function FirmDashboardPage() {
                   <div className="flex items-center gap-2">
                     <Truck className={`w-5 h-5 ${theme === "dark" ? "text-orange-400" : "text-orange-600"}`} />
                     <h3 className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                      Drivers
+                      {t.nav.drivers}
                     </h3>
                   </div>
                   <button
@@ -359,7 +361,7 @@ export default function FirmDashboardPage() {
               {drivers.length === 0 ? (
                 <div className="p-6 text-center">
                   <Truck className={`w-10 h-10 mx-auto mb-2 ${theme === "dark" ? "text-gray-700" : "text-gray-300"}`} />
-                  <p className={`text-sm ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>No drivers yet</p>
+                  <p className={`text-sm ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>{t.dashboard.noDrivers}</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100 dark:divide-gray-800">
