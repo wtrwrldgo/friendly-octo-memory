@@ -3,6 +3,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useFirmData } from "@/contexts/FirmDataContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import PageHeader from "@/components/PageHeader";
@@ -18,8 +19,8 @@ type StatusFilter = "ALL" | "ONLINE" | "OFFLINE" | "DELIVERING";
 
 export default function FirmDriversPage() {
   const { user, firm, loading: authLoading } = useAuth();
+  const { drivers, driversLoading, fetchDrivers } = useFirmData();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,42 +29,13 @@ export default function FirmDriversPage() {
     name: "",
     phone: "",
     carPlate: "",
+    carBrand: "",
+    carColor: "",
     city: "",
     status: "OFFLINE" as DriverStatus,
   });
-  const [drivers, setDrivers] = useState<Driver[]>([]);
 
-  const fetchDrivers = async () => {
-    try {
-      setLoading(true);
-      const firmId = user?.firmId || firm?.id;
-      if (!firmId) return;
-
-      const { data, error } = await db.getDrivers(firmId);
-      if (error) {
-        console.error("Failed to fetch drivers:", error);
-        return;
-      }
-
-      if (data) {
-        const mappedDrivers: Driver[] = data.map((d: any) => ({
-          id: d.id,
-          name: d.name,
-          phone: d.phone,
-          firmId: d.firmId,
-          firmName: firm?.name || "My Firm",
-          status: (d.isAvailable ? "ONLINE" : "OFFLINE") as DriverStatus,
-          carPlate: d.vehicleNumber || d.carPlate || "N/A",
-          city: d.city || "N/A",
-        }));
-        setDrivers(mappedDrivers);
-      }
-    } catch (error) {
-      console.error("Failed to fetch drivers:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = driversLoading;
 
   useEffect(() => {
     if (authLoading) return;
@@ -71,8 +43,9 @@ export default function FirmDriversPage() {
       router.push("/login");
       return;
     }
+    // Will use cached data if available
     fetchDrivers();
-  }, [user, firm, router, authLoading]);
+  }, [user, router, authLoading, fetchDrivers]);
 
   const stats = useMemo(() => ({
     total: drivers.length,
@@ -105,6 +78,8 @@ export default function FirmDriversPage() {
       name: "",
       phone: "",
       carPlate: "",
+      carBrand: "",
+      carColor: "",
       city: "",
       status: "OFFLINE",
     });
@@ -117,39 +92,76 @@ export default function FirmDriversPage() {
       name: driver.name,
       phone: driver.phone,
       carPlate: driver.carPlate,
+      carBrand: (driver as any).carBrand || "",
+      carColor: (driver as any).carColor || "",
       city: driver.city || "",
       status: driver.status,
     });
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingDriver) {
-      setDrivers(drivers.map(d =>
-        d.id === editingDriver.id
-          ? { ...d, ...formData }
-          : d
-      ));
-    } else {
-      const newDriver: Driver = {
-        id: `drv-${Date.now()}`,
-        name: formData.name,
-        phone: formData.phone,
-        firmId: user?.firmId || firm?.id || "1",
-        firmName: firm?.name || "My Firm",
-        status: formData.status,
-        carPlate: formData.carPlate,
-        city: formData.city,
-      };
-      setDrivers([...drivers, newDriver]);
+    try {
+      if (editingDriver) {
+        const { error } = await db.updateDriver(editingDriver.id, {
+          name: formData.name,
+          phone: formData.phone,
+          car_plate: formData.carPlate,
+          car_brand: formData.carBrand,
+          car_color: formData.carColor,
+          city: formData.city,
+        });
+        if (error) {
+          console.error("Failed to update driver:", error);
+          alert("Failed to update driver. Please try again.");
+          return;
+        }
+      } else {
+        const firmId = user?.firmId || firm?.id;
+        if (!firmId) {
+          alert("No firm ID found. Please try again.");
+          return;
+        }
+        const { error } = await db.createDriver({
+          firmId,
+          name: formData.name,
+          phone: formData.phone,
+          car_plate: formData.carPlate,
+          car_brand: formData.carBrand,
+          car_color: formData.carColor,
+          city: formData.city,
+        });
+        if (error) {
+          console.error("Failed to create driver:", error);
+          alert("Failed to create driver. Please try again.");
+          return;
+        }
+      }
+      setIsModalOpen(false);
+      // Refresh cache
+      fetchDrivers(true);
+    } catch (error) {
+      console.error("Failed to save driver:", error);
+      alert("Failed to save driver. Please try again.");
     }
-    setIsModalOpen(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this driver?")) {
-      setDrivers(drivers.filter(d => d.id !== id));
+      try {
+        const { error } = await db.deleteDriver(id);
+        if (error) {
+          console.error("Failed to delete driver:", error);
+          alert("Failed to delete driver. Please try again.");
+          return;
+        }
+        // Refresh cache
+        fetchDrivers(true);
+      } catch (error) {
+        console.error("Failed to delete driver:", error);
+        alert("Failed to delete driver. Please try again.");
+      }
     }
   };
 
@@ -281,7 +293,7 @@ export default function FirmDriversPage() {
 
             {/* Refresh Button */}
             <button
-              onClick={() => fetchDrivers()}
+              onClick={() => fetchDrivers(true)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all font-semibold shadow-sm hover:shadow-md"
               title="Refresh drivers"
             >
@@ -501,6 +513,32 @@ export default function FirmDriversPage() {
               placeholder="01A123BC"
               className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
               required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Car Brand
+            </label>
+            <input
+              type="text"
+              value={formData.carBrand}
+              onChange={(e) => setFormData({ ...formData, carBrand: e.target.value })}
+              placeholder="Toyota, Chevrolet, etc."
+              className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Car Color
+            </label>
+            <input
+              type="text"
+              value={formData.carColor}
+              onChange={(e) => setFormData({ ...formData, carColor: e.target.value })}
+              placeholder="White, Black, Silver, etc."
+              className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
             />
           </div>
 

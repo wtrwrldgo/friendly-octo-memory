@@ -4,6 +4,9 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+import { ToastProvider } from "@/contexts/ToastContext";
+import { FirmDataProvider } from "@/contexts/FirmDataContext";
 import LayoutContent from "@/components/LayoutContent";
 
 export const metadata: Metadata = {
@@ -21,7 +24,13 @@ export default function RootLayout({
       <body>
         <ThemeProvider>
           <AuthProvider>
-            <LayoutContent>{children}</LayoutContent>
+            <FirmDataProvider>
+              <SubscriptionProvider>
+                <ToastProvider>
+                  <LayoutContent>{children}</LayoutContent>
+                </ToastProvider>
+              </SubscriptionProvider>
+            </FirmDataProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

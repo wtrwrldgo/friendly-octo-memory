@@ -3,6 +3,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useFirmData } from "@/contexts/FirmDataContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import PageHeader from "@/components/PageHeader";
@@ -13,12 +14,11 @@ import {
   Navigation, Search, RefreshCw, Phone, Mail, MapPin,
   ShoppingCart, DollarSign, X, XCircle
 } from "lucide-react";
-import { db } from "@/lib/db";
 
 export default function FirmClientsPage() {
   const { user, firm } = useAuth();
+  const { clients, clientsLoading, fetchClients } = useFirmData();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<ClientType | "ALL">("ALL");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
@@ -32,50 +32,17 @@ export default function FirmClientsPage() {
     address: "",
     type: "B2C" as ClientType,
   });
-  const [clients, setClients] = useState<Client[]>([]);
 
-  const fetchClients = async () => {
-    try {
-      setLoading(true);
-      const firmId = user?.firmId || firm?.id;
-      if (!firmId) return;
-
-      const { data, error } = await db.getClients(firmId);
-      if (error) {
-        console.error("Failed to fetch clients:", error);
-        return;
-      }
-
-      if (data) {
-        const mappedClients = data.map((c: any) => ({
-          id: c.id,
-          name: c.name,
-          phone: c.phone,
-          email: c.email || "",
-          address: c.addresses?.[0]?.address || "No address",
-          firmId: firmId,
-          type: "B2C" as ClientType,
-          totalOrders: c._count?.orders || c.ordersCount || 0,
-          revenue: c.totalSpent || 0,
-          createdAt: c.createdAt,
-          lastOrderAt: c.lastOrderAt || c.createdAt,
-        }));
-        setClients(mappedClients);
-      }
-    } catch (error) {
-      console.error("Failed to fetch clients:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = clientsLoading;
 
   useEffect(() => {
     if (!user) {
       router.push("/login");
       return;
     }
+    // Will use cached data if available
     fetchClients();
-  }, [user, firm, router]);
+  }, [user, router, fetchClients]);
 
   const stats = useMemo(() => ({
     total: clients.length,
@@ -130,27 +97,17 @@ export default function FirmClientsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingClient) {
-      setClients(clients.map(c =>
-        c.id === editingClient.id ? { ...c, ...formData } : c
-      ));
-    } else {
-      const newClient: Client = {
-        id: `c${clients.length + 1}`,
-        ...formData,
-        firmId: user?.firmId || firm?.id || "1",
-        totalOrders: 0,
-        revenue: 0,
-        createdAt: new Date().toISOString(),
-      };
-      setClients([...clients, newClient]);
-    }
+    // TODO: Implement actual API call for create/update
     setIsModalOpen(false);
+    // Refresh cache
+    fetchClients(true);
   };
 
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this client?")) {
-      setClients(clients.filter(c => c.id !== id));
+      // TODO: Implement actual API call for delete
+      // Refresh cache
+      fetchClients(true);
     }
   };
 
@@ -280,7 +237,7 @@ export default function FirmClientsPage() {
 
             {/* Refresh Button */}
             <button
-              onClick={() => fetchClients()}
+              onClick={() => fetchClients(true)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all font-semibold shadow-sm hover:shadow-md"
               title="Refresh clients"
             >
