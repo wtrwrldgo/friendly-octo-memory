@@ -5,6 +5,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import { useFirmData } from "@/contexts/FirmDataContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import PageHeader from "@/components/PageHeader";
@@ -16,6 +17,7 @@ export default function FirmOrdersPage() {
   const { user, firm, loading: authLoading, isWatergoAdmin } = useAuth();
   const toast = useToast();
   const { orders, ordersLoading, fetchOrders } = useFirmData();
+  const { t } = useLanguage();
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
@@ -92,26 +94,26 @@ export default function FirmOrdersPage() {
     // TODO: Implement actual API call for create/update
     // For now, just close modal and refresh
     setIsModalOpen(false);
-    toast.success(editingOrder ? 'Order updated' : 'Order created');
+    toast.success(editingOrder ? t.orders.orderUpdated : t.orders.orderCreated);
     fetchOrders(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this order?")) {
+    if (confirm(t.orders.deleteConfirm)) {
       try {
         const response = await fetch(`/api/orders/${id}`, {
           method: 'DELETE',
         });
 
         if (response.ok) {
-          toast.success('Order deleted successfully');
+          toast.success(t.orders.orderDeleted);
           fetchOrders(true);
         } else {
-          toast.error('Failed to delete order. Please try again.');
+          toast.error(t.orders.deleteFailed);
         }
       } catch (error) {
         console.error('[Orders] Delete error:', error);
-        toast.error('Error deleting order.');
+        toast.error(t.orders.errorDeleting);
       }
     }
   };
@@ -131,16 +133,16 @@ export default function FirmOrdersPage() {
       });
 
       if (response.ok) {
-        toast.success('Order cancelled successfully');
+        toast.success(t.orders.orderCancelled);
         setCancelModalOpen(false);
         setOrderToCancel(null);
         fetchOrders(true);
       } else {
-        toast.error('Failed to cancel order. Please try again.');
+        toast.error(t.orders.cancelFailed);
       }
     } catch (error) {
       console.error('[Orders] Cancel error:', error);
-      toast.error('Error cancelling order.');
+      toast.error(t.orders.errorCancelling);
     }
   };
 
@@ -160,16 +162,16 @@ export default function FirmOrdersPage() {
       });
 
       if (response.ok) {
-        toast.success('Order returned to queue successfully');
+        toast.success(t.orders.orderReturned);
         setReturnToQueueModalOpen(false);
         setOrderToReturn(null);
         fetchOrders(true);
       } else {
-        toast.error('Failed to return order to queue.');
+        toast.error(t.orders.returnFailed);
       }
     } catch (error) {
       console.error('[Orders] Return to queue error:', error);
-      toast.error('Error returning order to queue.');
+      toast.error(t.orders.errorReturning);
     }
   };
 
@@ -177,8 +179,8 @@ export default function FirmOrdersPage() {
     <div className="p-8 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <div className="flex items-center justify-between mb-6">
         <PageHeader
-          title="My Orders"
-          description="View and manage all your delivery orders"
+          title={t.orders.myOrders}
+          description={t.orders.description}
         />
         <div className="flex items-center gap-3">
           <button
@@ -186,7 +188,7 @@ export default function FirmOrdersPage() {
             className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-blue-500/30 transition-all hover:scale-105"
           >
             <Plus className="w-5 h-5" />
-            Create Order
+            {t.orders.createOrder}
           </button>
         </div>
       </div>
@@ -199,7 +201,7 @@ export default function FirmOrdersPage() {
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-100">Total Orders</p>
+                <p className="text-sm font-medium text-blue-100">{t.dashboard.totalOrders}</p>
                 <p className="text-4xl font-bold text-white mt-2">{orders.length}</p>
               </div>
               <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
@@ -212,7 +214,7 @@ export default function FirmOrdersPage() {
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-amber-100">Pending</p>
+                <p className="text-sm font-medium text-amber-100">{t.orders.pending}</p>
                 <p className="text-4xl font-bold text-white mt-2">
                   {orders.filter((o) => o.status === "PENDING").length}
                 </p>
@@ -227,7 +229,7 @@ export default function FirmOrdersPage() {
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-100">In Progress</p>
+                <p className="text-sm font-medium text-purple-100">{t.orders.inProgress}</p>
                 <p className="text-4xl font-bold text-white mt-2">
                   {orders.filter((o) => ["ON_THE_WAY", "ASSIGNED", "CONFIRMED", "PREPARING", "DELIVERING"].includes(o.status)).length}
                 </p>
@@ -242,7 +244,7 @@ export default function FirmOrdersPage() {
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-emerald-100">Delivered</p>
+                <p className="text-sm font-medium text-emerald-100">{t.orders.delivered}</p>
                 <p className="text-4xl font-bold text-white mt-2">
                   {orders.filter((o) => o.status === "DELIVERED").length}
                 </p>
@@ -257,7 +259,7 @@ export default function FirmOrdersPage() {
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-red-100">Cancelled</p>
+                <p className="text-sm font-medium text-red-100">{t.orders.cancelled}</p>
                 <p className="text-4xl font-bold text-white mt-2">
                   {orders.filter((o) => o.status === "CANCELLED").length}
                 </p>
@@ -279,7 +281,7 @@ export default function FirmOrdersPage() {
               </div>
               <input
                 type="text"
-                placeholder="Search by client, order ID, or address..."
+                placeholder={t.orders.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-14 pr-4 py-3.5 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
@@ -289,11 +291,11 @@ export default function FirmOrdersPage() {
             {/* Filter Chips */}
             <div className="flex flex-wrap items-center gap-2">
               {[
-                { value: "ALL", label: "All", icon: Package, color: "blue" },
-                { value: "PENDING", label: "Pending", icon: Clock, color: "amber" },
-                { value: "DELIVERING", label: "Active", icon: Truck, color: "purple" },
-                { value: "DELIVERED", label: "Done", icon: CheckCircle2, color: "emerald" },
-                { value: "CANCELLED", label: "Cancelled", icon: XOctagon, color: "red" },
+                { value: "ALL", label: t.orders.all, icon: Package, color: "blue" },
+                { value: "PENDING", label: t.orders.pending, icon: Clock, color: "amber" },
+                { value: "DELIVERING", label: t.orders.active, icon: Truck, color: "purple" },
+                { value: "DELIVERED", label: t.orders.done, icon: CheckCircle2, color: "emerald" },
+                { value: "CANCELLED", label: t.orders.cancelled, icon: XOctagon, color: "red" },
               ].map((filter) => {
                 const Icon = filter.icon;
                 const isActive = statusFilter === filter.value;
@@ -318,10 +320,10 @@ export default function FirmOrdersPage() {
             <button
               onClick={() => fetchOrders(true)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all font-semibold shadow-sm hover:shadow-md"
-              title="Refresh orders"
+              title={t.orders.refresh}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Refresh</span>
+              <span className="hidden sm:inline">{t.orders.refresh}</span>
             </button>
           </div>
 
@@ -329,7 +331,7 @@ export default function FirmOrdersPage() {
           {(searchQuery || statusFilter !== "ALL") && (
             <div className="flex items-center justify-between mt-5 pt-5 border-t border-gray-200/50 dark:border-gray-700/50">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Found <span className="font-bold text-gray-900 dark:text-white bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg">{filteredOrders.length}</span> of {orders.length} orders
+                {t.orders.found} <span className="font-bold text-gray-900 dark:text-white bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg">{filteredOrders.length}</span> {t.orders.of} {orders.length} {t.orders.ordersText}
               </p>
               <button
                 onClick={() => {
@@ -338,7 +340,7 @@ export default function FirmOrdersPage() {
                 }}
                 className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 font-semibold flex items-center gap-1 hover:gap-2 transition-all"
               >
-                Clear all filters
+                {t.orders.clearAllFilters}
                 <XCircle className="w-4 h-4" />
               </button>
             </div>
@@ -354,7 +356,7 @@ export default function FirmOrdersPage() {
                   <div className="absolute inset-0 rounded-full border-4 border-blue-200 dark:border-blue-900"></div>
                   <div className="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
                 </div>
-                <p className="text-gray-600 dark:text-gray-400 font-medium">Loading orders...</p>
+                <p className="text-gray-600 dark:text-gray-400 font-medium">{t.orders.loadingOrders}</p>
               </div>
             </div>
           ) : filteredOrders.length === 0 ? (
@@ -368,10 +370,10 @@ export default function FirmOrdersPage() {
                 </div>
               </div>
               <p className="text-gray-700 dark:text-gray-300 text-xl font-semibold mb-2">
-                {orders.length === 0 ? "No orders yet" : "No orders found"}
+                {orders.length === 0 ? t.orders.noOrdersYet : t.orders.noOrders}
               </p>
               <p className="text-gray-500 dark:text-gray-500 text-sm">
-                {orders.length === 0 ? "Create your first order to get started" : "Try adjusting your search or filter criteria"}
+                {orders.length === 0 ? t.orders.createFirstOrder : t.orders.tryAdjustingSearch}
               </p>
             </div>
           ) : (
@@ -383,22 +385,22 @@ export default function FirmOrdersPage() {
                       #
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Order
+                      {t.orders.order}
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Customer
+                      {t.orders.customer}
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Driver
+                      {t.orders.driver}
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Status
+                      {t.orders.status}
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Date
+                      {t.orders.date}
                     </th>
                     <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Actions
+                      {t.orders.actions}
                     </th>
                   </tr>
                 </thead>
@@ -463,7 +465,7 @@ export default function FirmOrdersPage() {
                             </div>
                           ) : (
                             <span className="text-sm text-gray-400 dark:text-gray-500 italic">
-                              Not assigned
+                              {t.orders.notAssigned}
                             </span>
                           )}
                         </td>
@@ -487,7 +489,7 @@ export default function FirmOrdersPage() {
                             <button
                               onClick={() => openEditModal(order)}
                               className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-                              title="Edit"
+                              title={t.common.edit}
                             >
                               <Edit className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             </button>
@@ -495,7 +497,7 @@ export default function FirmOrdersPage() {
                               <button
                                 onClick={() => openReturnToQueueModal(order)}
                                 className="p-2 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
-                                title="Return to Queue"
+                                title={t.orders.returnToQueue}
                               >
                                 <RotateCcw className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                               </button>
@@ -504,7 +506,7 @@ export default function FirmOrdersPage() {
                               <button
                                 onClick={() => openCancelModal(order)}
                                 className="p-2 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition-colors"
-                                title="Cancel Order"
+                                title={t.orders.cancelOrder}
                               >
                                 <XCircle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                               </button>
@@ -512,7 +514,7 @@ export default function FirmOrdersPage() {
                             <button
                               onClick={() => handleDelete(order.id)}
                               className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                              title="Delete"
+                              title={t.common.delete}
                             >
                               <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
                             </button>
@@ -532,18 +534,18 @@ export default function FirmOrdersPage() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingOrder ? "Edit Order" : "Create New Order"}
+        title={editingOrder ? t.orders.editOrder : t.orders.createNewOrder}
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Client Name
+              {t.orders.clientName}
             </label>
             <input
               type="text"
               value={formData.clientName}
               onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-              placeholder="Enter client name"
+              placeholder={t.orders.enterClientName}
               className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               required
             />
@@ -551,12 +553,12 @@ export default function FirmOrdersPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Delivery Address
+              {t.orders.deliveryAddress}
             </label>
             <textarea
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              placeholder="Enter full delivery address"
+              placeholder={t.orders.enterAddress}
               className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               rows={3}
               required
@@ -565,7 +567,7 @@ export default function FirmOrdersPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Order Status
+              {t.orders.orderStatus}
             </label>
             <select
               value={formData.status}
@@ -573,11 +575,11 @@ export default function FirmOrdersPage() {
               className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               required
             >
-              <option value="PENDING">Pending</option>
-              <option value="ASSIGNED">Assigned to Driver</option>
-              <option value="ON_THE_WAY">On The Way</option>
-              <option value="DELIVERED">Delivered</option>
-              <option value="CANCELLED">Cancelled</option>
+              <option value="PENDING">{t.orders.pending}</option>
+              <option value="ASSIGNED">{t.orders.assigned}</option>
+              <option value="ON_THE_WAY">{t.orders.onTheWay}</option>
+              <option value="DELIVERED">{t.orders.delivered}</option>
+              <option value="CANCELLED">{t.orders.cancelled}</option>
             </select>
           </div>
 
@@ -587,14 +589,14 @@ export default function FirmOrdersPage() {
               onClick={() => setIsModalOpen(false)}
               className="flex-1 px-6 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all hover:scale-105"
             >
-              Cancel
+              {t.common.cancel}
             </button>
             <button
               type="submit"
               className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-blue-500/30 transition-all hover:scale-105"
             >
               <Save className="w-5 h-5" />
-              {editingOrder ? "Update Order" : "Create Order"}
+              {editingOrder ? t.orders.updateOrder : t.orders.createOrder}
             </button>
           </div>
         </form>
@@ -607,7 +609,7 @@ export default function FirmOrdersPage() {
           setCancelModalOpen(false);
           setOrderToCancel(null);
         }}
-        title="Cancel Order"
+        title={t.orders.cancelOrder}
       >
         <div className="space-y-6">
           <div className="text-center">
@@ -615,15 +617,15 @@ export default function FirmOrdersPage() {
               <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
             </div>
             <p className="text-gray-700 dark:text-gray-300 text-lg">
-              Are you sure you want to cancel this order?
+              {t.orders.cancelOrderConfirm}
             </p>
             {orderToCancel && (
               <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-xl">
                 <p className="font-semibold text-gray-900 dark:text-white">
-                  Order #{orderToCancel.orderNumber}
+                  {t.orders.order} #{orderToCancel.orderNumber}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Client: {orderToCancel.clientName}
+                  {t.orders.client}: {orderToCancel.clientName}
                 </p>
               </div>
             )}
@@ -638,7 +640,7 @@ export default function FirmOrdersPage() {
               }}
               className="flex-1 px-6 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all hover:scale-105"
             >
-              Keep Order
+              {t.orders.keepOrder}
             </button>
             <button
               type="button"
@@ -646,7 +648,7 @@ export default function FirmOrdersPage() {
               className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-red-500/30 transition-all hover:scale-105"
             >
               <XCircle className="w-5 h-5" />
-              Cancel Order
+              {t.orders.cancelOrder}
             </button>
           </div>
         </div>
@@ -659,7 +661,7 @@ export default function FirmOrdersPage() {
           setReturnToQueueModalOpen(false);
           setOrderToReturn(null);
         }}
-        title="Return Order to Queue"
+        title={t.orders.returnToQueueTitle}
       >
         <div className="space-y-6">
           <div className="text-center">
@@ -667,20 +669,20 @@ export default function FirmOrdersPage() {
               <RotateCcw className="w-8 h-8 text-amber-600 dark:text-amber-400" />
             </div>
             <p className="text-gray-700 dark:text-gray-300 text-lg">
-              Return this order to the queue?
+              {t.orders.returnToQueueConfirm}
             </p>
             {orderToReturn && (
               <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-xl">
                 <p className="font-semibold text-gray-900 dark:text-white">
-                  Order #{orderToReturn.orderNumber}
+                  {t.orders.order} #{orderToReturn.orderNumber}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Client: {orderToReturn.clientName}
+                  {t.orders.client}: {orderToReturn.clientName}
                 </p>
               </div>
             )}
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-              The driver will be removed and the order will be available for another driver.
+              {t.orders.returnToQueueDescription}
             </p>
           </div>
 
@@ -693,7 +695,7 @@ export default function FirmOrdersPage() {
               }}
               className="flex-1 px-6 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all hover:scale-105"
             >
-              Keep Driver
+              {t.orders.keepDriver}
             </button>
             <button
               type="button"
@@ -701,7 +703,7 @@ export default function FirmOrdersPage() {
               className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-amber-500/30 transition-all hover:scale-105"
             >
               <RotateCcw className="w-5 h-5" />
-              Return to Queue
+              {t.orders.returnToQueue}
             </button>
           </div>
         </div>
