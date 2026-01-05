@@ -16,6 +16,9 @@ export const ownerSchema = z.object({
 // Firm status enum matching Prisma schema
 const firmStatusEnum = z.enum(['DRAFT', 'PENDING_REVIEW', 'ACTIVE', 'SUSPENDED']);
 
+// Delivery fee type enum matching Prisma schema
+const deliveryFeeTypeEnum = z.enum(['FIXED', 'PERCENTAGE']);
+
 export const createFirmSchema = z.object({
   name: z.string().min(2).max(100),
   logoUrl: urlOrPath.optional().nullable(),
@@ -25,7 +28,11 @@ export const createFirmSchema = z.object({
   address: z.string().max(200).optional().nullable(),
   deliveryTime: z.string().max(50).optional().nullable(),
   minOrder: z.number().int().min(0).default(0),
+  minOrderEnabled: z.boolean().default(false),
   deliveryFee: z.number().int().min(0).default(0),
+  deliveryFeeEnabled: z.boolean().default(false),
+  deliveryFeeType: deliveryFeeTypeEnum.default('FIXED'),
+  deliveryFeePercent: z.number().int().min(0).max(100).default(0),
   bottleDeposit: z.number().int().min(0).default(5000),
   bottleDepositEnabled: z.boolean().default(false),
   bottleDepositPrice: z.number().int().min(0).default(15000),
