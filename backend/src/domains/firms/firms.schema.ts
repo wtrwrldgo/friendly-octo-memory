@@ -36,9 +36,9 @@ export const createFirmSchema = z.object({
   bottleDeposit: z.number().int().min(0).default(5000),
   bottleDepositEnabled: z.boolean().default(false),
   bottleDepositPrice: z.number().int().min(0).default(15000),
-  scheduleDaysLimit: z.number().int().min(2).max(7).default(7),
-  scheduleTimeInterval: z.number().int().refine((v) => v === 15 || v === 30, {
-    message: 'Time interval must be 15 or 30 minutes',
+  scheduleDaysLimit: z.number().int().min(1).max(10).default(7),
+  scheduleTimeInterval: z.number().int().refine((v) => [1, 2, 5, 10, 15, 30, 60, 120, 180].includes(v), {
+    message: 'Time interval must be 1, 2, 5, 10, 15, 30, 60, 120, or 180 minutes',
   }).default(30),
   isActive: z.boolean().default(true),
   // Optional owner data - if provided, creates owner staff member

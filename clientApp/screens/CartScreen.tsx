@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Modal, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCart } from '../context/CartContext';
@@ -43,64 +43,6 @@ function QuantityStepper({ value, onChange }: { value: number; onChange: (v: num
   );
 }
 
-// Free badge component for fees
-function FreeBadge() {
-  return (
-    <View style={s.freeBadgeContainer}>
-      <Text style={s.freePrice}>0 UZS</Text>
-      <View style={s.freeBadge}>
-        <Text style={s.freeBadgeText}>Free</Text>
-      </View>
-    </View>
-  );
-}
-
-function OptionRow({
-  icon,
-  iconImage,
-  title,
-  subtitle,
-  right,
-  chevron,
-  onPress,
-  compact,
-}: {
-  icon?: string;
-  iconImage?: any;
-  title: string;
-  subtitle?: string;
-  right?: React.ReactNode;
-  chevron?: boolean;
-  onPress?: () => void;
-  compact?: boolean;
-}) {
-  const content = (
-    <>
-      <View style={s.rowIconWrapper}>
-        {iconImage ? (
-          <Image source={iconImage} style={compact ? s.rowIconImageSmall : s.rowIconImage} resizeMode="contain" />
-        ) : icon ? (
-          <Text style={s.rowIcon}>{icon}</Text>
-        ) : null}
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={s.rowTitle}>{title}</Text>
-        {!!subtitle && <Text style={s.rowSub} numberOfLines={1}>{subtitle}</Text>}
-      </View>
-      {right}
-      {chevron && <Text style={s.rowChevron}>›</Text>}
-    </>
-  );
-
-  return onPress ? (
-    <TouchableOpacity style={[s.rowCard, compact && s.rowCardCompact]} onPress={onPress} activeOpacity={0.7}>
-      {content}
-    </TouchableOpacity>
-  ) : (
-    <View style={[s.rowCard, compact && s.rowCardCompact]}>{content}</View>
-  );
-}
-
 function formatUZS(n: number) {
   return n.toLocaleString('ru-RU').replace(/,/g, ' ');
 }
@@ -113,6 +55,7 @@ function AddressSelectionModal({
   selectedAddress,
   onSelectAddress,
   onAddNew,
+  bottomInset,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -120,6 +63,7 @@ function AddressSelectionModal({
   selectedAddress: any;
   onSelectAddress: (address: any) => void;
   onAddNew: () => void;
+  bottomInset: number;
 }) {
   const getAddressIcon = (type?: string) => {
     switch (type) {
@@ -142,7 +86,7 @@ function AddressSelectionModal({
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={s.addressList} contentContainerStyle={s.addressListContent}>
+          <ScrollView style={s.addressList} contentContainerStyle={[s.addressListContent, { paddingBottom: Math.max(bottomInset, Platform.OS === 'android' ? 48 : 16) + 24 }]}>
             {addresses.map((address) => {
               const iconSource = getAddressIcon(address.addressType);
               return (
@@ -305,42 +249,52 @@ function TimeSelectionModal({
   onSelect,
   currentSelection,
   language,
+  bottomInset,
+  firmDeliveryTime,
+  scheduleDaysLimit = 7,
+  scheduleTimeInterval = 30,
 }: {
   visible: boolean;
   onClose: () => void;
   onSelect: (time: string, date?: Date) => void;
   currentSelection: string;
   language: Language;
+  bottomInset: number;
+  firmDeliveryTime?: string;
+  scheduleDaysLimit?: number;
+  scheduleTimeInterval?: number;
 }) {
-  // Get translations directly from the translations object
+  // Get translations and use real firm delivery time
+  const deliveryTime = firmDeliveryTime || '15-25 min';
   const langTranslations = (translations as any)[language] || translations.en;
-  const ts = langTranslations.timeSelection || {
-    title: 'Delivery Time',
-    now: 'Now',
-    selectTime: 'Select time',
-    deliverNow: 'Deliver now',
-    deliverNowSubtitle: 'Delivered within 15-25 minutes',
-    orderNow: 'Order now (15-25 min)',
-    today: 'Today',
-    tomorrow: 'Tomorrow',
-    selectDay: 'Select day',
-    hour: 'Hour',
-    minute: 'Minute',
-    confirm: 'Confirm',
-    days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+  const baseTs = langTranslations.timeSelection || {};
+  const ts = {
+    title: baseTs.title || 'Delivery Time',
+    now: baseTs.now || 'Now',
+    selectTime: baseTs.selectTime || 'Select time',
+    deliverNow: baseTs.deliverNow || 'Deliver now',
+    deliverNowSubtitle: baseTs.deliverNowSubtitle?.replace('15-25 min', deliveryTime) || `Delivered within ${deliveryTime}`,
+    orderNow: baseTs.orderNow?.replace('15-25 min', deliveryTime) || `Order now (${deliveryTime})`,
+    today: baseTs.today || 'Today',
+    tomorrow: baseTs.tomorrow || 'Tomorrow',
+    selectDay: baseTs.selectDay || 'Select day',
+    hour: baseTs.hour || 'Hour',
+    minute: baseTs.minute || 'Minute',
+    confirm: baseTs.confirm || 'Confirm',
+    days: baseTs.days || ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    months: baseTs.months || ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
   };
   const days = ts.days || ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const months = ts.months || ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const [mode, setMode] = React.useState<'now' | 'schedule'>(
-    currentSelection.startsWith(ts.now) ? 'now' : 'schedule'
-  );
+  // Always default to "now" mode when modal opens
+  const [mode, setMode] = React.useState<'now' | 'schedule'>('now');
 
-  // Generate dates for next 7 days
+  // Generate dates based on firm's scheduleDaysLimit setting
   const generateDates = () => {
     const dates = [];
     const today = new Date();
-    for (let i = 0; i < 7; i++) {
+    const daysLimit = Math.min(Math.max(scheduleDaysLimit, 1), 10); // Clamp between 1-10
+    for (let i = 0; i < daysLimit; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       dates.push(date);
@@ -348,7 +302,7 @@ function TimeSelectionModal({
     return dates;
   };
 
-  const availableDates = React.useMemo(() => generateDates(), []);
+  const availableDates = React.useMemo(() => generateDates(), [scheduleDaysLimit]);
   const [selectedDateIndex, setSelectedDateIndex] = React.useState(0);
 
   // Format date for display
@@ -380,9 +334,16 @@ function TimeSelectionModal({
   const [selectedHour, setSelectedHour] = React.useState(initialTime.hour);
   const [selectedMinute, setSelectedMinute] = React.useState(initialTime.minute);
 
-  // Generate hours (00-23) and minutes (00-59)
+  // Generate hours (00-23) and minutes based on firm's scheduleTimeInterval
   const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
+  // Generate minute intervals based on scheduleTimeInterval
+  // For intervals >= 60 min (1hr+), show only hourly slots (minute = 00)
+  // For intervals < 60 min, show minute intervals within each hour
+  const interval = [1, 2, 5, 10, 15, 30, 60, 120, 180].includes(scheduleTimeInterval) ? scheduleTimeInterval : 30;
+  const minuteValues = interval >= 60
+    ? [0] // For hourly intervals, only show :00
+    : Array.from({ length: 60 / interval }, (_, i) => i * interval);
+  const minutes = minuteValues.map(m => m.toString().padStart(2, '0'));
 
   const handleConfirm = () => {
     if (mode === 'now') {
@@ -399,7 +360,7 @@ function TimeSelectionModal({
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={s.modalOverlay}>
-        <View style={s.timeModalContent}>
+        <View style={[s.timeModalContent, { paddingBottom: Math.max(bottomInset, Platform.OS === 'android' ? 48 : 16) + 24 }]}>
           <View style={s.modalHeader}>
             <Text style={s.modalTitle}>{ts.title}</Text>
             <TouchableOpacity onPress={onClose}>
@@ -589,28 +550,38 @@ function AddressWarningModal({
 const CartScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { cart, clearCart, incrementQuantity, decrementQuantity, removeFromCart } = useCart();
-  const { addresses } = useUser();
+  const { addresses, user } = useUser();
   const { setCurrentOrder, addToHistory, hasActiveOrder, currentOrder } = useOrder();
   const { t, language } = useLanguage();
   const { showError } = useToast();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
   const [showTimeModal, setShowTimeModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showAddressWarningModal, setShowAddressWarningModal] = useState(false);
   const [addressWarningType, setAddressWarningType] = useState<'no_address' | 'select_address'>('select_address');
+  const [showFeeInfoModal, setShowFeeInfoModal] = useState(false);
+  const [feeInfoType, setFeeInfoType] = useState<'delivery' | 'service'>('delivery');
   const [selectedTime, setSelectedTime] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null); // Store selected delivery date
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null); // No payment method selected initially
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(user?.defaultPaymentMethod || null); // Use default from profile if set
   const [cartSelectedAddress, setCartSelectedAddress] = useState<Address | null>(null); // Local cart address selection
 
-  // Set initial time selection based on language
+  // Set initial time selection based on language and firm delivery time
   React.useEffect(() => {
-    if (!selectedTime) {
-      const langTranslations = (translations as any)[language] || translations.en;
-      const orderNowText = langTranslations.timeSelection?.orderNow || 'Order now (15-25 min)';
-      setSelectedTime(orderNowText);
+    const langTranslations = (translations as any)[language] || translations.en;
+    const deliveryTime = cart.firm?.deliveryTime || '15-25 min';
+    const orderNowText = langTranslations.timeSelection?.orderNow?.replace('15-25 min', deliveryTime)
+      || `Order now (${deliveryTime})`;
+    setSelectedTime(orderNowText);
+  }, [language, cart.firm?.deliveryTime]);
+
+  // Initialize payment method from user's default when user data loads
+  React.useEffect(() => {
+    if (user?.defaultPaymentMethod && !selectedPaymentMethod) {
+      setSelectedPaymentMethod(user.defaultPaymentMethod);
     }
-  }, [language]);
+  }, [user?.defaultPaymentMethod]);
 
   // Log addresses on focus
   useFocusEffect(
@@ -621,17 +592,6 @@ const CartScreen: React.FC = () => {
       console.log('========================');
     }, [cartSelectedAddress, addresses])
   );
-
-  // Get 3D icon for address type
-  const getAddress3DIcon = (type?: string) => {
-    switch (type) {
-      case 'house': return require('../assets/address/house-3d.png');
-      case 'apartment': return require('../assets/address/apartment-3d.png');
-      case 'government': return require('../assets/address/government-3d.png');
-      case 'office': return require('../assets/address/office-3d.png');
-      default: return require('../assets/ui-icons/address-icon.png');
-    }
-  };
 
   // Handle address row click
   const handleAddressClick = () => {
@@ -644,14 +604,24 @@ const CartScreen: React.FC = () => {
     }
   };
 
-  // Calculate totals
+  // Calculate totals - all prices in UZS
   const subtotal = useMemo(() => cart.total, [cart.total]);
-  const deliveryFee = cart.firm?.deliveryFee || 5000;
-  const total = useMemo(() => subtotal + deliveryFee, [subtotal, deliveryFee]);
+  const bottleDepositEnabled = cart.firm?.bottleDepositEnabled ?? false;
+  const bottleDepositPrice = cart.firm?.bottleDepositPrice ?? 15000;
+  const deliveryFee = cart.firm?.deliveryFee ?? 0;
+  const minOrder = cart.firm?.minOrder ?? 0;
+  const total = useMemo(() => subtotal + (bottleDepositEnabled ? bottleDepositPrice : 0) + deliveryFee, [subtotal, bottleDepositEnabled, bottleDepositPrice, deliveryFee]);
+  const isMinOrderMet = subtotal >= minOrder;
 
   const handleCheckout = async () => {
     console.log('Checkout clicked - cartSelectedAddress:', cartSelectedAddress);
     console.log('All addresses:', addresses);
+
+    // Check minimum order requirement
+    if (minOrder > 0 && !isMinOrderMet) {
+      showError(`Minimum buyırtpa ${formatUZS(minOrder)} UZS`);
+      return;
+    }
 
     // Check if an address is selected in cart
     if (!cartSelectedAddress) {
@@ -698,7 +668,7 @@ const CartScreen: React.FC = () => {
         paymentMethod: (selectedPaymentMethod as 'cash' | 'card') || 'cash',
       });
 
-      setCurrentOrder(order);
+      await setCurrentOrder(order);
       addToHistory(order);
       clearCart();
       navigation.navigate('OrderTracking', { orderId: order.id });
@@ -787,8 +757,12 @@ const CartScreen: React.FC = () => {
             </View>
 
             <View style={s.productContent}>
-              <Text style={s.productTitle}>{item.product.name}</Text>
-              <Text style={s.meta}>{item.product.volume}</Text>
+              <Text style={s.productTitle}>
+                {item.product.name.includes(item.product.volume)
+                  ? item.product.name
+                  : `${item.product.name} • ${item.product.volume}`}
+              </Text>
+              <Text style={s.productSubtitle}>Qaytarıladı</Text>
 
               <View style={s.productFooter}>
                 <QuantityStepper
@@ -812,70 +786,149 @@ const CartScreen: React.FC = () => {
         {/* Section Divider */}
         <View style={s.sectionDivider} />
 
-        {/* Fees & Options */}
-        <OptionRow
-          iconImage={require('../assets/ui-icons/location-pin.png')}
-          title={`Jetkeriw ${cart.firm?.name || 'AQUAwater'}`}
-          right={<FreeBadge />}
-          compact
-        />
+        {/* Options Card - Grouped */}
+        <View style={s.optionsCard}>
+          {/* Delivery Time Row */}
+          <TouchableOpacity style={s.optionRow} onPress={() => setShowTimeModal(true)} activeOpacity={0.7}>
+            <View style={s.optionIconWrap3D}>
+              <Image
+                source={require('../assets/ui-icons/delivery-icon.png')}
+                style={s.optionIcon3D}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={s.optionContent}>
+              <Text style={s.optionLabel}>Jetkeriw waqtı</Text>
+              <Text style={s.optionValue}>{selectedTime}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#C4C9D0" />
+          </TouchableOpacity>
 
-        <OptionRow
-          iconImage={require('../assets/illustrations/tracking-truck.png')}
-          title="Xızmet haqqı"
-          right={<FreeBadge />}
-          compact
-        />
+          <View style={s.optionDivider} />
 
-        <OptionRow
-          iconImage={require('../assets/ui-icons/delivery-icon.png')}
-          title="Jetkeriw waqtı"
-          subtitle={selectedTime}
-          chevron
-          onPress={() => setShowTimeModal(true)}
-        />
+          {/* Payment Row */}
+          <TouchableOpacity
+            style={s.optionRow}
+            onPress={() => navigation.navigate('PaymentMethod', {
+              onSelect: (method: string) => setSelectedPaymentMethod(method)
+            })}
+            activeOpacity={0.7}
+          >
+            <View style={s.optionIconWrap3D}>
+              <Image
+                source={
+                  selectedPaymentMethod === 'cash'
+                    ? require('../assets/payment/cash-icon.png')
+                    : require('../assets/payment/card-icon.png')
+                }
+                style={s.optionIcon3D}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={s.optionContent}>
+              <Text style={s.optionLabel}>{t('payment.title') || 'Payment'}</Text>
+              <Text style={s.optionValue}>
+                {selectedPaymentMethod === 'cash'
+                  ? (t('payment.cash') || 'Cash')
+                  : selectedPaymentMethod === 'card'
+                    ? (t('payment.card') || 'Card')
+                    : (t('cart.selectPayment') || 'Select')}
+              </Text>
+            </View>
+            <View style={s.checkIconSmall}>
+              <Ionicons name="checkmark" size={12} color="#fff" />
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#C4C9D0" />
+          </TouchableOpacity>
 
-        <OptionRow
-          iconImage={
-            selectedPaymentMethod === 'cash'
-              ? require('../assets/payment/cash-icon.png')
-              : require('../assets/payment/card-icon.png')
-          }
-          title="Tólem"
-          subtitle="Tek naqtı pul menen"
-          right={
-            selectedPaymentMethod === 'cash' ? (
+          <View style={s.optionDivider} />
+
+          {/* Address Row */}
+          <TouchableOpacity style={s.optionRow} onPress={handleAddressClick} activeOpacity={0.7}>
+            <View style={s.optionIconWrap3D}>
+              <Image
+                source={require('../assets/ui-icons/address-icon.png')}
+                style={s.optionIcon3D}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={s.optionContent}>
+              <Text style={s.optionLabel}>Mánzil</Text>
+              <Text style={s.optionValue} numberOfLines={1}>
+                {cartSelectedAddress ? cartSelectedAddress.address : 'Saylań'}
+              </Text>
+            </View>
+            {cartSelectedAddress && (
               <View style={s.checkIconSmall}>
                 <Ionicons name="checkmark" size={12} color="#fff" />
               </View>
-            ) : null
-          }
-          chevron
-          onPress={() => navigation.navigate('PaymentMethod', {
-            onSelect: (method: string) => setSelectedPaymentMethod(method)
-          })}
-        />
+            )}
+            <Ionicons name="chevron-forward" size={18} color="#C4C9D0" />
+          </TouchableOpacity>
+        </View>
 
-        <OptionRow
-          iconImage={getAddress3DIcon(cartSelectedAddress?.addressType)}
-          title={cartSelectedAddress ? cartSelectedAddress.title : 'Mánzil'}
-          subtitle={
-            cartSelectedAddress
-              ? cartSelectedAddress.address
-              : addresses.length > 0
-                ? 'Saylań'
-                : 'Jetkeriw mánzilinízdi qosıń'
-          }
-          right={
-            cartSelectedAddress ? (
-              <View style={s.checkIconSmall}>
-                <Ionicons name="checkmark" size={12} color="#fff" />
-              </View>
-            ) : null
-          }
-          chevron
-          onPress={handleAddressClick}
-        />
+        {/* Minimum Order Warning */}
+        {minOrder > 0 && !isMinOrderMet && (
+          <View style={s.minOrderWarning}>
+            <Ionicons name="alert-circle" size={18} color="#F59E0B" />
+            <Text style={s.minOrderWarningText}>
+              Minimum buyırtpa: {formatUZS(minOrder)} UZS (házir: {formatUZS(subtotal)} UZS)
+            </Text>
+          </View>
+        )}
+
+        {/* Order Summary Card */}
+        <View style={s.summaryCard}>
+          <View style={s.summaryRow}>
+            <Text style={s.summaryLabel}>Ónim</Text>
+            <Text style={s.summaryValue}>{formatUZS(subtotal)} UZS</Text>
+          </View>
+          {bottleDepositEnabled && (
+            <View style={s.summaryRow}>
+              <Text style={s.summaryLabel}>Butılka depoziti</Text>
+              <Text style={s.summaryValue}>{formatUZS(bottleDepositPrice)} UZS</Text>
+            </View>
+          )}
+          <View style={s.summaryRow}>
+            <View style={s.summaryLabelWithInfo}>
+              <Text style={s.summaryLabel}>Jetkeriw</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setFeeInfoType('delivery');
+                  setShowFeeInfoModal(true);
+                }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="information-circle-outline" size={16} color="#8088A2" />
+              </TouchableOpacity>
+            </View>
+            {deliveryFee === 0 ? (
+              <Text style={s.summaryValueFree}>Tegin</Text>
+            ) : (
+              <Text style={s.summaryValue}>{formatUZS(deliveryFee)} UZS</Text>
+            )}
+          </View>
+          <View style={s.summaryRow}>
+            <View style={s.summaryLabelWithInfo}>
+              <Text style={s.summaryLabel}>Xızmet haqqı</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setFeeInfoType('service');
+                  setShowFeeInfoModal(true);
+                }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="information-circle-outline" size={16} color="#8088A2" />
+              </TouchableOpacity>
+            </View>
+            <Text style={s.summaryValueFree}>Tegin</Text>
+          </View>
+          <View style={s.summaryDivider} />
+          <View style={s.summaryRow}>
+            <Text style={s.summaryTotalLabel}>Barlığı</Text>
+            <Text style={s.summaryTotalValue}>{formatUZS(total)} UZS</Text>
+          </View>
+        </View>
       </ScrollView>
 
       {/* Address Selection Modal */}
@@ -892,6 +945,7 @@ const CartScreen: React.FC = () => {
           setShowAddressModal(false);
           navigation.navigate('SelectAddress');
         }}
+        bottomInset={insets.bottom}
       />
 
       {/* Time Selection Modal */}
@@ -904,6 +958,10 @@ const CartScreen: React.FC = () => {
         }}
         currentSelection={selectedTime}
         language={language}
+        bottomInset={insets.bottom}
+        firmDeliveryTime={cart.firm?.deliveryTime}
+        scheduleDaysLimit={cart.firm?.scheduleDaysLimit}
+        scheduleTimeInterval={cart.firm?.scheduleTimeInterval}
       />
 
       {/* Address Warning Modal */}
@@ -915,17 +973,61 @@ const CartScreen: React.FC = () => {
         onSelectAddress={() => setShowAddressModal(true)}
       />
 
-      {/* Footer */}
-      <View style={s.footer}>
-        <View style={s.rowBetween}>
-          <Text style={s.totalLabel}>Barlığı</Text>
-          <Text style={s.totalValue}>{formatUZS(total)} UZS</Text>
-        </View>
+      {/* Fee Info Modal */}
+      <Modal
+        visible={showFeeInfoModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowFeeInfoModal(false)}
+      >
+        <TouchableOpacity
+          style={s.feeInfoModalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowFeeInfoModal(false)}
+        >
+          <View style={s.feeInfoModalContent}>
+            <View style={s.feeInfoModalIcon}>
+              <Ionicons
+                name={feeInfoType === 'delivery' ? 'car-outline' : 'water-outline'}
+                size={32}
+                color={C.primary}
+              />
+            </View>
+            <Text style={s.feeInfoModalTitle}>
+              {feeInfoType === 'delivery' ? 'Jetkeriw haqqı' : 'Xızmet haqqı'}
+            </Text>
+            <Text style={s.feeInfoModalText}>
+              {feeInfoType === 'delivery'
+                ? 'Jetkeriw haqqı suw kompaniyasına tólenedi. Bul buyırtpanı sizge jetkeriw ushın.'
+                : 'Xızmet haqqı WaterGo platformasına tólenedi. Bul qolaylı buyırtpa hám tez jetkeriw ushın.'}
+            </Text>
+            <TouchableOpacity
+              style={s.feeInfoModalButton}
+              onPress={() => setShowFeeInfoModal(false)}
+            >
+              <Text style={s.feeInfoModalButtonText}>Túsindim</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
+      {/* Footer */}
+      <View style={[s.footer]}>
         <TouchableOpacity activeOpacity={0.9} onPress={handleCheckout} disabled={loading}>
           <View style={s.ctaWrapper}>
             <LinearGradient colors={[C.primary, C.primary2]} style={s.cta}>
-              <Text style={s.ctaTxt}>{loading ? 'Júkleniwde...' : 'Buyırtpa beriw'}</Text>
+              {loading ? (
+                <Text style={s.ctaTxt}>Júkleniwde...</Text>
+              ) : (
+                <View style={s.ctaContent}>
+                  <Text style={s.ctaTxt}>Buyırtpa beriw • {formatUZS(total)} UZS</Text>
+                  <Text style={s.ctaSubtitle}>
+                    ⏱ {selectedTime.includes(':') && !selectedTime.includes('(')
+                      ? selectedTime.split(',')[0]
+                      : cart.firm?.deliveryTime || '15-25 daq'}
+                  </Text>
+                </View>
+              )}
             </LinearGradient>
           </View>
         </TouchableOpacity>
@@ -946,7 +1048,7 @@ const s = StyleSheet.create({
   },
   scroll: {
     padding: 16,
-    paddingBottom: 140,
+    paddingBottom: 200,
   },
   title: {
     fontSize: 24,
@@ -1000,12 +1102,6 @@ const s = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: C.text,
-    marginBottom: 2,
-  },
-  meta: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    fontWeight: '500',
     marginBottom: 12,
   },
   productFooter: {
@@ -1082,6 +1178,222 @@ const s = StyleSheet.create({
   sectionDivider: {
     height: 12,
   },
+  // Product Subtitle
+  productSubtitle: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontWeight: '500',
+    marginBottom: 10,
+  },
+  // Options Card - Grouped
+  optionsCard: {
+    backgroundColor: C.card,
+    borderRadius: 18,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  optionIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#EEF4FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  optionIconWrap3D: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  optionIcon3D: {
+    width: 40,
+    height: 40,
+  },
+  optionContent: {
+    flex: 1,
+  },
+  optionLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#8088A2',
+    marginBottom: 2,
+  },
+  optionValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: C.text,
+  },
+  optionDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 16,
+  },
+  // Legacy fee styles (kept for reference)
+  feesRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  feeItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: C.card,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    minHeight: 48,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  feeLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#8088A2',
+  },
+  feeValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: C.text,
+  },
+  // Minimum Order Warning
+  minOrderWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FEF3C7',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+  },
+  minOrderWarningText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#92400E',
+  },
+  // Order Summary Card
+  summaryCard: {
+    backgroundColor: C.card,
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#8088A2',
+  },
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: C.text,
+  },
+  summaryValueFree: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#22C55E',
+  },
+  summaryDivider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 8,
+  },
+  summaryTotalLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: C.text,
+  },
+  summaryTotalValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: C.text,
+  },
+  summaryLabelWithInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  // Fee Info Modal
+  feeInfoModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  feeInfoModalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 320,
+  },
+  feeInfoModalIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#EEF2FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  feeInfoModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: C.text,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  feeInfoModalText: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#8088A2',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  feeInfoModalButton: {
+    backgroundColor: C.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+  },
+  feeInfoModalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
   // Option Rows
   rowCard: {
     flexDirection: 'row',
@@ -1151,17 +1463,7 @@ const s = StyleSheet.create({
     color: '#C4C9D0',
     marginLeft: 2,
   },
-  // Free Badge
-  freeBadgeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  freePrice: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#9CA3AF',
-  },
+  // Free Badge (legacy - kept for reference)
   freeBadge: {
     backgroundColor: '#DCFCE7',
     paddingHorizontal: 8,
@@ -1325,16 +1627,25 @@ const s = StyleSheet.create({
     elevation: 6,
   },
   cta: {
-    height: 56,
+    height: 64,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  ctaContent: {
+    alignItems: 'center',
   },
   ctaTxt: {
     color: '#fff',
     fontSize: 17,
     fontWeight: '700',
     letterSpacing: 0.3,
+  },
+  ctaSubtitle: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 2,
   },
   // Modal styles
   modalOverlay: {
@@ -1611,6 +1922,7 @@ const s = StyleSheet.create({
     backgroundColor: C.primary,
     marginHorizontal: 20,
     marginTop: 20,
+    marginBottom: 8,
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: 'center',

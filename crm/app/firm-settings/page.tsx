@@ -825,10 +825,13 @@ export default function FirmSettingsPage() {
                     <div className="relative max-w-xs">
                       <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
-                        type="number"
-                        value={formData.minOrder}
-                        onChange={(e) => setFormData({ ...formData, minOrder: Number(e.target.value) || 0 })}
-                        min={0}
+                        type="text"
+                        inputMode="numeric"
+                        value={formData.minOrder || ""}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, "");
+                          setFormData({ ...formData, minOrder: Number(val) || 0 });
+                        }}
                         placeholder="50000"
                         className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                       />
@@ -909,10 +912,13 @@ export default function FirmSettingsPage() {
                         <div className="relative max-w-xs">
                           <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <input
-                            type="number"
-                            value={formData.deliveryFee}
-                            onChange={(e) => setFormData({ ...formData, deliveryFee: Number(e.target.value) || 0 })}
-                            min={0}
+                            type="text"
+                            inputMode="numeric"
+                            value={formData.deliveryFee || ""}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/[^0-9]/g, "");
+                              setFormData({ ...formData, deliveryFee: Number(val) || 0 });
+                            }}
                             placeholder="5000"
                             className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                           />
@@ -955,10 +961,13 @@ export default function FirmSettingsPage() {
                 <div className="relative max-w-xs">
                   <Droplets className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
-                    type="number"
-                    value={formData.bottleDeposit}
-                    onChange={(e) => setFormData({ ...formData, bottleDeposit: Number(e.target.value) || 0 })}
-                    min={0}
+                    type="text"
+                    inputMode="numeric"
+                    value={formData.bottleDeposit || ""}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, "");
+                      setFormData({ ...formData, bottleDeposit: Number(val) || 0 });
+                    }}
                     placeholder="5000"
                     className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   />
@@ -1006,10 +1015,13 @@ export default function FirmSettingsPage() {
                     <div className="relative max-w-xs">
                       <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
-                        type="number"
-                        value={formData.bottleDepositPrice}
-                        onChange={(e) => setFormData({ ...formData, bottleDepositPrice: Number(e.target.value) || 0 })}
-                        min={0}
+                        type="text"
+                        inputMode="numeric"
+                        value={formData.bottleDepositPrice || ""}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, "");
+                          setFormData({ ...formData, bottleDepositPrice: Number(val) || 0 });
+                        }}
                         placeholder="15000"
                         className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                       />
@@ -1037,12 +1049,16 @@ export default function FirmSettingsPage() {
                       onChange={(e) => setFormData({ ...formData, scheduleDaysLimit: Number(e.target.value) })}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     >
+                      <option value={1}>1 {t.settings.daysAhead}</option>
                       <option value={2}>2 {t.settings.daysAhead}</option>
                       <option value={3}>3 {t.settings.daysAhead}</option>
                       <option value={4}>4 {t.settings.daysAhead}</option>
                       <option value={5}>5 {t.settings.daysAhead}</option>
                       <option value={6}>6 {t.settings.daysAhead}</option>
                       <option value={7}>7 {t.settings.daysAhead}</option>
+                      <option value={8}>8 {t.settings.daysAhead}</option>
+                      <option value={9}>9 {t.settings.daysAhead}</option>
+                      <option value={10}>10 {t.settings.daysAhead}</option>
                     </select>
                     <p className="text-xs text-gray-500 mt-1">{t.settings.advanceBookingDaysDesc}</p>
                   </div>
@@ -1057,8 +1073,15 @@ export default function FirmSettingsPage() {
                       onChange={(e) => setFormData({ ...formData, scheduleTimeInterval: Number(e.target.value) })}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     >
+                      <option value={1}>1 {t.settings.minutes}</option>
+                      <option value={2}>2 {t.settings.minutes}</option>
+                      <option value={5}>5 {t.settings.minutes}</option>
+                      <option value={10}>10 {t.settings.minutes}</option>
                       <option value={15}>15 {t.settings.minutes}</option>
                       <option value={30}>30 {t.settings.minutes}</option>
+                      <option value={60}>1 {t.settings.hours || "hour"}</option>
+                      <option value={120}>2 {t.settings.hours || "hours"}</option>
+                      <option value={180}>3 {t.settings.hours || "hours"}</option>
                     </select>
                     <p className="text-xs text-gray-500 mt-1">{t.settings.timeSlotIntervalsDesc}</p>
                   </div>
