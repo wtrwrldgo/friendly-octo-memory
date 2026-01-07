@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Proxy images from HTTP backend to serve via HTTPS
+// Proxy images from HTTP backend to serve via HTTPS (v2)
 export async function GET(request: NextRequest) {
   try {
     const url = request.nextUrl.searchParams.get("url");
