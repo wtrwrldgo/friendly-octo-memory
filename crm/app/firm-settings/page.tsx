@@ -27,6 +27,19 @@ import { useLanguage } from "@/contexts/LanguageContext";
 // Use relative URL to go through Next.js API routes (which proxy to backend)
 const API_URL = "/api";
 
+// Helper to convert HTTP backend URLs to HTTPS proxy URLs
+const getProxyUrl = (url: string | null | undefined): string | null => {
+  if (!url) return null;
+  // If it's already a data URL (base64), return as-is
+  if (url.startsWith("data:")) return url;
+  // If it's an HTTP URL from our VPS, proxy it
+  if (url.startsWith("http://45.92.173.121")) {
+    return `/api/proxy/image?url=${encodeURIComponent(url)}`;
+  }
+  // Otherwise return as-is (could be HTTPS or relative)
+  return url;
+};
+
 export default function FirmSettingsPage() {
   const { profile, firm, updateFirm } = useAuth();
   const { t } = useLanguage();
@@ -105,15 +118,15 @@ export default function FirmSettingsPage() {
           });
           if (firmData.logo || firmData.logoUrl) {
             const logoUrl = firmData.logo || firmData.logoUrl;
-            setImagePreview(logoUrl);
+            setImagePreview(getProxyUrl(logoUrl));
           }
           if (firmData.homeBannerUrl || firmData.home_banner_url) {
             const homeBannerUrl = firmData.homeBannerUrl || firmData.home_banner_url;
-            setHomeBannerPreview(homeBannerUrl);
+            setHomeBannerPreview(getProxyUrl(homeBannerUrl));
           }
           if (firmData.detailBannerUrl || firmData.detail_banner_url) {
             const detailBannerUrl = firmData.detailBannerUrl || firmData.detail_banner_url;
-            setDetailBannerPreview(detailBannerUrl);
+            setDetailBannerPreview(getProxyUrl(detailBannerUrl));
           }
         }
       } catch (err) {
@@ -574,7 +587,7 @@ export default function FirmSettingsPage() {
                         value={formData.logoUrl}
                         onChange={(e) => {
                           setFormData({ ...formData, logoUrl: e.target.value });
-                          setImagePreview(e.target.value || null);
+                          setImagePreview(getProxyUrl(e.target.value) || null);
                         }}
                         placeholder="https://example.com/logo.png"
                         className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
