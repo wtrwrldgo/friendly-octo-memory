@@ -3,15 +3,13 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Droplets } from "lucide-react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { theme } = useTheme();
   const { signIn } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -25,207 +23,164 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // Use Supabase authentication
-      const { error: signInError } = await signIn(formData.email, formData.password);
+      const { error: signInError, user } = await signIn(formData.email, formData.password);
 
       if (signInError) {
-        setError(signInError.message || "Invalid email or password");
+        setError(signInError.message || t.auth.invalidCredentials);
+        setLoading(false);
         return;
       }
 
-      // Redirect will be handled by AuthContext
-      router.push("/firm-dashboard");
+      const redirectTo = user?.role === "WATERGO_ADMIN" ? "/" : "/firm-dashboard";
+      window.location.href = redirectTo;
     } catch (err: any) {
       console.error("Login failed:", err);
-      setError(err.message || "Login failed. Please try again.");
-    } finally {
+      setError(err.message || t.auth.loginFailed);
       setLoading(false);
     }
   };
 
   return (
-    <div className={`min-h-screen relative overflow-hidden ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
-      {/* Animated Background */}
-      <div className="absolute inset-0">
-        <div className={`absolute top-0 -left-4 w-96 h-96 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob ${theme === 'dark' ? 'bg-blue-600/20' : 'bg-blue-400/30'}`}></div>
-        <div className={`absolute top-0 -right-4 w-96 h-96 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000 ${theme === 'dark' ? 'bg-purple-600/20' : 'bg-purple-400/30'}`}></div>
-        <div className={`absolute -bottom-8 left-20 w-96 h-96 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000 ${theme === 'dark' ? 'bg-pink-600/20' : 'bg-pink-400/30'}`}></div>
+    <div className="min-h-screen bg-[#0C1633] flex items-center justify-center p-4">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-        <div className="w-full max-w-[1000px]">
-          {/* Logo */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-3 mb-4">
-              <Droplets className="w-12 h-12 text-blue-500" />
-              <h1 className="text-3xl font-bold">
-                <span className={theme === 'dark' ? 'text-white' : 'text-gray-900'}>Water</span>
-                <span className="text-blue-500">Go</span>
-              </h1>
-            </div>
+      <div className="relative w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-bold text-white">
+            Water<span className="text-blue-400">Go</span>
+          </h1>
+          <p className="text-gray-400 mt-2">{t.auth.managementDashboard}</p>
+        </div>
+
+        {/* Login Card */}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-white mb-2">{t.auth.welcomeBack}</h2>
+            <p className="text-gray-400">{t.auth.signInToAccount}</p>
           </div>
 
-          {/* Login Card */}
-          <div className={`backdrop-blur-xl border rounded-3xl p-1 shadow-2xl ${theme === 'dark' ? 'bg-white/10 border-white/20' : 'bg-white/60 border-white/40'}`}>
-            <div className={`backdrop-blur-2xl rounded-3xl p-8 md:p-12 ${theme === 'dark' ? 'bg-gradient-to-br from-gray-900/90 to-gray-900/50' : 'bg-white/80'}`}>
-              <div className="grid md:grid-cols-2 gap-12 items-center">
-                {/* Left - Info */}
-                <div className={theme === 'dark' ? 'text-white' : 'text-gray-900'}>
-                  <h2 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-                    Welcome to the future of delivery
-                  </h2>
-                  <p className={`text-lg mb-8 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                    Powerful analytics, real-time tracking, and seamless management
-                  </p>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl relative z-50">
+                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
 
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-1">
-                        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="font-semibold">Real-time tracking</p>
-                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Monitor every delivery instantly</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-1">
-                        <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="font-semibold">Advanced analytics</p>
-                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Data-driven insights for growth</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-pink-500/20 flex items-center justify-center flex-shrink-0 mt-1">
-                        <svg className="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="font-semibold">Easy management</p>
-                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Simple, intuitive interface</p>
-                      </div>
-                    </div>
-                  </div>
+            {/* Email Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                {t.auth.email}
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail className="w-5 h-5 text-gray-500" />
                 </div>
-
-                {/* Right - Form */}
-                <div>
-                  <div className="mb-8">
-                    <h3 className={`text-2xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Sign in</h3>
-                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>Access your account</p>
-                  </div>
-
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    {error && (
-                      <div className="p-4 backdrop-blur-xl border border-red-500/50 rounded-xl bg-red-500/10">
-                        <p className="text-red-400 text-sm">{error}</p>
-                      </div>
-                    )}
-
-                    <div>
-                      <input
-                        type="email"
-                        required
-                        placeholder="Email address"
-                        className={`w-full px-4 py-4 backdrop-blur-xl border rounded-xl focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 outline-none transition ${
-                          theme === 'dark'
-                            ? 'bg-white/5 border-white/10 text-white placeholder-gray-500'
-                            : 'bg-white/50 border-gray-300 text-gray-900 placeholder-gray-400'
-                        }`}
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      />
-                    </div>
-
-                    <div>
-                      <input
-                        type="password"
-                        required
-                        placeholder="Password"
-                        className={`w-full px-4 py-4 backdrop-blur-xl border rounded-xl focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 outline-none transition ${
-                          theme === 'dark'
-                            ? 'bg-white/5 border-white/10 text-white placeholder-gray-500'
-                            : 'bg-white/50 border-gray-300 text-gray-900 placeholder-gray-400'
-                        }`}
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/25"
-                    >
-                      {loading ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Signing in...
-                        </span>
-                      ) : (
-                        "Sign in"
-                      )}
-                    </button>
-                  </form>
-
-                  {/* Demo Credentials */}
-                  <div className={`mt-6 p-4 backdrop-blur-xl border rounded-xl ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white/40 border-gray-200'}`}>
-                    <p className={`text-xs font-semibold uppercase mb-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Test Account</p>
-                    <div className="space-y-2 text-xs">
-                      <div className="flex justify-between items-center">
-                        <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>Email</span>
-                        <code className={`px-2 py-1 rounded ${theme === 'dark' ? 'text-gray-300 bg-white/5' : 'text-gray-700 bg-white/60'}`}>owner@aquapure.uz</code>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>Password</span>
-                        <code className={`px-2 py-1 rounded ${theme === 'dark' ? 'text-gray-300 bg-white/5' : 'text-gray-700 bg-white/60'}`}>TestPassword123!</code>
-                      </div>
-                      <p className={`text-center mt-3 text-yellow-500 ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                        ⚠ Complete database setup first (see QUICKSTART.md)
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <input
+                  type="email"
+                  required
+                  placeholder={t.auth.enterEmail}
+                  className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
               </div>
             </div>
+
+            {/* Password Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                {t.auth.password}
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="w-5 h-5 text-gray-500" />
+                </div>
+                <input
+                  type="password"
+                  required
+                  placeholder={t.auth.enterPassword}
+                  className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span>{t.auth.signingIn}</span>
+                </>
+              ) : (
+                <>
+                  <span>{t.auth.signIn}</span>
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-white/10" />
+            <span className="text-gray-500 text-sm">{t.auth.testAccounts}</span>
+            <div className="flex-1 h-px bg-white/10" />
           </div>
 
-          <p className={`text-center text-sm mt-6 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>
-            © 2024 <span className={theme === 'dark' ? 'text-white' : 'text-gray-900'}>Water</span><span className="text-blue-500">Go</span>. All rights reserved.
-          </p>
-        </div>
-      </div>
+          {/* Test Accounts */}
+          <div className="space-y-3">
+            {/* Admin Account */}
+            <button
+              type="button"
+              onClick={() => setFormData({ email: "admin@watergo.com", password: "admin123" })}
+              className="w-full p-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-xl transition-all text-left group"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-400 font-semibold text-sm">{t.auth.watergoAdmin}</p>
+                  <p className="text-gray-500 text-xs mt-1">admin@watergo.com</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </button>
 
-      <style jsx>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
+            {/* Firm Owner Account */}
+            <button
+              type="button"
+              onClick={() => setFormData({ email: "owner@test.com", password: "password123" })}
+              className="w-full p-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-xl transition-all text-left group"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-emerald-400 font-semibold text-sm">{t.auth.firmOwnerAccount}</p>
+                  <p className="text-gray-500 text-xs mt-1">owner@test.com</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-gray-500 text-sm mt-8">
+          {t.auth.copyright}
+        </p>
+      </div>
     </div>
   );
 }

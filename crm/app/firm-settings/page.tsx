@@ -460,7 +460,7 @@ export default function FirmSettingsPage() {
       <div className="p-8 max-w-6xl mx-auto">
         {/* Success Message */}
         {success && (
-          <div className="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3">
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3 relative z-50">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
@@ -473,7 +473,7 @@ export default function FirmSettingsPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center gap-3">
+          <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center gap-3 relative z-50">
             <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
               <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
@@ -953,29 +953,7 @@ export default function FirmSettingsPage() {
                 )}
               </div>
 
-              {/* Bottle Deposit */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  {t.settings.bottleDepositAmount}
-                </label>
-                <div className="relative max-w-xs">
-                  <Droplets className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={formData.bottleDeposit || ""}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9]/g, "");
-                      setFormData({ ...formData, bottleDeposit: Number(val) || 0 });
-                    }}
-                    placeholder="5000"
-                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">{t.settings.refundableDeposit}</p>
-              </div>
-
-              {/* Bottle Deposit Pricing Toggle */}
+              {/* Bottle Deposit Toggle */}
               <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-cyan-500/5 to-blue-500/5 dark:from-cyan-500/10 dark:to-blue-500/10 border border-cyan-200/50 dark:border-cyan-700/50">
                   <div className="flex items-center gap-3">
