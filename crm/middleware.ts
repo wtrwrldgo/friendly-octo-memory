@@ -16,6 +16,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Allow proxy-image routes (for serving VPS images)
+  if (pathname.startsWith('/proxy-image/')) {
+    return NextResponse.next();
+  }
+
   // Allow static files
   if (pathname.startsWith('/_next') || pathname.startsWith('/favicon')) {
     return NextResponse.next();
