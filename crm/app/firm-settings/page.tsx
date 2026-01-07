@@ -34,7 +34,7 @@ const getProxyUrl = (url: string | null | undefined): string | null => {
   if (url.startsWith("data:")) return url;
   // If it's an HTTP URL from our VPS, proxy it via API route
   if (url.startsWith("http://45.92.173.121")) {
-    return `/api/img?url=${encodeURIComponent(url)}`;
+    return `/api/imageproxy?url=${encodeURIComponent(url)}`;
   }
   // Otherwise return as-is (could be HTTPS or relative)
   return url;
