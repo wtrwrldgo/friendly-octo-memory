@@ -9,6 +9,11 @@ const nextConfig = {
         pathname: '/**',
       },
       {
+        protocol: 'http',
+        hostname: '45.92.173.121',
+        pathname: '/**',
+      },
+      {
         protocol: 'https',
         hostname: 'i.postimg.cc',
         pathname: '/**',
@@ -19,6 +24,14 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/proxy-image/:path*',
+        destination: 'http://45.92.173.121/:path*',
+      },
+    ];
   },
 }
 

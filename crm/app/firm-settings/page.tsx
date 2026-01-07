@@ -32,9 +32,10 @@ const getProxyUrl = (url: string | null | undefined): string | null => {
   if (!url) return null;
   // If it's already a data URL (base64), return as-is
   if (url.startsWith("data:")) return url;
-  // If it's an HTTP URL from our VPS, proxy it
-  if (url.startsWith("http://45.92.173.121")) {
-    return `/api/proxy/image?url=${encodeURIComponent(url)}`;
+  // If it's an HTTP URL from our VPS, proxy it via Next.js rewrite
+  if (url.startsWith("http://45.92.173.121/")) {
+    // Convert http://45.92.173.121/static/... to /proxy-image/static/...
+    return url.replace("http://45.92.173.121/", "/proxy-image/");
   }
   // Otherwise return as-is (could be HTTPS or relative)
   return url;
