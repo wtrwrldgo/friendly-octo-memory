@@ -34,7 +34,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useLanguage, languages } from "@/contexts/LanguageContext";
 
-const BACKEND_URL = "http://localhost:3001";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || "http://45.92.173.121";
 
 export default function Sidebar() {
   const pathname = usePathname();
