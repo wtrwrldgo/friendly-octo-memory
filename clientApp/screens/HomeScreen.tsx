@@ -234,10 +234,10 @@ const HomeScreen: React.FC = () => {
             </View>
           </View>
           <View style={styles.cartContent}>
-            <Text style={styles.cartTitle}>Cart</Text>
-            <Text style={styles.cartSubtitle}>{cart.items.length} {cart.items.length === 1 ? 'item' : 'items'}</Text>
+            <Text style={styles.cartTitle}>{t('cart.title')}</Text>
+            <Text style={styles.cartSubtitle}>{cart.items.length} {t('cart.items')}</Text>
           </View>
-          <Text style={styles.cartTotal}>Total: {cart.total.toLocaleString()} UZS</Text>
+          <Text style={styles.cartTotal}>{t('cart.total')}: {cart.total.toLocaleString()} UZS</Text>
         </TouchableOpacity>
       )}
     </SafeAreaView>

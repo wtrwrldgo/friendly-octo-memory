@@ -4,6 +4,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useFirmData } from "@/contexts/FirmDataContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import PageHeader from "@/components/PageHeader";
@@ -18,6 +19,7 @@ import {
 export default function FirmClientsPage() {
   const { user, firm } = useAuth();
   const { clients, clientsLoading, fetchClients } = useFirmData();
+  const { t } = useLanguage();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<ClientType | "ALL">("ALL");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -104,7 +106,7 @@ export default function FirmClientsPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this client?")) {
+    if (confirm(t.clients.deleteConfirm)) {
       // TODO: Implement actual API call for delete
       // Refresh cache
       fetchClients(true);
@@ -120,8 +122,8 @@ export default function FirmClientsPage() {
     <div className="p-8 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <div className="flex items-center justify-between mb-6">
         <PageHeader
-          title="Clients"
-          description="Manage B2B, B2C, and B2G clients"
+          title={t.clients.title}
+          description={t.clients.description}
         />
         <div className="flex items-center gap-3">
           <button
@@ -129,7 +131,7 @@ export default function FirmClientsPage() {
             className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-blue-500/30 transition-all hover:scale-105"
           >
             <Plus className="w-5 h-5" />
-            Add Client
+            {t.clients.addClient}
           </button>
         </div>
       </div>
@@ -142,7 +144,7 @@ export default function FirmClientsPage() {
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-100">Total Clients</p>
+                <p className="text-sm font-medium text-blue-100">{t.clients.totalClients}</p>
                 <p className="text-4xl font-bold text-white mt-2">{stats.total}</p>
               </div>
               <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
@@ -155,7 +157,7 @@ export default function FirmClientsPage() {
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-cyan-100">B2C Customers</p>
+                <p className="text-sm font-medium text-cyan-100">{t.clients.b2cCustomers}</p>
                 <p className="text-4xl font-bold text-white mt-2">{stats.b2c}</p>
               </div>
               <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
@@ -168,7 +170,7 @@ export default function FirmClientsPage() {
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-100">Total Orders</p>
+                <p className="text-sm font-medium text-purple-100">{t.clients.totalOrders}</p>
                 <p className="text-4xl font-bold text-white mt-2">{stats.totalOrders}</p>
               </div>
               <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
@@ -181,7 +183,7 @@ export default function FirmClientsPage() {
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-emerald-100">Total Revenue</p>
+                <p className="text-sm font-medium text-emerald-100">{t.clients.totalRevenue}</p>
                 <p className="text-4xl font-bold text-white mt-2">${stats.totalRevenue.toLocaleString()}</p>
               </div>
               <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
@@ -201,7 +203,7 @@ export default function FirmClientsPage() {
               </div>
               <input
                 type="text"
-                placeholder="Search by name, phone, email, or address..."
+                placeholder={t.clients.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-14 pr-4 py-3.5 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
@@ -211,10 +213,10 @@ export default function FirmClientsPage() {
             {/* Filter Chips */}
             <div className="flex flex-wrap items-center gap-2">
               {[
-                { value: "ALL", label: "All", icon: Users, color: "blue" },
-                { value: "B2C", label: "B2C", icon: Store, color: "cyan" },
-                { value: "B2B", label: "B2B", icon: Building2, color: "purple" },
-                { value: "B2G", label: "B2G", icon: Landmark, color: "emerald" },
+                { value: "ALL", label: t.common.all, icon: Users, color: "blue" },
+                { value: "B2C", label: t.clients.b2c, icon: Store, color: "cyan" },
+                { value: "B2B", label: t.clients.b2b, icon: Building2, color: "purple" },
+                { value: "B2G", label: t.clients.b2g, icon: Landmark, color: "emerald" },
               ].map((filter) => {
                 const Icon = filter.icon;
                 const isActive = activeTab === filter.value;
@@ -239,10 +241,10 @@ export default function FirmClientsPage() {
             <button
               onClick={() => fetchClients(true)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all font-semibold shadow-sm hover:shadow-md"
-              title="Refresh clients"
+              title={t.common.refresh}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Refresh</span>
+              <span className="hidden sm:inline">{t.common.refresh}</span>
             </button>
           </div>
 
@@ -250,7 +252,7 @@ export default function FirmClientsPage() {
           {(searchQuery || activeTab !== "ALL") && (
             <div className="flex items-center justify-between mt-5 pt-5 border-t border-gray-200/50 dark:border-gray-700/50">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Found <span className="font-bold text-gray-900 dark:text-white bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg">{filteredClients.length}</span> of {clients.length} clients
+                {t.clients.found} <span className="font-bold text-gray-900 dark:text-white bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg">{filteredClients.length}</span> {t.clients.of} {clients.length} {t.clients.clientsText}
               </p>
               <button
                 onClick={() => {
@@ -259,7 +261,7 @@ export default function FirmClientsPage() {
                 }}
                 className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 font-semibold flex items-center gap-1 hover:gap-2 transition-all"
               >
-                Clear all filters
+                {t.clients.clearAllFilters}
                 <XCircle className="w-4 h-4" />
               </button>
             </div>
@@ -275,7 +277,7 @@ export default function FirmClientsPage() {
                   <div className="absolute inset-0 rounded-full border-4 border-blue-200 dark:border-blue-900"></div>
                   <div className="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
                 </div>
-                <p className="text-gray-600 dark:text-gray-400 font-medium">Loading clients...</p>
+                <p className="text-gray-600 dark:text-gray-400 font-medium">{t.clients.loadingClients}</p>
               </div>
             </div>
           ) : filteredClients.length === 0 ? (
@@ -289,10 +291,10 @@ export default function FirmClientsPage() {
                 </div>
               </div>
               <p className="text-gray-700 dark:text-gray-300 text-xl font-semibold mb-2">
-                {clients.length === 0 ? "No clients yet" : "No clients found"}
+                {clients.length === 0 ? t.clients.noClientsYet : t.clients.noClients}
               </p>
               <p className="text-gray-500 dark:text-gray-500 text-sm">
-                {clients.length === 0 ? "Add your first client to get started" : "Try adjusting your search or filter criteria"}
+                {clients.length === 0 ? t.clients.addFirstClient : t.clients.tryAdjustingSearch}
               </p>
             </div>
           ) : (
@@ -304,22 +306,22 @@ export default function FirmClientsPage() {
                       #
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Client
+                      {t.clients.client}
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Contact
+                      {t.clients.contact}
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Address
+                      {t.clients.address}
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Orders
+                      {t.orders.title}
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Revenue
+                      {t.clients.revenue}
                     </th>
                     <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Actions
+                      {t.common.actions}
                     </th>
                   </tr>
                 </thead>
@@ -379,7 +381,7 @@ export default function FirmClientsPage() {
                             <button
                               onClick={() => openMapModal(client.address)}
                               className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors flex-shrink-0"
-                              title="View on Yandex Map"
+                              title={t.clients.viewOnMap}
                             >
                               <Navigation className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
                             </button>
@@ -400,14 +402,14 @@ export default function FirmClientsPage() {
                             <button
                               onClick={() => openEditModal(client)}
                               className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-                              title="Edit"
+                              title={t.common.edit}
                             >
                               <Edit2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             </button>
                             <button
                               onClick={() => handleDelete(client.id)}
                               className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                              title="Delete"
+                              title={t.common.delete}
                             >
                               <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
                             </button>
@@ -427,18 +429,18 @@ export default function FirmClientsPage() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingClient ? "Edit Client" : "Add New Client"}
+        title={editingClient ? t.clients.editClient : t.clients.addNewClient}
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Client Name
+              {t.clients.clientName}
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Enter client name"
+              placeholder={t.clients.enterClientName}
               className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               required
             />
@@ -446,7 +448,7 @@ export default function FirmClientsPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Client Type
+              {t.clients.clientType}
             </label>
             <select
               value={formData.type}
@@ -454,15 +456,15 @@ export default function FirmClientsPage() {
               className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               required
             >
-              <option value="B2C">B2C - Consumer</option>
-              <option value="B2B">B2B - Business</option>
-              <option value="B2G">B2G - Government</option>
+              <option value="B2C">{t.clients.b2cConsumer}</option>
+              <option value="B2B">{t.clients.b2bBusinessType}</option>
+              <option value="B2G">{t.clients.b2gGovernmentType}</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Phone Number
+              {t.clients.phoneNumber}
             </label>
             <input
               type="tel"
@@ -476,7 +478,7 @@ export default function FirmClientsPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Email (Optional)
+              {t.clients.emailOptional}
             </label>
             <input
               type="email"
@@ -489,12 +491,12 @@ export default function FirmClientsPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Address
+              {t.clients.address}
             </label>
             <textarea
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              placeholder="Enter delivery address"
+              placeholder={t.clients.enterAddress}
               className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               rows={3}
               required
@@ -507,14 +509,14 @@ export default function FirmClientsPage() {
               onClick={() => setIsModalOpen(false)}
               className="flex-1 px-6 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all hover:scale-105"
             >
-              Cancel
+              {t.common.cancel}
             </button>
             <button
               type="submit"
               className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-blue-500/30 transition-all hover:scale-105"
             >
               <Save className="w-5 h-5" />
-              {editingClient ? "Update Client" : "Add Client"}
+              {editingClient ? t.clients.updateClient : t.clients.addClient}
             </button>
           </div>
         </form>
@@ -524,7 +526,7 @@ export default function FirmClientsPage() {
       <Modal
         isOpen={isMapModalOpen}
         onClose={() => setIsMapModalOpen(false)}
-        title="Client Location"
+        title={t.clients.clientLocation}
       >
         <div className="space-y-4">
           {/* Address Display */}
@@ -533,7 +535,7 @@ export default function FirmClientsPage() {
               <Navigation className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Delivery Address</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{t.clients.deliveryAddress}</p>
               <p className="text-sm text-gray-600 dark:text-gray-300">{selectedClientAddress}</p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Uzbekistan</p>
             </div>
@@ -561,13 +563,13 @@ export default function FirmClientsPage() {
               className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 rounded-2xl text-white font-semibold transition-all shadow-lg shadow-red-500/25 hover:scale-105"
             >
               <Navigation className="w-4 h-4" />
-              Open in Yandex Maps
+              {t.clients.openInYandexMaps}
             </a>
             <button
               onClick={() => setIsMapModalOpen(false)}
               className="px-6 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all hover:scale-105"
             >
-              Close
+              {t.common.close}
             </button>
           </div>
         </div>

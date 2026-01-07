@@ -13,10 +13,12 @@ import {
   Users, Crown, Shield, Headphones, Search, Filter, Sparkles
 } from "lucide-react";
 import { firmApi } from "@/lib/firmApi";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function FirmStaffPage() {
   const { user, firm } = useAuth();
   const router = useRouter();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<StaffRole | "ALL">("ALL");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -84,8 +86,8 @@ export default function FirmStaffPage() {
             <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-purple-600 animate-spin"></div>
             <Users className="absolute inset-0 m-auto w-8 h-8 text-purple-600" />
           </div>
-          <p className="text-lg font-semibold text-gray-900 dark:text-white">Loading Staff</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Please wait...</p>
+          <p className="text-lg font-semibold text-gray-900 dark:text-white">{t.common.loading}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t.common.loading}</p>
         </div>
       </div>
     );
@@ -155,7 +157,7 @@ export default function FirmStaffPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this staff member?")) {
+    if (confirm(t.staff.deleteConfirm)) {
       setStaff(staff.filter((s) => s.id !== id));
     }
   };
@@ -206,15 +208,15 @@ export default function FirmStaffPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <PageHeader
-          title="Staff Management"
-          description="Manage your team members across all locations"
+          title={t.staff.title}
+          description={t.staff.description}
         />
         <button
           onClick={openCreateModal}
           className="group flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-3.5 rounded-2xl font-semibold shadow-xl shadow-purple-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/40"
         >
           <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
-          Add Staff Member
+          {t.staff.addStaff}
           <Sparkles className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>
       </div>
@@ -230,10 +232,10 @@ export default function FirmStaffPage() {
               <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
                 <Users className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xs font-medium text-white/80 bg-white/20 px-3 py-1 rounded-full">Total</span>
+              <span className="text-xs font-medium text-white/80 bg-white/20 px-3 py-1 rounded-full">{t.common.total}</span>
             </div>
             <p className="text-4xl font-black text-white mb-1">{staff.length}</p>
-            <p className="text-sm text-white/80 font-medium">Team Members</p>
+            <p className="text-sm text-white/80 font-medium">{t.staff.teamMembers}</p>
           </div>
         </div>
 
@@ -248,11 +250,11 @@ export default function FirmStaffPage() {
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                <span className="text-xs font-medium text-white/80">Active</span>
+                <span className="text-xs font-medium text-white/80">{t.staff.active}</span>
               </div>
             </div>
             <p className="text-4xl font-black text-white mb-1">{activeStaff.length}</p>
-            <p className="text-sm text-white/80 font-medium">Active Members</p>
+            <p className="text-sm text-white/80 font-medium">{t.staff.activeMembers}</p>
           </div>
         </div>
 
@@ -265,10 +267,10 @@ export default function FirmStaffPage() {
               <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
                 <Shield className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xs font-medium text-white/80 bg-white/20 px-3 py-1 rounded-full">Team Lead</span>
+              <span className="text-xs font-medium text-white/80 bg-white/20 px-3 py-1 rounded-full">{t.staff.teamLead}</span>
             </div>
             <p className="text-4xl font-black text-white mb-1">{managerStaff.length}</p>
-            <p className="text-sm text-white/80 font-medium">Managers</p>
+            <p className="text-sm text-white/80 font-medium">{t.staff.managers}</p>
           </div>
         </div>
 
@@ -281,10 +283,10 @@ export default function FirmStaffPage() {
               <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
                 <Headphones className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xs font-medium text-white/80 bg-white/20 px-3 py-1 rounded-full">Support</span>
+              <span className="text-xs font-medium text-white/80 bg-white/20 px-3 py-1 rounded-full">{t.staff.support}</span>
             </div>
             <p className="text-4xl font-black text-white mb-1">{operatorStaff.length}</p>
-            <p className="text-sm text-white/80 font-medium">Operators</p>
+            <p className="text-sm text-white/80 font-medium">{t.staff.operators}</p>
           </div>
         </div>
       </div>
@@ -303,7 +305,7 @@ export default function FirmStaffPage() {
               }`}
             >
               <Users className="w-4 h-4" />
-              All ({staff.length})
+              {t.common.all} ({staff.length})
             </button>
 
             <button
@@ -315,7 +317,7 @@ export default function FirmStaffPage() {
               }`}
             >
               <Crown className="w-4 h-4" />
-              Owners ({ownerStaff.length})
+              {t.staff.owners} ({ownerStaff.length})
             </button>
 
             <button
@@ -327,7 +329,7 @@ export default function FirmStaffPage() {
               }`}
             >
               <Shield className="w-4 h-4" />
-              Managers ({managerStaff.length})
+              {t.staff.managers} ({managerStaff.length})
             </button>
 
             <button
@@ -339,7 +341,7 @@ export default function FirmStaffPage() {
               }`}
             >
               <Headphones className="w-4 h-4" />
-              Operators ({operatorStaff.length})
+              {t.staff.operators} ({operatorStaff.length})
             </button>
           </div>
 
@@ -350,7 +352,7 @@ export default function FirmStaffPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search staff..."
+              placeholder={t.staff.searchPlaceholder}
               className="w-72 pl-12 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
             />
           </div>
@@ -364,25 +366,25 @@ export default function FirmStaffPage() {
             <thead className="bg-gradient-to-r from-gray-50 to-gray-100/80 dark:from-gray-700/80 dark:to-gray-800/80 border-b border-gray-200/50 dark:border-gray-600/50">
               <tr>
                 <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                  Staff Member
+                  {t.staff.staffMember}
                 </th>
                 <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                  Role
+                  {t.staff.role}
                 </th>
                 <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                  Contact
+                  {t.staff.contact}
                 </th>
                 <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                  Location
+                  {t.staff.location}
                 </th>
                 <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                  Status
+                  {t.common.status}
                 </th>
                 <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                  Joined
+                  {t.staff.joined}
                 </th>
                 <th className="px-6 py-5 text-right text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                  Actions
+                  {t.common.actions}
                 </th>
               </tr>
             </thead>
@@ -394,8 +396,8 @@ export default function FirmStaffPage() {
                       <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-4">
                         <Users className="w-8 h-8 text-gray-400" />
                       </div>
-                      <p className="text-lg font-semibold text-gray-900 dark:text-white mb-1">No staff found</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Try adjusting your search or filters</p>
+                      <p className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{t.staff.noStaff}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t.staff.tryAdjustingFilters}</p>
                     </div>
                   </td>
                 </tr>
@@ -457,7 +459,7 @@ export default function FirmStaffPage() {
                           <span className="font-medium">{member.city}</span>
                         </div>
                       ) : (
-                        <span className="text-gray-400 text-sm">Not set</span>
+                        <span className="text-gray-400 text-sm">{t.staff.notSet}</span>
                       )}
                     </td>
                     <td className="px-6 py-5">
@@ -467,12 +469,12 @@ export default function FirmStaffPage() {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                           </span>
-                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">Active</span>
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">{t.staff.active}</span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500">
                           <XCircle className="w-4 h-4" />
-                          <span className="font-medium">Inactive</span>
+                          <span className="font-medium">{t.staff.inactive}</span>
                         </div>
                       )}
                     </td>
@@ -514,8 +516,7 @@ export default function FirmStaffPage() {
         {filteredStaff.length > 0 && (
           <div className="px-6 py-4 bg-gray-50/80 dark:bg-gray-700/30 border-t border-gray-200/50 dark:border-gray-600/50">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Showing <span className="font-semibold text-gray-900 dark:text-white">{filteredStaff.length}</span> of{" "}
-              <span className="font-semibold text-gray-900 dark:text-white">{staff.length}</span> staff members
+              {t.staff.showing} <span className="font-semibold text-gray-900 dark:text-white">{filteredStaff.length}</span> / <span className="font-semibold text-gray-900 dark:text-white">{staff.length}</span> {t.staff.staffMembers}
             </p>
           </div>
         )}
@@ -525,18 +526,18 @@ export default function FirmStaffPage() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingStaff ? "Edit Staff Member" : "Add New Staff Member"}
+        title={editingStaff ? t.staff.editStaff : t.staff.addNewStaff}
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Full Name
+              {t.staff.fullName}
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Enter full name"
+              placeholder={t.staff.enterFullName}
               className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
               required
             />
@@ -544,7 +545,7 @@ export default function FirmStaffPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Role
+              {t.staff.role}
             </label>
             <select
               value={formData.role}
@@ -552,15 +553,15 @@ export default function FirmStaffPage() {
               className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
               required
             >
-              <option value="OWNER">Owner</option>
-              <option value="MANAGER">Manager</option>
-              <option value="OPERATOR">Operator</option>
+              <option value="OWNER">{t.staff.owner}</option>
+              <option value="MANAGER">{t.staff.manager}</option>
+              <option value="OPERATOR">{t.staff.operator}</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Phone Number
+              {t.drivers.phoneNumber}
             </label>
             <input
               type="tel"
@@ -574,7 +575,7 @@ export default function FirmStaffPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Email
+              {t.clients.email}
             </label>
             <input
               type="email"
@@ -587,7 +588,7 @@ export default function FirmStaffPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              City
+              {t.drivers.city}
             </label>
             <input
               type="text"
@@ -607,7 +608,7 @@ export default function FirmStaffPage() {
               className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
             />
             <label htmlFor="active" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Active Status
+              {t.staff.activeStatus}
             </label>
           </div>
 
@@ -617,14 +618,14 @@ export default function FirmStaffPage() {
               onClick={() => setIsModalOpen(false)}
               className="flex-1 px-6 py-3.5 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
             >
-              Cancel
+              {t.common.cancel}
             </button>
             <button
               type="submit"
               className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-purple-500/30 transition-all hover:scale-[1.02]"
             >
               <Save className="w-5 h-5" />
-              {editingStaff ? "Update" : "Add Staff"}
+              {editingStaff ? t.staff.updateStaff : t.staff.addStaff}
             </button>
           </div>
         </form>

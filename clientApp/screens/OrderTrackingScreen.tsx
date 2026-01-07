@@ -7,6 +7,7 @@ import {
   Image,
   TouchableOpacity,
   Animated,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,6 +26,7 @@ import OrderReturnedToQueueModal from '../components/OrderReturnedToQueueModal';
 import OrderDeletedModal from '../components/OrderDeletedModal';
 import { getFirmLogo, getProductImageByName } from '../utils/imageMapping';
 import { useStageSounds } from '../hooks/useStageSounds';
+import { getTranslatedProductName } from '../utils/translations';
 
 type Stage = 'placed' | 'queue' | 'on_the_way' | 'courier_arrived' | 'delivered';
 
@@ -232,7 +234,7 @@ const OrderTrackingScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { currentOrder, setCurrentOrder } = useOrder();
   const { showToast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { handleStageChange } = useStageSounds();
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showCallFirmModal, setShowCallFirmModal] = useState(false);
@@ -396,7 +398,7 @@ const OrderTrackingScreen: React.FC = () => {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.backText}>{'‹'}</Text>
+            <Ionicons name={Platform.OS === 'ios' ? 'chevron-back' : 'arrow-back'} size={24} color="#1E293B" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t('orderTracking.title')}</Text>
           <View style={{ width: 32 }} />
@@ -433,7 +435,7 @@ const OrderTrackingScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('MainTabs')}>
-          <Text style={styles.backText}>{'‹'}</Text>
+          <Ionicons name={Platform.OS === 'ios' ? 'chevron-back' : 'arrow-back'} size={24} color="#1E293B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('orderTracking.title')}</Text>
         <View style={{ width: 32 }} />
@@ -496,7 +498,6 @@ const OrderTrackingScreen: React.FC = () => {
         {currentOrder.driver && (stage === 'on_the_way' || stage === 'courier_arrived' || stage === 'delivered') && (
           <DriverCard
             name={currentOrder.driver.name}
-            firm={stage === 'courier_arrived' ? t('orderTracking.atYourDoor') : stage === 'delivered' ? t('orderTracking.deliveredByCompany').replace('{company}', currentOrder.driver.company || currentOrder.firm?.name || '') : (currentOrder.driver.company || currentOrder.firm?.name || '')}
             plateNumber={currentOrder.driver.vehicleNumber}
             carBrand={currentOrder.driver.carBrand}
             carColor={currentOrder.driver.carColor}
@@ -522,7 +523,7 @@ const OrderTrackingScreen: React.FC = () => {
                   />
                 </View>
                 <View>
-                  <Text style={styles.itemTitle}>{item.product.name}</Text>
+                  <Text style={styles.itemTitle}>{getTranslatedProductName(item.product, language)}</Text>
                   <Text style={styles.itemSubtitle}>
                     {item.product.volume} × {item.quantity}
                   </Text>

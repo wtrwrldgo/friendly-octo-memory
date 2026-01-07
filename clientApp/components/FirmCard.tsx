@@ -26,9 +26,11 @@ export const FirmCard: React.FC<FirmCardProps> = ({ firm, onPress }) => {
     if (firm.homeBanner && typeof firm.homeBanner === 'number') return firm.homeBanner;
     // Fallback to logo if it's a bundled asset
     if (firm.logo && typeof firm.logo === 'number') return firm.logo;
-    // Fallback to URL (for remote images)
+    // Fallback to URL (for remote images) - check both field names
     if (firm.homeBanner && typeof firm.homeBanner === 'string') return { uri: firm.homeBanner };
+    if (firm.homeBannerUrl && typeof firm.homeBannerUrl === 'string') return { uri: firm.homeBannerUrl };
     if (firm.logo && typeof firm.logo === 'string') return { uri: firm.logo };
+    if (firm.logoUrl && typeof firm.logoUrl === 'string') return { uri: firm.logoUrl };
     return null;
   };
 

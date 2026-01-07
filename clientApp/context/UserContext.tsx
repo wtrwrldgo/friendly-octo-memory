@@ -8,6 +8,7 @@ interface UserContextType {
   user: User | null;
   addresses: Address[];
   selectedAddress: Address | null;
+  isLoaded: boolean;
   setUser: (user: User | null) => void;
   setAddresses: (addresses: Address[]) => void;
   setSelectedAddress: (address: Address | null) => void;
@@ -167,6 +168,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         user,
         addresses,
         selectedAddress,
+        isLoaded,
         setUser,
         setAddresses,
         setSelectedAddress: setSelectedAddressWithLogging,

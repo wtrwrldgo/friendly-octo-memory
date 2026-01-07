@@ -3,6 +3,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import PageHeader from "@/components/PageHeader";
@@ -34,6 +35,7 @@ type TimePeriod = "day" | "week" | "month" | "year";
 
 export default function FirmFinancesPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<"ALL" | "REVENUE" | "EXPENSE">("ALL");
@@ -174,8 +176,8 @@ export default function FirmFinancesPage() {
             <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-emerald-600 animate-spin"></div>
             <DollarSign className="absolute inset-0 m-auto w-8 h-8 text-emerald-600" />
           </div>
-          <p className="text-lg font-semibold text-gray-900 dark:text-white">Loading Finances</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Please wait...</p>
+          <p className="text-lg font-semibold text-gray-900 dark:text-white">{t.finances.loading}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t.finances.pleaseWait}</p>
         </div>
       </div>
     );
@@ -278,7 +280,7 @@ export default function FirmFinancesPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this transaction?")) {
+    if (confirm(t.finances.deleteConfirm)) {
       setTransactions(transactions.filter((t) => t.id !== id));
     }
   };
@@ -297,10 +299,10 @@ export default function FirmFinancesPage() {
 
   const getPeriodLabel = (period: TimePeriod) => {
     switch (period) {
-      case "day": return "Today";
-      case "week": return "This Week";
-      case "month": return "This Month";
-      case "year": return "This Year";
+      case "day": return t.finances.today;
+      case "week": return t.finances.thisWeek;
+      case "month": return t.finances.thisMonth;
+      case "year": return t.finances.thisYear;
     }
   };
 
@@ -331,15 +333,15 @@ export default function FirmFinancesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <PageHeader
-          title="Financial Management"
-          description="Track revenue, expenses, and profitability"
+          title={t.finances.title}
+          description={t.finances.description}
         />
         <button
           onClick={openCreateModal}
           className="group flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-6 py-3.5 rounded-2xl font-semibold shadow-xl shadow-emerald-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/40"
         >
           <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
-          Add Transaction
+          {t.finances.addTransaction}
           <Sparkles className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>
       </div>
@@ -361,7 +363,7 @@ export default function FirmFinancesPage() {
               </div>
             </div>
             <p className="text-4xl font-black text-white mb-1">${totalRevenue.toLocaleString()}</p>
-            <p className="text-sm text-white/80 font-medium">Total Revenue</p>
+            <p className="text-sm text-white/80 font-medium">{t.finances.totalRevenue}</p>
           </div>
         </div>
 
@@ -380,7 +382,7 @@ export default function FirmFinancesPage() {
               </div>
             </div>
             <p className="text-4xl font-black text-white mb-1">${totalExpenses.toLocaleString()}</p>
-            <p className="text-sm text-white/80 font-medium">Total Expenses</p>
+            <p className="text-sm text-white/80 font-medium">{t.finances.totalExpenses}</p>
           </div>
         </div>
 
@@ -393,10 +395,10 @@ export default function FirmFinancesPage() {
               <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
                 <Wallet className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xs font-medium text-white/80 bg-white/20 px-3 py-1 rounded-full">Profit</span>
+              <span className="text-xs font-medium text-white/80 bg-white/20 px-3 py-1 rounded-full">{t.finances.profit}</span>
             </div>
             <p className="text-4xl font-black text-white mb-1">${(totalRevenue - totalExpenses).toLocaleString()}</p>
-            <p className="text-sm text-white/80 font-medium">Net Profit</p>
+            <p className="text-sm text-white/80 font-medium">{t.finances.netProfit}</p>
           </div>
         </div>
 
@@ -410,13 +412,13 @@ export default function FirmFinancesPage() {
                 <PieChart className="w-6 h-6 text-white" />
               </div>
               <span className="text-xs font-medium text-white/80 bg-white/20 px-3 py-1 rounded-full">
-                {((totalRevenue - totalExpenses) / totalRevenue * 100) > 35 ? "Excellent" : "Good"}
+                {((totalRevenue - totalExpenses) / totalRevenue * 100) > 35 ? t.finances.excellent : t.finances.good}
               </span>
             </div>
             <p className="text-4xl font-black text-white mb-1">
               {totalRevenue > 0 ? ((totalRevenue - totalExpenses) / totalRevenue * 100).toFixed(1) : 0}%
             </p>
-            <p className="text-sm text-white/80 font-medium">Profit Margin</p>
+            <p className="text-sm text-white/80 font-medium">{t.finances.profitMargin}</p>
           </div>
         </div>
       </div>
@@ -449,7 +451,7 @@ export default function FirmFinancesPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search transactions..."
+              placeholder={t.finances.searchPlaceholder}
               className="w-72 pl-12 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
             />
           </div>
@@ -460,7 +462,7 @@ export default function FirmFinancesPage() {
       <div className="mb-8">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-emerald-600" />
-          {getPeriodLabel(timePeriod)} Performance
+          {getPeriodLabel(timePeriod)} {t.finances.performance}
         </h2>
         <div className="grid grid-cols-4 gap-4">
           <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl p-5 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all">
@@ -468,7 +470,7 @@ export default function FirmFinancesPage() {
               <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
                 <ArrowUpCircle className="w-5 h-5 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Revenue</span>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t.finances.revenue}</span>
             </div>
             <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
               ${currentMetrics.revenue.toLocaleString()}
@@ -480,7 +482,7 @@ export default function FirmFinancesPage() {
               <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/30">
                 <ArrowDownCircle className="w-5 h-5 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Expenses</span>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t.finances.expenses}</span>
             </div>
             <p className="text-2xl font-bold text-red-600 dark:text-red-400">
               ${currentMetrics.expenses.toLocaleString()}
@@ -492,7 +494,7 @@ export default function FirmFinancesPage() {
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                 <Wallet className="w-5 h-5 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Profit</span>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t.finances.profit}</span>
             </div>
             <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               ${currentMetrics.profit.toLocaleString()}
@@ -504,7 +506,7 @@ export default function FirmFinancesPage() {
               <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30">
                 <PieChart className="w-5 h-5 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Margin</span>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t.finances.margin}</span>
             </div>
             <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               {currentMetrics.margin.toFixed(1)}%
@@ -518,7 +520,7 @@ export default function FirmFinancesPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Receipt className="w-5 h-5 text-emerald-600" />
-            All Transactions
+            {t.finances.allTransactions}
           </h2>
 
           {/* Filter Buttons */}
@@ -531,7 +533,7 @@ export default function FirmFinancesPage() {
                   : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
             >
-              All ({transactions.length})
+              {t.finances.all} ({transactions.length})
             </button>
             <button
               onClick={() => setFilterType("REVENUE")}
@@ -542,7 +544,7 @@ export default function FirmFinancesPage() {
               }`}
             >
               <ArrowUpCircle className="w-4 h-4" />
-              Revenue ({revenueTransactions.length})
+              {t.finances.revenue} ({revenueTransactions.length})
             </button>
             <button
               onClick={() => setFilterType("EXPENSE")}
@@ -553,7 +555,7 @@ export default function FirmFinancesPage() {
               }`}
             >
               <ArrowDownCircle className="w-4 h-4" />
-              Expenses ({expenseTransactions.length})
+              {t.finances.expenses} ({expenseTransactions.length})
             </button>
           </div>
         </div>
@@ -565,22 +567,22 @@ export default function FirmFinancesPage() {
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100/80 dark:from-gray-700/80 dark:to-gray-800/80 border-b border-gray-200/50 dark:border-gray-600/50">
                 <tr>
                   <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                    Date
+                    {t.finances.date}
                   </th>
                   <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                    Type
+                    {t.finances.type}
                   </th>
                   <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                    Category
+                    {t.finances.category}
                   </th>
                   <th className="px-6 py-5 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                    Description
+                    {t.finances.descriptionLabel}
                   </th>
                   <th className="px-6 py-5 text-right text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                    Amount
+                    {t.finances.amount}
                   </th>
                   <th className="px-6 py-5 text-right text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                    Actions
+                    {t.finances.actions}
                   </th>
                 </tr>
               </thead>
@@ -592,8 +594,8 @@ export default function FirmFinancesPage() {
                         <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-4">
                           <Receipt className="w-8 h-8 text-gray-400" />
                         </div>
-                        <p className="text-lg font-semibold text-gray-900 dark:text-white mb-1">No transactions found</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Try adjusting your search or filters</p>
+                        <p className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{t.finances.noTransactions}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{t.finances.tryAdjustingFilters}</p>
                       </div>
                     </td>
                   </tr>
@@ -630,12 +632,12 @@ export default function FirmFinancesPage() {
                         {transaction.type === "REVENUE" ? (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30">
                             <ArrowUpCircle className="w-3.5 h-3.5" />
-                            Revenue
+                            {t.finances.revenue}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg shadow-red-500/30">
                             <ArrowDownCircle className="w-3.5 h-3.5" />
-                            Expense
+                            {t.finances.expense}
                           </span>
                         )}
                       </td>
@@ -698,8 +700,8 @@ export default function FirmFinancesPage() {
           {filteredTransactions.length > 0 && (
             <div className="px-6 py-4 bg-gray-50/80 dark:bg-gray-700/30 border-t border-gray-200/50 dark:border-gray-600/50">
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Showing <span className="font-semibold text-gray-900 dark:text-white">{filteredTransactions.length}</span> of{" "}
-                <span className="font-semibold text-gray-900 dark:text-white">{transactions.length}</span> transactions
+                {t.finances.showing} <span className="font-semibold text-gray-900 dark:text-white">{filteredTransactions.length}</span> {t.finances.of}{" "}
+                <span className="font-semibold text-gray-900 dark:text-white">{transactions.length}</span> {t.finances.transactions}
               </p>
             </div>
           )}
@@ -710,12 +712,12 @@ export default function FirmFinancesPage() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingTransaction ? "Edit Transaction" : "Add New Transaction"}
+        title={editingTransaction ? t.finances.editTransaction : t.finances.addNewTransaction}
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Transaction Type
+              {t.finances.transactionType}
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -728,7 +730,7 @@ export default function FirmFinancesPage() {
                 }`}
               >
                 <ArrowUpCircle className="w-5 h-5" />
-                Revenue
+                {t.finances.revenue}
               </button>
               <button
                 type="button"
@@ -740,20 +742,20 @@ export default function FirmFinancesPage() {
                 }`}
               >
                 <ArrowDownCircle className="w-5 h-5" />
-                Expense
+                {t.finances.expense}
               </button>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Category
+              {t.finances.category}
             </label>
             <input
               type="text"
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              placeholder="e.g., Delivery Orders, Salaries, Marketing"
+              placeholder={t.finances.categoryPlaceholder}
               className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
               required
             />
@@ -761,7 +763,7 @@ export default function FirmFinancesPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Amount ($)
+              {t.finances.amountLabel}
             </label>
             <div className="relative">
               <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -779,12 +781,12 @@ export default function FirmFinancesPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Description
+              {t.finances.descriptionLabel}
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Add details about this transaction..."
+              placeholder={t.finances.descriptionPlaceholder}
               className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
               rows={3}
               required
@@ -797,7 +799,7 @@ export default function FirmFinancesPage() {
               onClick={() => setIsModalOpen(false)}
               className="flex-1 px-6 py-3.5 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
             >
-              Cancel
+              {t.finances.cancel}
             </button>
             <button
               type="submit"
@@ -808,7 +810,7 @@ export default function FirmFinancesPage() {
               }`}
             >
               <Save className="w-5 h-5" />
-              {editingTransaction ? "Update" : "Create"}
+              {editingTransaction ? t.finances.update : t.finances.create}
             </button>
           </div>
         </form>

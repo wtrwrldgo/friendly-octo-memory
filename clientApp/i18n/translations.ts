@@ -12,6 +12,7 @@ export const translations = {
       edit: 'Edit',
       search: 'Search',
       loading: 'Loading...',
+      saving: 'Saving...',
       error: 'Error',
       success: 'Success',
     },
@@ -58,11 +59,41 @@ export const translations = {
       minOrder: 'Min Order',
       viewCart: 'View Cart',
       goToProducts: 'Go to products',
+      noProducts: 'No products available',
+      noProductsMessage: 'This firm doesn\'t have any products yet',
+    },
+
+    // No Internet Screen
+    noInternet: {
+      title: 'No Internet Connection',
+      subtitle: 'Please check your network and try again.',
+      retry: 'Retry',
+    },
+
+    // Address Select Screen (Onboarding)
+    addressSelect: {
+      title: 'Select Address',
+      addFirstAddress: 'Add your first delivery address to continue',
+      chooseAddress: 'Choose your delivery address',
+      noAddresses: 'No addresses yet',
+      noAddressesMessage: 'Add your first address to start ordering water',
+      addOnMap: 'Add Address on Map',
+      addNew: 'Add New Address',
+      continue: 'Continue',
+    },
+
+    // Address Summary Screen
+    addressSummary: {
+      noData: 'No address data found',
+      goBack: 'Go Back',
+      reviewAddressHint: 'Please verify your address details',
     },
 
     // Product Card
     product: {
       add: 'Add',
+      returnable: 'Returnable',
+      bottleDeposit: 'Bottle deposit',
     },
 
     // Cart Screen
@@ -93,6 +124,23 @@ export const translations = {
       removeItem: 'Remove Item',
       removeItemMessage: 'Are you sure you want to remove this item?',
       remove: 'Remove',
+      selectPayment: 'Select',
+      deliveryTime: 'Delivery time',
+      delivery: 'Delivery',
+      select: 'Select',
+      addressRequired: 'Delivery address required',
+      selectAddressBtn: 'Select address',
+      selectAddressToOrder: 'Select a delivery address to place your order.',
+      selectAddressToContinue: 'Select a delivery address to continue.',
+      orderOnTheWay: 'Your order is on the way',
+      trackOrder: 'Track order',
+      deliveryFeeInfo: 'Delivery fee',
+      serviceFeeInfo: 'Service fee',
+      deliveryFeeDesc: 'Delivery fee is paid to the water company. This is for delivering your order.',
+      serviceFeeDesc: 'Service fee is paid to WaterGo platform. This is for convenient ordering and fast delivery.',
+      understood: 'Understood',
+      placeOrderBtn: 'Place order',
+      loading: 'Loading...',
     },
 
     // Time Selection Modal
@@ -133,6 +181,19 @@ export const translations = {
       reorder: 'Reorder',
       items: 'items',
       scheduledFor: 'Scheduled for',
+      activeOrderExists: 'Active Order Exists',
+      activeOrderMessage: 'You can place a new order after your current order is delivered.',
+    },
+
+    // Map Fallback UI
+    mapFallback: {
+      title: 'Map Temporarily Unavailable',
+      subtitle: "Don't worry! You can still continue by entering your address manually.",
+      enterAddress: 'Enter Your Address',
+      placeholder: 'Enter your address manually',
+      example: 'Example: Street 123, Building 5, Floor 3, Apt 42',
+      retryMap: 'Retry Map',
+      infoText: 'You can update your exact location later in settings',
     },
 
     // Profile Screen
@@ -146,6 +207,7 @@ export const translations = {
       savedAddresses: 'Saved Addresses',
       addNew: '+ Add New',
       noAddresses: 'No saved addresses',
+      addAddressHint: 'Add your first delivery address',
       noAddressesMessage: 'Add your delivery address to get started',
       addFirstAddress: 'Add Your First Address',
       selected: 'Selected',
@@ -360,10 +422,12 @@ export const translations = {
       courierOnWay: 'The courier is on the way',
       orderArriveSoon: 'Your order will arrive soon',
       delivered: 'Delivered',
+      cancelled: 'Cancelled',
       processing: 'Processing',
       items: 'Items',
       estimatedTime: 'Estimated time',
       callDriver: 'Call driver',
+      courier: 'Courier',
       cancel: 'Cancel order',
       orderDetails: 'Order details',
       subtotal: 'Subtotal',
@@ -423,6 +487,12 @@ export const translations = {
       thankYou: 'Thank you for your feedback!',
       skipReview: 'Skip',
       selectRating: 'Please select a rating',
+      poor: 'Poor',
+      average: 'Average',
+      good: 'Good',
+      excellent: 'Excellent!',
+      company: 'Company',
+      maybeLater: 'Maybe later',
     },
 
     // Errors
@@ -530,6 +600,7 @@ export const translations = {
       edit: 'Редактировать',
       search: 'Поиск',
       loading: 'Загрузка...',
+      saving: 'Сохранение...',
       error: 'Ошибка',
       success: 'Успешно',
     },
@@ -576,11 +647,41 @@ export const translations = {
       minOrder: 'Мин. заказ',
       viewCart: 'Корзина',
       goToProducts: 'Перейти к товарам',
+      noProducts: 'Товары отсутствуют',
+      noProductsMessage: 'У этой компании пока нет товаров',
+    },
+
+    // No Internet Screen
+    noInternet: {
+      title: 'Нет подключения к интернету',
+      subtitle: 'Проверьте подключение к сети и повторите попытку.',
+      retry: 'Повторить',
+    },
+
+    // Address Select Screen (Onboarding)
+    addressSelect: {
+      title: 'Выберите адрес',
+      addFirstAddress: 'Добавьте первый адрес доставки для продолжения',
+      chooseAddress: 'Выберите адрес доставки',
+      noAddresses: 'Пока адресов нет',
+      noAddressesMessage: 'Добавьте первый адрес, чтобы начать заказывать воду',
+      addOnMap: 'Добавить адрес на карте',
+      addNew: 'Добавить новый адрес',
+      continue: 'Продолжить',
+    },
+
+    // Address Summary Screen
+    addressSummary: {
+      noData: 'Данные адреса не найдены',
+      goBack: 'Назад',
+      reviewAddressHint: 'Пожалуйста, проверьте данные адреса',
     },
 
     // Product Card
     product: {
       add: 'Добавить',
+      returnable: 'Возвратная',
+      bottleDeposit: 'Залог за бутылку',
     },
 
     // Cart Screen
@@ -611,6 +712,23 @@ export const translations = {
       removeItem: 'Удалить товар',
       removeItemMessage: 'Вы уверены, что хотите удалить этот товар?',
       remove: 'Удалить',
+      selectPayment: 'Выбрать',
+      deliveryTime: 'Время доставки',
+      delivery: 'Доставка',
+      select: 'Выбрать',
+      addressRequired: 'Требуется адрес доставки',
+      selectAddressBtn: 'Выбрать адрес',
+      selectAddressToOrder: 'Выберите адрес доставки для оформления заказа.',
+      selectAddressToContinue: 'Выберите адрес доставки для продолжения.',
+      orderOnTheWay: 'Ваш заказ в пути',
+      trackOrder: 'Отследить заказ',
+      deliveryFeeInfo: 'Стоимость доставки',
+      serviceFeeInfo: 'Сервисный сбор',
+      deliveryFeeDesc: 'Стоимость доставки оплачивается водной компании. Это за доставку вашего заказа.',
+      serviceFeeDesc: 'Сервисный сбор оплачивается платформе WaterGo. Это за удобный заказ и быструю доставку.',
+      understood: 'Понятно',
+      placeOrderBtn: 'Оформить заказ',
+      loading: 'Загрузка...',
     },
 
     // Time Selection Modal
@@ -651,6 +769,19 @@ export const translations = {
       reorder: 'Повторить',
       items: 'товаров',
       scheduledFor: 'Запланировано на',
+      activeOrderExists: 'Есть активный заказ',
+      activeOrderMessage: 'Вы сможете сделать новый заказ после доставки текущего.',
+    },
+
+    // Map Fallback UI
+    mapFallback: {
+      title: 'Карта временно недоступна',
+      subtitle: 'Не волнуйтесь! Вы можете продолжить, введя адрес вручную.',
+      enterAddress: 'Введите адрес',
+      placeholder: 'Введите адрес вручную',
+      example: 'Пример: ул. Мира 123, д. 5, эт. 3, кв. 42',
+      retryMap: 'Обновить карту',
+      infoText: 'Вы сможете уточнить местоположение позже в настройках',
     },
 
     // Profile Screen
@@ -664,6 +795,7 @@ export const translations = {
       savedAddresses: 'Сохраненные адреса',
       addNew: '+ Добавить',
       noAddresses: 'Нет сохраненных адресов',
+      addAddressHint: 'Добавьте первый адрес доставки',
       noAddressesMessage: 'Добавьте адрес доставки, чтобы начать',
       addFirstAddress: 'Добавить первый адрес',
       selected: 'Выбран',
@@ -878,10 +1010,12 @@ export const translations = {
       courierOnWay: 'Курьер в пути',
       orderArriveSoon: 'Ваш заказ скоро прибудет',
       delivered: 'Доставлено',
+      cancelled: 'Отменено',
       processing: 'Обработка',
       items: 'Товары',
       estimatedTime: 'Ожидаемое время',
       callDriver: 'Позвонить курьеру',
+      courier: 'Курьер',
       cancel: 'Отменить заказ',
       orderDetails: 'Детали заказа',
       subtotal: 'Промежуточный итог',
@@ -941,6 +1075,12 @@ export const translations = {
       thankYou: 'Спасибо за ваш отзыв!',
       skipReview: 'Пропустить',
       selectRating: 'Пожалуйста, выберите оценку',
+      poor: 'Плохо',
+      average: 'Средне',
+      good: 'Хорошо',
+      excellent: 'Отлично!',
+      company: 'Компания',
+      maybeLater: 'Позже',
     },
 
     // Errors
@@ -1048,6 +1188,7 @@ export const translations = {
       edit: 'Tahrirlash',
       search: 'Qidirish',
       loading: 'Yuklanmoqda...',
+      saving: 'Saqlanmoqda...',
       error: 'Xato',
       success: 'Muvaffaqiyatli',
     },
@@ -1094,11 +1235,41 @@ export const translations = {
       minOrder: 'Min. buyurtma',
       viewCart: 'Savatni ko\'rish',
       goToProducts: 'Mahsulotlarga o\'tish',
+      noProducts: 'Mahsulotlar mavjud emas',
+      noProductsMessage: 'Bu kompaniyada hali mahsulotlar yo\'q',
+    },
+
+    // No Internet Screen
+    noInternet: {
+      title: 'Internet aloqasi yo\'q',
+      subtitle: 'Tarmoq ulanishini tekshiring va qaytadan urinib ko\'ring.',
+      retry: 'Qayta urinish',
+    },
+
+    // Address Select Screen (Onboarding)
+    addressSelect: {
+      title: 'Manzil tanlang',
+      addFirstAddress: 'Davom etish uchun birinchi manzilni qo\'shing',
+      chooseAddress: 'Yetkazib berish manzilini tanlang',
+      noAddresses: 'Hali manzillar yo\'q',
+      noAddressesMessage: 'Suv buyurtma qilish uchun birinchi manzilingizni qo\'shing',
+      addOnMap: 'Xaritada manzil qo\'shish',
+      addNew: 'Yangi manzil qo\'shish',
+      continue: 'Davom etish',
+    },
+
+    // Address Summary Screen
+    addressSummary: {
+      noData: 'Manzil ma\'lumotlari topilmadi',
+      goBack: 'Orqaga',
+      reviewAddressHint: 'Iltimos, manzil ma\'lumotlarini tekshiring',
     },
 
     // Product Card
     product: {
       add: 'Qo\'shish',
+      returnable: 'Qaytariladi',
+      bottleDeposit: 'Butilka depoziti',
     },
 
     // Cart Screen
@@ -1129,6 +1300,23 @@ export const translations = {
       removeItem: 'Mahsulotni o\'chirish',
       removeItemMessage: 'Ushbu mahsulotni o\'chirishni xohlaysizmi?',
       remove: 'O\'chirish',
+      selectPayment: 'Tanlash',
+      deliveryTime: 'Yetkazib berish vaqti',
+      delivery: 'Yetkazib berish',
+      select: 'Tanlash',
+      addressRequired: 'Yetkazib berish manzili kerak',
+      selectAddressBtn: 'Manzil tanlash',
+      selectAddressToOrder: 'Buyurtma berish uchun yetkazib berish manzilini tanlang.',
+      selectAddressToContinue: 'Davom etish uchun yetkazib berish manzilini tanlang.',
+      orderOnTheWay: 'Buyurtmangiz yo\'lda',
+      trackOrder: 'Buyurtmani kuzatish',
+      deliveryFeeInfo: 'Yetkazib berish narxi',
+      serviceFeeInfo: 'Xizmat to\'lovi',
+      deliveryFeeDesc: 'Yetkazib berish narxi suv kompaniyasiga to\'lanadi. Bu buyurtmangizni yetkazib berish uchun.',
+      serviceFeeDesc: 'Xizmat to\'lovi WaterGo platformasiga to\'lanadi. Bu qulay buyurtma va tez yetkazib berish uchun.',
+      understood: 'Tushundim',
+      placeOrderBtn: 'Buyurtma berish',
+      loading: 'Yuklanmoqda...',
     },
 
     // Time Selection Modal
@@ -1169,6 +1357,19 @@ export const translations = {
       reorder: 'Qayta buyurtma',
       items: 'mahsulotlar',
       scheduledFor: 'Rejalashtirilgan vaqt',
+      activeOrderExists: 'Faol buyurtma mavjud',
+      activeOrderMessage: 'Joriy buyurtma yetkazilgandan keyin yangi buyurtma berishingiz mumkin.',
+    },
+
+    // Map Fallback UI
+    mapFallback: {
+      title: 'Xarita vaqtincha mavjud emas',
+      subtitle: 'Xavotir olmang! Manzilni qo\'lda kiritib davom etishingiz mumkin.',
+      enterAddress: 'Manzilingizni kiriting',
+      placeholder: 'Manzilni qo\'lda kiriting',
+      example: 'Misol: Navoiy ko\'chasi 123, 5-uy, 3-qavat, 42-xonadon',
+      retryMap: 'Xaritani yangilash',
+      infoText: 'Aniq joylashuvni keyinroq sozlamalarda o\'zgartirishingiz mumkin',
     },
 
     // Profile Screen
@@ -1182,6 +1383,7 @@ export const translations = {
       savedAddresses: 'Saqlangan manzillar',
       addNew: '+ Qo\'shish',
       noAddresses: 'Saqlangan manzillar yo\'q',
+      addAddressHint: 'Birinchi yetkazib berish manzilingizni qo\'shing',
       noAddressesMessage: 'Yetkazib berish manzilini qo\'shing',
       addFirstAddress: 'Birinchi manzilni qo\'shing',
       selected: 'Tanlangan',
@@ -1396,10 +1598,12 @@ export const translations = {
       courierOnWay: 'Kuryer yo\'lda',
       orderArriveSoon: 'Buyurtmangiz tez orada yetib keladi',
       delivered: 'Yetkazildi',
+      cancelled: 'Bekor qilindi',
       processing: 'Qayta ishlanmoqda',
       items: 'Mahsulotlar',
       estimatedTime: 'Taxminiy vaqt',
       callDriver: 'Kuryerga qo\'ng\'iroq',
+      courier: 'Kuryer',
       cancel: 'Buyurtmani bekor qilish',
       orderDetails: 'Buyurtma tafsilotlari',
       subtotal: 'Oraliq jami',
@@ -1459,6 +1663,12 @@ export const translations = {
       thankYou: 'Fikr-mulohazangiz uchun rahmat!',
       skipReview: 'O\'tkazib yuborish',
       selectRating: 'Iltimos, baholang',
+      poor: 'Yomon',
+      average: 'O\'rtacha',
+      good: 'Yaxshi',
+      excellent: 'A\'lo!',
+      company: 'Kompaniya',
+      maybeLater: 'Keyinroq',
     },
 
     // Errors
@@ -1559,8 +1769,9 @@ export const translations = {
       edit: 'Ózgertiw',
       search: 'Izlew',
       loading: 'Júklenbekte...',
+      saving: 'Saqlanıwda...',
       error: 'Qátelik',
-      success: 'Jetiskerlik',
+      success: 'Tabıs',
     },
 
     // Bottom Navigation
@@ -1606,11 +1817,41 @@ export const translations = {
       minOrder: 'Eń az buyırtpa',
       viewCart: 'Sebetke ótiw',
       goToProducts: 'Ónimlerge ótiw',
+      noProducts: 'Ónimler joq',
+      noProductsMessage: 'Bul kompaniyada házir ónimler joq',
+    },
+
+    // No Internet Screen
+    noInternet: {
+      title: 'Internet baylanısı joq',
+      subtitle: 'Tarmoq baylanısın tekserin hám qaytadan urınıń.',
+      retry: 'Qaytadan urınıw',
+    },
+
+    // Address Select Screen (Onboarding)
+    addressSelect: {
+      title: 'Mánzil saylań',
+      addFirstAddress: 'Dawam etiw ushın birinshi mánzildi qosıń',
+      chooseAddress: 'Jetkeriw mánzilińizdi saylań',
+      noAddresses: 'Házir mánziller joq',
+      noAddressesMessage: 'Suw buyırtpa qılıw ushın birinshi mánzilińizdi qosıń',
+      addOnMap: 'Kartada mánzil qosıw',
+      addNew: 'Jańa mánzil qosıw',
+      continue: 'Dawam etiw',
+    },
+
+    // Address Summary Screen
+    addressSummary: {
+      noData: 'Mánzil maǵlıwmatları tabılmadı',
+      goBack: 'Artqa',
+      reviewAddressHint: 'Ótinish, mánzil maǵlıwmatların tekserińiz',
     },
 
     // Product Card
     product: {
       add: 'Qosıw',
+      returnable: 'Qaytarıladı',
+      bottleDeposit: 'Butılka depoziti',
     },
 
     // Cart Screen
@@ -1641,6 +1882,23 @@ export const translations = {
       removeItemMessage: 'Bul ónimdi óshiriwge rózi mesiz?',
       remove: 'Óshiriw',
       checkout: 'Tólemge ótiw',
+      selectPayment: 'Saylań',
+      deliveryTime: 'Jetkeriw waqtı',
+      delivery: 'Jetkeriw',
+      select: 'Saylań',
+      addressRequired: 'Jetkeriw mánzili kerek',
+      selectAddressBtn: 'Mánzil saylań',
+      selectAddressToOrder: 'Buyırtpanı jiberiw ushın jetkeriw mánzilın saylań.',
+      selectAddressToContinue: 'Dawam etiw ushın jetkeriw mánzilın saylań.',
+      orderOnTheWay: 'Buyırtpańız jolda',
+      trackOrder: 'Buyırtpanı qadaǵalaw',
+      deliveryFeeInfo: 'Jetkeriw haqqı',
+      serviceFeeInfo: 'Xızmet haqqı',
+      deliveryFeeDesc: 'Jetkeriw haqqı suw kompaniyasına tólenedi. Bul buyırtpanı sizge jetkeriw ushın.',
+      serviceFeeDesc: 'Xızmet haqqı WaterGo platformasına tólenedi. Bul qolaylı buyırtpa hám tez jetkeriw ushın.',
+      understood: 'Túsindim',
+      placeOrderBtn: 'Buyırtpa beriw',
+      loading: 'Júkleniwde...',
     },
 
     // Time Selection Modal
@@ -1682,6 +1940,19 @@ export const translations = {
       reorder: 'Qaytadan buyırtpa',
       items: 'ónim',
       scheduledFor: 'Rejelestrilgen waqıt',
+      activeOrderExists: 'Aktiv buyırtpa bar',
+      activeOrderMessage: 'Házirgi buyırtpańız jetkerilgennen keyin jańa buyırtpa bere alasız.',
+    },
+
+    // Map Fallback UI
+    mapFallback: {
+      title: 'Karta waqıtsha islemeydi',
+      subtitle: 'Qayǵırmań! Mánzildi qoldan kiritip dawam etiń.',
+      enterAddress: 'Mánzilińizdi kirgiziń',
+      placeholder: 'Mánzildi qoldan kirgiziń',
+      example: 'Mısal: Navoiy kóshesi 123, 5-úy, 3-qabat, 42-pátir',
+      retryMap: 'Kartanı jańalaw',
+      infoText: 'Anıq ornıńızdı keyinirek sazlamalarda ózgertiwińiz múmkin',
     },
 
     // Profile Screen
@@ -1695,6 +1966,7 @@ export const translations = {
       savedAddresses: 'Saqlanǵan mánziller',
       addNew: '+ Qosıw',
       noAddresses: 'Saqlanǵan mánziller joq',
+      addAddressHint: 'Birinshi jetkeriw mánzilińizdi qosıń',
       noAddressesMessage: 'Jetkeriw mánzilińizdi qosıń',
       addFirstAddress: 'Birinshi mánzildi qosıw',
       selected: 'Saylanǵan',
@@ -1868,10 +2140,12 @@ export const translations = {
       courierOnWay: 'Kuryer jolda',
       orderArriveSoon: 'Buyırtpańız tez arada jetip keledi',
       delivered: 'Jetkizildi',
+      cancelled: 'Toqtatıldı',
       processing: 'Isleniwde',
       items: 'Ónimler',
       estimatedTime: 'Taxminiylenen waqıt',
-      callDriver: 'Kurierdi sharqıraw',
+      callDriver: 'Drayverge qońıraw',
+      courier: 'Kuryer',
       cancel: 'Buyırtpanı bes qılıw',
       orderDetails: 'Buyırtpa maǵlıwmatları',
       subtotal: 'Jıyını',
@@ -1905,11 +2179,11 @@ export const translations = {
       receivedOrder: 'Biz buyırtpańızdı qabıl ettik.',
       arrivingIn: '{min}–{max} mińuttan keyin jetip keledi',
       courierDistance: 'Kuryer sizden {distance} km alısta',
-      courierAtDoor: 'Kuryeriniz esikiñizde suwıñız penen! 💧',
+      courierAtDoor: 'Kuryerińiz esikińizde suwıńız menen! 💧',
       orderDeliveredMessage: 'Buyırtpańız jetkizildi.',
-      atYourDoor: 'Esikiñizde',
+      atYourDoor: 'Esikińizde',
       deliveredByCompany: '{company} jetkizdi',
-      cash: 'Naq pul',
+      cash: 'Naqt pul',
       card: 'Karta',
       wallet: 'Hámyan',
       somethingWrong: 'Qátelik júz berdi',
@@ -1931,6 +2205,12 @@ export const translations = {
       thankYou: 'Pikirińiz ushın raxmet!',
       skipReview: 'Ótkeriw',
       selectRating: 'Iltimas, bağalań',
+      poor: 'Jaman',
+      average: 'Ortasha',
+      good: 'Jaqsı',
+      excellent: 'Úlgi!',
+      company: 'Kompaniya',
+      maybeLater: 'Keyinirek',
     },
 
     // Payment Method
@@ -1941,11 +2221,11 @@ export const translations = {
       cashDescription: 'Buyırtpańızdı alǵanda tóleń',
       card: 'Kredit/Debit karta',
       cardDescription: 'Kartańız menen qáwipsiz tóleń',
-      wallet: 'Sanlar hámyanı',
+      wallet: 'Sanli hámyan',
       walletDescription: 'UzCard, Humo, Payme',
       confirm: 'Dawam etiw',
       comingSoon: 'Jaqında keledi',
-      cashOnlyNote: 'Házir tek naqtı pul tólem usılı qoljetimlı. Karta hám sanlar hámyanı tólemleri jaqında qoljetimlı boladı.',
+      cashOnlyNote: 'Házir tek naqtı pul tólem usılı qoljetimlı. Karta hám sanli hámyan tólemleri jaqında qoljetimlı boladı.',
     },
 
     // Address
@@ -1953,6 +2233,7 @@ export const translations = {
       selectAddress: 'Mánzildi saylań',
       yourAddresses: 'Sizdiń mánzilleriniz',
       addNew: 'Jańa mánzil qosıw',
+      addNewAddress: 'Jańa mánzil qosıw',
       setDefault: 'Negizgi etip qoyıw',
       edit: 'Ózgertiw',
       delete: 'Óshiriw',
@@ -1965,12 +2246,12 @@ export const translations = {
       saveAddress: 'Mánzildi saqlaw',
       addressDetails: 'Mánzil tolıq maǵlıwmatları',
       enterDetails: 'Tolıq maǵlıwmatlardı kirgiziń',
-      saved: 'Mánzil sáyatti saқlandi!',
+      saved: 'Mánzil sátti saqlandı!',
     },
 
     // Errors
     errors: {
-      somethingWentWrong: 'Qátelik juz berdi',
+      somethingWentWrong: 'Qátelik júz berdi',
       tryAgain: 'Qaytadan urınıp kórińiz',
       networkError: 'Tarmoq qáteligi. Baǵlanıstı tekserińiz.',
       invalidPhone: 'Qáte telefon nomeri',

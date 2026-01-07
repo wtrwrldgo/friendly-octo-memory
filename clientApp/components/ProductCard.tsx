@@ -4,6 +4,7 @@ import { Colors } from '../constants/Colors';
 import { Product } from '../types';
 import { getProductImageByName } from '../utils/imageMapping';
 import { useLanguage } from '../context/LanguageContext';
+import { getTranslatedProductName } from '../utils/translations';
 
 type Props = {
   product: Product;
@@ -20,9 +21,12 @@ export const ProductCard: React.FC<Props> = ({
   onIncrement,
   onDecrement,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const hasInCart = quantity > 0;
   const [imageError, setImageError] = useState(false);
+
+  // Get translated product name
+  const translatedName = getTranslatedProductName(product, language);
 
   // Get local asset by product name (works in APK)
   const localImage = getProductImageByName(product.name, product.volume);
@@ -64,7 +68,7 @@ export const ProductCard: React.FC<Props> = ({
       {/* Title + Volume Badge */}
       <View style={styles.titleRow}>
         <Text style={styles.title} numberOfLines={2}>
-          {product.name}
+          {translatedName}
         </Text>
         {product.volume && (
           <View style={styles.volumeBadge}>

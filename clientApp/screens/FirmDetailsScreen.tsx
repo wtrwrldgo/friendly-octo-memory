@@ -33,13 +33,18 @@ const FirmDetailsScreen: React.FC = () => {
 
   const { cart, addToCart, incrementQuantity, decrementQuantity, getItemQuantity } = useCart();
   const { hasActiveOrder, currentOrder } = useOrder();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const insets = useSafeAreaInsets();
 
-  // Get single banner image
+  // Get single banner image - prioritize detailBanner, then logo
   const getBannerSource = () => {
+    // First try detail banner from API
+    if (firm.detailBanner && typeof firm.detailBanner === 'string') return { uri: firm.detailBanner };
+    if (firm.detailBannerUrl && typeof firm.detailBannerUrl === 'string') return { uri: firm.detailBannerUrl };
+    // Fallback to local logo asset
     const localLogo = getFirmLogo(firm.name);
     if (localLogo) return localLogo;
+    // Fallback to logo from API
     if (typeof firm.logo === 'number') return firm.logo;
     if (typeof firm.logo === 'string' && firm.logo) return { uri: firm.logo };
     return null;
@@ -67,7 +72,7 @@ const FirmDetailsScreen: React.FC = () => {
 
   useEffect(() => {
     loadProducts();
-  }, []);
+  }, [language]);
 
   const loadProducts = async () => {
     try {
@@ -162,9 +167,9 @@ const FirmDetailsScreen: React.FC = () => {
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>No products available</Text>
+              <Text style={styles.emptyTitle}>{t('firmDetails.noProducts')}</Text>
               <Text style={styles.emptySubtitle}>
-                This firm doesn't have any products yet
+                {t('firmDetails.noProductsMessage')}
               </Text>
             </View>
           }

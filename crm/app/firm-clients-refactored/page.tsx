@@ -110,14 +110,14 @@ export default function FirmClientsRefactoredPage() {
     };
   }, [clients, filterClients]);
 
-  // Auth check
+  // Auth check - redirect if not authenticated
   useEffect(() => {
-    if (user?.type === "admin") {
-      router.push("/");
+    if (!user) {
+      router.push("/login");
     }
   }, [user, router]);
 
-  if (user?.type !== "firm") {
+  if (!user) {
     return null;
   }
 

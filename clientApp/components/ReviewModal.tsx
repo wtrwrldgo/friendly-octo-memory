@@ -27,7 +27,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
   visible,
   onClose,
   onSubmit,
-  driverName,
+  driverName: _driverName,
   companyName,
   companyLogo,
 }) => {
@@ -54,10 +54,10 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
 
   const getRatingText = () => {
     if (rating === 0) return '';
-    if (rating <= 2) return 'Poor';
-    if (rating === 3) return 'Average';
-    if (rating === 4) return 'Good';
-    return 'Excellent!';
+    if (rating <= 2) return t('review.poor') || 'Poor';
+    if (rating === 3) return t('review.average') || 'Average';
+    if (rating === 4) return t('review.good') || 'Good';
+    return t('review.excellent') || 'Excellent!';
   };
 
   const renderStars = () => {
@@ -125,9 +125,9 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
             </View>
 
             {/* Title */}
-            <Text style={styles.title}>Rate Your Experience</Text>
+            <Text style={styles.title}>{t('review.title')}</Text>
             <Text style={styles.subtitle}>
-              How was your delivery with {driverName || 'your driver'}?
+              {t('review.rateDelivery')}
             </Text>
 
             {/* Star Rating */}
@@ -141,7 +141,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
             {/* Company Info */}
             <View style={styles.companyCard}>
               <View style={styles.companyInfo}>
-                <Text style={styles.companyLabel}>Company</Text>
+                <Text style={styles.companyLabel}>{t('review.company') || 'Company'}</Text>
                 <View style={styles.companyRow}>
                   <View style={styles.companyLogoWrapper}>
                     <Image
@@ -160,11 +160,11 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
 
             {/* Comment Input */}
             <Text style={styles.commentLabel}>
-              Tell us more (Optional)
+              {t('review.addComment')}
             </Text>
             <TextInput
               style={styles.commentInput}
-              placeholder="Share your experience with others..."
+              placeholder={t('review.commentPlaceholder')}
               placeholderTextColor="#9BA0B8"
               multiline
               numberOfLines={4}
@@ -184,12 +184,12 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                 disabled={rating === 0}
               >
                 <Text style={styles.submitButtonText}>
-                  Submit Review
+                  {t('review.submitReview')}
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-                <Text style={styles.skipText}>Maybe later</Text>
+                <Text style={styles.skipText}>{t('review.maybeLater') || t('review.skipReview')}</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>

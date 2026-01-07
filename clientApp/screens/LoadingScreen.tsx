@@ -1,8 +1,6 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image, Platform, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { LinearGradient } from 'expo-linear-gradient';
 import { AuthStackParamList } from '../types';
 
 type LoadingScreenProps = {
@@ -10,104 +8,102 @@ type LoadingScreenProps = {
 };
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
+  const dot1 = useRef(new Animated.Value(0.35)).current;
+  const dot2 = useRef(new Animated.Value(0.35)).current;
+  const dot3 = useRef(new Animated.Value(0.35)).current;
+
+  // keep loop references so we can stop them
+  const loop1 = useRef<Animated.CompositeAnimation | null>(null);
+  const loop2 = useRef<Animated.CompositeAnimation | null>(null);
+  const loop3 = useRef<Animated.CompositeAnimation | null>(null);
+
   useEffect(() => {
-    let isMounted = true; // Track if component is still mounted
-
-    const navigateToSelectLanguage = async () => {
-      console.log('📱 [LoadingScreen] Component mounted! Navigating to SelectLanguage...');
-
-      // Use setTimeout to ensure navigation happens after component is fully mounted
-      setTimeout(() => {
-        // Only navigate if component is still mounted
-        if (!isMounted) {
-          console.log('📱 [LoadingScreen] Component unmounted, skipping navigation');
-          return;
-        }
-
-        // Always navigate to SelectLanguage first
-        // The SelectLanguage screen will pre-select any stored language
-        console.log('📱 [LoadingScreen] Navigating to SelectLanguage...');
-        navigation.replace('SelectLanguage');
-      }, 1500); // Show loading screen for 1.5 seconds
+    const createLoop = (dot: Animated.Value, delay: number) => {
+      const animation = Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(dot, {
+            toValue: 1,
+            duration: 350,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot, {
+            toValue: 0.35,
+            duration: 350,
+            easing: Easing.in(Easing.quad),
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      animation.start();
+      return animation;
     };
 
-    navigateToSelectLanguage();
+    loop1.current = createLoop(dot1, 0);
+    loop2.current = createLoop(dot2, 140);
+    loop3.current = createLoop(dot3, 280);
 
-    // Cleanup function
     return () => {
-      isMounted = false;
+      loop1.current?.stop();
+      loop2.current?.stop();
+      loop3.current?.stop();
     };
+  }, [dot1, dot2, dot3]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      navigation.replace('SelectLanguage');
+    }, 1200);
+
+    return () => clearTimeout(timeoutId);
   }, [navigation]);
 
+  const dotStyle = (v: Animated.Value) => ({
+    opacity: v,
+    transform: [
+      {
+        scale: v.interpolate({
+          inputRange: [0.35, 1],
+          outputRange: [0.9, 1.25],
+        }),
+      },
+    ],
+  });
+
   return (
-    <LinearGradient
-      colors={['#E9F7FF', '#F7FEFF']}
-      start={{ x: 0.5, y: 0 }}
-      end={{ x: 0.5, y: 1 }}
-      style={styles.container}
-    >
-      <SafeAreaView style={styles.safe}>
-        {/* Spinner at the TOP */}
-        <View style={styles.topLoader}>
-          <ActivityIndicator size="large" color="#62B7FF" />
-        </View>
+    <View style={styles.container}>
+      <View style={styles.center}>
+        <Text style={styles.title}>
+          <Text style={styles.titleWater}>Water</Text>
+          <Text style={styles.titleGo}>Go</Text>
+        </Text>
 
-        {/* Center content */}
-        <View style={styles.center}>
-          <Image
-            source={require('../assets/watergo-loading.png')}
-            style={styles.mascot}
-            resizeMode="contain"
-          />
-
-          <Text style={styles.title}>
-            <Text style={styles.titleWater}>Water</Text>
-            <Text style={styles.titleGo}>Go</Text>
-          </Text>
-          <Text style={styles.sub}>Loading...</Text>
+        <View style={styles.dotsContainer}>
+          <Animated.View style={[styles.dot, dotStyle(dot1)]} />
+          <Animated.View style={[styles.dot, dotStyle(dot2)]} />
+          <Animated.View style={[styles.dot, dotStyle(dot3)]} />
         </View>
-      </SafeAreaView>
-    </LinearGradient>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1
-  },
-  safe: {
-    flex: 1
-  },
-  topLoader: {
-    height: 72,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: Platform.OS === 'ios' ? 4 : 12,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  mascot: {
-    width: 320,
-    height: 320,
-    marginBottom: 16
-  },
-  title: {
-    fontSize: 64,
-    fontWeight: '800',
-  },
-  titleWater: {
-    color: '#0C1633'
-  },
-  titleGo: {
-    color: '#62B7FF'
-  },
-  sub: {
-    fontSize: 28,
-    color: '#6B7280',
-    marginTop: 8
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+
+  title: { fontSize: 36, fontWeight: '600', letterSpacing: -0.5 },
+  titleWater: { color: '#0C1633', fontWeight: '600' },
+  titleGo: { color: '#3B66FF', fontWeight: '700' },
+
+  dotsContainer: { flexDirection: 'row', marginTop: 18 },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#3B66FF',
+    marginHorizontal: 5, // safer than gap
   },
 });
 

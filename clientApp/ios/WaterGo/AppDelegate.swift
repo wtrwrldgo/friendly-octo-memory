@@ -1,7 +1,6 @@
 import Expo
 import React
 import ReactAppDependencyProvider
-import YandexMapsMobile
 
 @UIApplicationMain
 public class AppDelegate: ExpoAppDelegate {
@@ -14,11 +13,6 @@ public class AppDelegate: ExpoAppDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
-    // Initialize Yandex MapKit for iOS
-    YMKMapKit.setApiKey("34c20e7b-cade-43bd-a252-fea9b47389e6")
-    // Start MapKit framework (required for tiles to load)
-    YMKMapKit.sharedInstance()
-
     let delegate = ReactNativeDelegate()
     let factory = ExpoReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()

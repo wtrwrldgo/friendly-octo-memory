@@ -2,12 +2,15 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Spacing } from '../constants/Colors';
+import { useLanguage } from '../context/LanguageContext';
 
 interface NoInternetScreenProps {
   onRetry?: () => void;
 }
 
 const NoInternetScreen: React.FC<NoInternetScreenProps> = ({ onRetry }) => {
+  const { t } = useLanguage();
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.content}>
@@ -19,11 +22,11 @@ const NoInternetScreen: React.FC<NoInternetScreenProps> = ({ onRetry }) => {
         />
 
         {/* Main Title */}
-        <Text style={styles.title}>No Internet Connection</Text>
+        <Text style={styles.title}>{t('noInternet.title')}</Text>
 
         {/* Subtitle */}
         <Text style={styles.subtitle}>
-          Please check your network and try again.
+          {t('noInternet.subtitle')}
         </Text>
 
         {/* Retry Button */}
@@ -32,7 +35,7 @@ const NoInternetScreen: React.FC<NoInternetScreenProps> = ({ onRetry }) => {
           onPress={onRetry}
           activeOpacity={0.8}
         >
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={styles.retryButtonText}>{t('noInternet.retry')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

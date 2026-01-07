@@ -49,6 +49,7 @@ const menuIcons = {
   about: require('../assets/ui-icons/info-icon.png'),
 };
 
+
 // Menu Row Component with icons
 const MenuRow = React.memo(function MenuRow({
   title,
@@ -212,7 +213,7 @@ const ProfileScreen: React.FC = () => {
 
           <View style={styles.profileInfo}>
             <Text style={styles.userName} numberOfLines={1}>
-              {user?.name || 'WaterGo User'}
+              {user?.name || t('profile.guest')}
             </Text>
             <Text style={styles.userPhone} numberOfLines={1}>
               {user?.phone || '+998 XX XXX XX XX'}
@@ -245,28 +246,34 @@ const ProfileScreen: React.FC = () => {
           {addresses.length > 0 ? (
             addresses.map((address) => {
               const isSelected = selectedAddress?.id === address.id;
+              // Use user-inputted name if available, otherwise fall back to address type
+              const displayTitle = address.name ? address.name :
+                                   address.addressType === 'house' ? (t('auth.privateHouse') || 'Home') :
+                                   address.addressType === 'apartment' ? (t('auth.apartment') || 'Apartment') :
+                                   address.addressType === 'office' ? (t('auth.office') || 'Office') :
+                                   address.addressType === 'government' ? (t('auth.government') || 'Government') :
+                                   address.title || 'My Address';
+
               return (
                 <View key={address.id} style={[styles.addressCard, isSelected && styles.addressCardSelected]}>
-                  {/* Left accent for selected */}
-                  {isSelected && <View style={styles.selectedIndicator} />}
-
                   <TouchableOpacity
                     style={styles.addressCardTouchable}
                     onPress={() => setSelectedAddress(address)}
                     activeOpacity={0.7}
                   >
+                    {/* Address Content */}
                     <View style={styles.addressContent}>
                       <Text style={[styles.addressTitle, isSelected && styles.addressTitleSelected]} numberOfLines={1}>
-                        {address.title}
+                        {displayTitle}
                       </Text>
-                      <Text style={styles.addressText} numberOfLines={1}>
+                      <Text style={styles.addressText} numberOfLines={2}>
                         {address.address}
                       </Text>
                     </View>
 
-                    {/* Selected indicator */}
+                    {/* Selected indicator - green checkmark */}
                     <View style={[styles.checkCircle, isSelected && styles.checkCircleSelected]}>
-                      {isSelected && <Ionicons name="checkmark" size={12} color="#FFFFFF" />}
+                      {isSelected && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
                     </View>
                   </TouchableOpacity>
 
@@ -299,7 +306,7 @@ const ProfileScreen: React.FC = () => {
             onPress={() => navigation.navigate('SelectAddress')}
             activeOpacity={0.7}
           >
-            <Text style={styles.addAddressText}>+ Add new address</Text>
+            <Text style={styles.addAddressText}>+ {t('address.addNewAddress') || 'Add New Address'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -318,7 +325,8 @@ const ProfileScreen: React.FC = () => {
           <MenuRow
             title={t('profile.paymentMethods') || 'Payment Methods'}
             icon={menuIcons.payment}
-            onPress={() => navigation.navigate('PaymentMethod')}
+            rightText={user?.defaultPaymentMethod === 'cash' ? (t('payment.cash') || 'Cash') : user?.defaultPaymentMethod === 'card' ? (t('payment.card') || 'Card') : undefined}
+            onPress={() => navigation.navigate('PaymentMethod', { fromProfile: true })}
           />
           <MenuRow
             title={t('profile.notifications') || 'Notifications'}
@@ -370,7 +378,7 @@ const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
 
         {/* Version */}
-        <Text style={styles.versionText}>WaterGo v1.0.0</Text>
+        <Text style={styles.versionText}>{t('profile.version') || 'Version'} 1.0.0</Text>
       </ScrollView>
 
       {/* Language Selection Modal */}
@@ -439,15 +447,15 @@ const ProfileScreen: React.FC = () => {
       <Modal
         visible={showEditNameModal}
         transparent
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setShowEditNameModal(false)}
       >
         <KeyboardAvoidingView
+          style={styles.modalOverlay}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardAvoidingView}
         >
           <TouchableOpacity
-            style={styles.modalOverlay}
+            style={styles.modalOverlayTouchable}
             activeOpacity={1}
             onPress={() => setShowEditNameModal(false)}
           >
@@ -582,9 +590,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
   editNameModalContent: {
     position: 'absolute',
     bottom: 0,
@@ -654,24 +659,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.white,
-    borderRadius: 12,
+    borderRadius: 14,
     marginBottom: 8,
-    paddingLeft: 14,
+    paddingLeft: 16,
     paddingRight: 12,
-    paddingVertical: 12,
-    overflow: 'hidden',
+    paddingVertical: 14,
   },
   addressCardSelected: {
-    backgroundColor: '#F8FAFF',
-  },
-  selectedIndicator: {
-    position: 'absolute',
-    left: 0,
-    top: 8,
-    bottom: 8,
-    width: 3,
-    backgroundColor: Colors.primary,
-    borderRadius: 2,
+    backgroundColor: '#F0F7FF',
   },
   addressCardTouchable: {
     flex: 1,
@@ -680,35 +675,35 @@ const styles = StyleSheet.create({
   },
   addressContent: {
     flex: 1,
-    paddingRight: 10,
+    paddingRight: 12,
   },
   addressTitle: {
     fontSize: 15,
     fontWeight: '600',
     color: Colors.text,
-    marginBottom: 2,
+    marginBottom: 3,
   },
   addressTitleSelected: {
-    color: Colors.text,
+    color: Colors.primary,
   },
   addressText: {
     fontSize: 13,
-    color: '#9CA3AF',
-    lineHeight: 17,
+    color: '#6B7280',
+    lineHeight: 18,
   },
   checkCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1.5,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
     borderColor: '#D1D5DB',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
   },
   checkCircleSelected: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primary,
+    borderColor: '#22C55E',
+    backgroundColor: '#22C55E',
   },
   checkMark: {
     fontSize: 10,
@@ -839,6 +834,10 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalOverlayTouchable: {
+    flex: 1,
     justifyContent: 'flex-end',
   },
   modalContent: {

@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Cart, CartItem, Product, Firm } from '../types';
+import { getFirmById } from '../services/api';
 
 const CART_STORAGE_KEY = '@watergo_cart';
 
@@ -49,6 +50,21 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const cartData = await AsyncStorage.getItem(CART_STORAGE_KEY);
       if (cartData) {
         const parsedCart = JSON.parse(cartData);
+
+        // Refresh firm data from API to get latest settings (deliveryFee, bottleDeposit, etc.)
+        if (parsedCart.firm?.id) {
+          try {
+            const freshFirm = await getFirmById(parsedCart.firm.id);
+            parsedCart.firm = {
+              ...parsedCart.firm,
+              ...freshFirm,
+            };
+          } catch (firmError) {
+            console.log('Could not refresh firm data:', firmError);
+            // Keep cached firm data if API call fails
+          }
+        }
+
         setCart(parsedCart);
       }
     } catch (error) {

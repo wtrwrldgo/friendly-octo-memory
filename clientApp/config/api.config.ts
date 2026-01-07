@@ -6,7 +6,6 @@
  */
 
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
 
 export interface ApiConfig {
   baseURL: string;
@@ -20,16 +19,11 @@ export interface ApiConfig {
 // - Android Emulator: 10.0.2.2 (special alias for host machine)
 // - Physical device: use your computer's IP address
 //
-// NOTE: For physical Android devices, use your computer's local IP address
-// Find your IP with: ipconfig (Windows) or ifconfig/ip addr (Mac/Linux)
-const LOCAL_IP = '192.168.1.8'; // Your computer's IP on the local network
+// Production VPS URL
+const VPS_URL = 'http://45.92.173.121';
 
 const getLocalBackendUrl = () => {
-  if (Platform.OS === 'android') {
-    // Use actual IP for physical devices (also works in emulator)
-    return `http://${LOCAL_IP}:3001/api`;
-  }
-  return 'http://localhost:3001/api'; // iOS simulator
+  return `${VPS_URL}/api`;
 };
 
 // Environment-based configuration
@@ -47,7 +41,7 @@ const ENV = {
     useLocalBackend: false,
   },
   production: {
-    baseURL: 'https://api.watergo.com/api',
+    baseURL: 'http://45.92.173.121/api', // VPS deployed
     timeout: 10000,
     useMockData: false,
     useLocalBackend: false,

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Image } from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ActiveOrderPopupProps {
   visible: boolean;
@@ -12,6 +13,8 @@ const ActiveOrderPopup: React.FC<ActiveOrderPopupProps> = ({
   onClose,
   onTrackOrder,
 }) => {
+  const { t } = useLanguage();
+
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
@@ -24,11 +27,11 @@ const ActiveOrderPopup: React.FC<ActiveOrderPopupProps> = ({
           />
 
           {/* Title */}
-          <Text style={styles.title}>Aktiv buyırtpa bar</Text>
+          <Text style={styles.title}>{t('orders.activeOrderExists')}</Text>
 
           {/* Message */}
           <Text style={styles.message}>
-            Házirgi buyırtpańız jetkerilgennen keyin jańa buyırtpa bere alasız.
+            {t('orders.activeOrderMessage')}
           </Text>
 
           {/* Buttons */}
@@ -38,7 +41,7 @@ const ActiveOrderPopup: React.FC<ActiveOrderPopupProps> = ({
               onPress={onClose}
               activeOpacity={0.7}
             >
-              <Text style={styles.closeBtnText}>Jaqsı</Text>
+              <Text style={styles.closeBtnText}>{t('common.ok')}</Text>
             </TouchableOpacity>
             {onTrackOrder && (
               <TouchableOpacity
@@ -49,7 +52,7 @@ const ActiveOrderPopup: React.FC<ActiveOrderPopupProps> = ({
                 }}
                 activeOpacity={0.7}
               >
-                <Text style={styles.trackBtnText}>Qadaǵalaw</Text>
+                <Text style={styles.trackBtnText}>{t('orders.trackOrder')}</Text>
               </TouchableOpacity>
             )}
           </View>

@@ -16,6 +16,7 @@ export const MOCK_FIRMS: Firm[] = [
     deliveryTime: '15-25 min',
     minOrder: 5000,
     deliveryFee: 5000,
+    bottleDeposit: 5000,
     location: 'Tashkent',
     promotions: [
       { label: '-10% delivery', value: 'delivery-discount', color: 'green' },
@@ -30,6 +31,7 @@ export const MOCK_FIRMS: Firm[] = [
     deliveryTime: '20-30 min',
     minOrder: 4000,
     deliveryFee: 4000,
+    bottleDeposit: 4000,
     location: 'Tashkent',
     promotions: [
       { label: 'Free delivery', value: 'free-delivery', color: 'green' },
@@ -43,6 +45,7 @@ export const MOCK_FIRMS: Firm[] = [
     deliveryTime: '10-20 min',
     minOrder: 6000,
     deliveryFee: 6000,
+    bottleDeposit: 6000,
     location: 'Tashkent',
     promotions: [
       { label: 'Premium quality', value: 'premium', color: 'blue' },
@@ -56,6 +59,7 @@ export const MOCK_FIRMS: Firm[] = [
     deliveryTime: '25-35 min',
     minOrder: 3500,
     deliveryFee: 3500,
+    bottleDeposit: 3500,
     location: 'Tashkent',
   },
 ];

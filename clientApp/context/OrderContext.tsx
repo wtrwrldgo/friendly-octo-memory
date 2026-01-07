@@ -27,24 +27,33 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const orders = await ApiService.getOrders();
       console.log('[OrderContext] Loaded orders from API:', orders.length);
 
-      // Separate active and completed orders
+      // Separate active and completed orders (exclude cancelled)
       const activeOrders = orders.filter(
         (o) => o.stage !== OrderStage.DELIVERED && o.stage !== OrderStage.CANCELLED
       );
+      // Only show delivered orders in history (hide cancelled)
       const completedOrders = orders.filter(
-        (o) => o.stage === OrderStage.DELIVERED || o.stage === OrderStage.CANCELLED
+        (o) => o.stage === OrderStage.DELIVERED
       );
 
       // Set current order (most recent active)
       if (activeOrders.length > 0) {
         setCurrentOrderState(activeOrders[0]);
         await AsyncStorage.setItem(CURRENT_ORDER_KEY, JSON.stringify(activeOrders[0]));
+      } else {
+        // No active orders - clear current order
+        setCurrentOrderState(null);
+        await AsyncStorage.removeItem(CURRENT_ORDER_KEY);
       }
 
-      // Set order history (completed orders)
+      // Set order history (only delivered orders, not cancelled)
       setOrderHistory(completedOrders);
-    } catch (error) {
-      console.error('[OrderContext] Error loading orders from API:', error);
+    } catch (error: any) {
+      // Don't log error if user is not authenticated yet (expected on app start)
+      const errorMsg = error?.message || String(error);
+      if (!errorMsg.includes('User not found') && !errorMsg.includes('Unauthorized')) {
+        console.error('[OrderContext] Error loading orders from API:', error);
+      }
     }
   };
 

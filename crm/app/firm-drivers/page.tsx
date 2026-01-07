@@ -4,6 +4,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useFirmData } from "@/contexts/FirmDataContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import PageHeader from "@/components/PageHeader";
@@ -18,6 +19,7 @@ import { db } from "@/lib/db";
 type StatusFilter = "ALL" | "ONLINE" | "OFFLINE" | "DELIVERING";
 
 export default function FirmDriversPage() {
+  const { t } = useLanguage();
   const { user, firm, loading: authLoading } = useAuth();
   const { drivers, driversLoading, fetchDrivers } = useFirmData();
   const router = useRouter();
@@ -148,7 +150,7 @@ export default function FirmDriversPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this driver?")) {
+    if (confirm(t.drivers.deleteConfirm)) {
       try {
         const { error } = await db.deleteDriver(id);
         if (error) {
@@ -169,8 +171,8 @@ export default function FirmDriversPage() {
     <div className="p-8 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <div className="flex items-center justify-between mb-6">
         <PageHeader
-          title="My Drivers"
-          description="Manage your delivery drivers"
+          title={t.drivers.title}
+          description={t.drivers.description}
         />
         <div className="flex items-center gap-3">
           <button
@@ -178,7 +180,7 @@ export default function FirmDriversPage() {
             className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-orange-500/30 transition-all hover:scale-105"
           >
             <Plus className="w-5 h-5" />
-            Add Driver
+            {t.drivers.addDriver}
           </button>
         </div>
       </div>
@@ -191,7 +193,7 @@ export default function FirmDriversPage() {
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-orange-100">Total Drivers</p>
+                <p className="text-sm font-medium text-orange-100">{t.drivers.totalDrivers}</p>
                 <p className="text-4xl font-bold text-white mt-2">{stats.total}</p>
               </div>
               <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
@@ -204,14 +206,14 @@ export default function FirmDriversPage() {
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-emerald-100">Online Now</p>
+                <p className="text-sm font-medium text-emerald-100">{t.drivers.onlineNow}</p>
                 <p className="text-4xl font-bold text-white mt-2">{stats.online}</p>
                 <div className="flex items-center gap-1.5 mt-2">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                   </span>
-                  <span className="text-xs text-emerald-100">Live</span>
+                  <span className="text-xs text-emerald-100">{t.drivers.live}</span>
                 </div>
               </div>
               <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
@@ -224,7 +226,7 @@ export default function FirmDriversPage() {
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-100">Delivering</p>
+                <p className="text-sm font-medium text-purple-100">{t.drivers.delivering}</p>
                 <p className="text-4xl font-bold text-white mt-2">{stats.delivering}</p>
               </div>
               <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
@@ -237,7 +239,7 @@ export default function FirmDriversPage() {
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-100">Offline</p>
+                <p className="text-sm font-medium text-gray-100">{t.drivers.offline}</p>
                 <p className="text-4xl font-bold text-white mt-2">{stats.offline}</p>
               </div>
               <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm">
@@ -257,7 +259,7 @@ export default function FirmDriversPage() {
               </div>
               <input
                 type="text"
-                placeholder="Search by name, phone, plate, or city..."
+                placeholder={t.drivers.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-14 pr-4 py-3.5 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
@@ -267,10 +269,10 @@ export default function FirmDriversPage() {
             {/* Filter Chips */}
             <div className="flex flex-wrap items-center gap-2">
               {[
-                { value: "ALL", label: "All", icon: Truck, color: "orange" },
-                { value: "ONLINE", label: "Online", icon: Wifi, color: "emerald" },
-                { value: "DELIVERING", label: "Delivering", icon: Zap, color: "purple" },
-                { value: "OFFLINE", label: "Offline", icon: WifiOff, color: "gray" },
+                { value: "ALL", label: t.common.all, icon: Truck, color: "orange" },
+                { value: "ONLINE", label: t.drivers.online, icon: Wifi, color: "emerald" },
+                { value: "DELIVERING", label: t.drivers.delivering, icon: Zap, color: "purple" },
+                { value: "OFFLINE", label: t.drivers.offline, icon: WifiOff, color: "gray" },
               ].map((filter) => {
                 const Icon = filter.icon;
                 const isActive = statusFilter === filter.value;
@@ -295,10 +297,10 @@ export default function FirmDriversPage() {
             <button
               onClick={() => fetchDrivers(true)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all font-semibold shadow-sm hover:shadow-md"
-              title="Refresh drivers"
+              title={t.common.refresh}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Refresh</span>
+              <span className="hidden sm:inline">{t.common.refresh}</span>
             </button>
           </div>
 
@@ -306,7 +308,7 @@ export default function FirmDriversPage() {
           {(searchQuery || statusFilter !== "ALL") && (
             <div className="flex items-center justify-between mt-5 pt-5 border-t border-gray-200/50 dark:border-gray-700/50">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Found <span className="font-bold text-gray-900 dark:text-white bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded-lg">{filteredDrivers.length}</span> of {drivers.length} drivers
+                {t.drivers.found} <span className="font-bold text-gray-900 dark:text-white bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded-lg">{filteredDrivers.length}</span> {t.drivers.of} {drivers.length} {t.drivers.driversText}
               </p>
               <button
                 onClick={() => {
@@ -315,7 +317,7 @@ export default function FirmDriversPage() {
                 }}
                 className="text-sm text-orange-600 dark:text-orange-400 hover:text-orange-700 font-semibold flex items-center gap-1 hover:gap-2 transition-all"
               >
-                Clear all filters
+                {t.drivers.clearAllFilters}
                 <XCircle className="w-4 h-4" />
               </button>
             </div>
@@ -331,7 +333,7 @@ export default function FirmDriversPage() {
                   <div className="absolute inset-0 rounded-full border-4 border-orange-200 dark:border-orange-900"></div>
                   <div className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent animate-spin"></div>
                 </div>
-                <p className="text-gray-600 dark:text-gray-400 font-medium">Loading drivers...</p>
+                <p className="text-gray-600 dark:text-gray-400 font-medium">{t.drivers.loadingDrivers}</p>
               </div>
             </div>
           ) : filteredDrivers.length === 0 ? (
@@ -345,10 +347,10 @@ export default function FirmDriversPage() {
                 </div>
               </div>
               <p className="text-gray-700 dark:text-gray-300 text-xl font-semibold mb-2">
-                {drivers.length === 0 ? "No drivers yet" : "No drivers found"}
+                {drivers.length === 0 ? t.drivers.noDriversYet : t.drivers.noDrivers}
               </p>
               <p className="text-gray-500 dark:text-gray-500 text-sm">
-                {drivers.length === 0 ? "Add your first driver to get started" : "Try adjusting your search or filter criteria"}
+                {drivers.length === 0 ? t.drivers.addFirstDriver : t.drivers.tryAdjustingSearch}
               </p>
             </div>
           ) : (
@@ -360,22 +362,22 @@ export default function FirmDriversPage() {
                       #
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Status
+                      {t.drivers.status}
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Driver
+                      {t.orders.driver}
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Phone
+                      {t.drivers.phone}
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Vehicle
+                      {t.drivers.vehicle}
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      City
+                      {t.drivers.city}
                     </th>
                     <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Actions
+                      {t.common.actions}
                     </th>
                   </tr>
                 </thead>
@@ -401,7 +403,7 @@ export default function FirmDriversPage() {
                         <td className="px-4 py-4">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${statusStyle.bg} ${statusStyle.text}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot}`}></span>
-                            {driver.status === "ONLINE" ? "Online" : driver.status === "DELIVERING" ? "Delivering" : "Offline"}
+                            {driver.status === "ONLINE" ? t.drivers.online : driver.status === "DELIVERING" ? t.drivers.delivering : t.drivers.offline}
                           </span>
                         </td>
                         <td className="px-4 py-4">
@@ -471,18 +473,18 @@ export default function FirmDriversPage() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingDriver ? "Edit Driver" : "Add New Driver"}
+        title={editingDriver ? t.drivers.editDriver : t.drivers.addNewDriver}
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Driver Name
+              {t.drivers.driverName}
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Enter driver name"
+              placeholder={t.drivers.enterDriverName}
               className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
               required
             />
@@ -490,7 +492,7 @@ export default function FirmDriversPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Phone Number
+              {t.drivers.phoneNumber}
             </label>
             <input
               type="tel"
@@ -504,7 +506,7 @@ export default function FirmDriversPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Car Plate Number
+              {t.drivers.carPlate}
             </label>
             <input
               type="text"
@@ -518,7 +520,7 @@ export default function FirmDriversPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Car Brand
+              {t.drivers.carBrand}
             </label>
             <input
               type="text"
@@ -531,7 +533,7 @@ export default function FirmDriversPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Car Color
+              {t.drivers.carColor}
             </label>
             <input
               type="text"
@@ -544,7 +546,7 @@ export default function FirmDriversPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              City
+              {t.drivers.city}
             </label>
             <input
               type="text"
@@ -557,7 +559,7 @@ export default function FirmDriversPage() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Status
+              {t.drivers.status}
             </label>
             <select
               value={formData.status}
@@ -565,9 +567,9 @@ export default function FirmDriversPage() {
               className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
               required
             >
-              <option value="ONLINE">Online</option>
-              <option value="OFFLINE">Offline</option>
-              <option value="DELIVERING">Delivering</option>
+              <option value="ONLINE">{t.drivers.online}</option>
+              <option value="OFFLINE">{t.drivers.offline}</option>
+              <option value="DELIVERING">{t.drivers.delivering}</option>
             </select>
           </div>
 
@@ -577,14 +579,14 @@ export default function FirmDriversPage() {
               onClick={() => setIsModalOpen(false)}
               className="flex-1 px-6 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all hover:scale-105"
             >
-              Cancel
+              {t.common.cancel}
             </button>
             <button
               type="submit"
               className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-orange-500/30 transition-all hover:scale-105"
             >
               <Save className="w-5 h-5" />
-              {editingDriver ? "Update Driver" : "Add Driver"}
+              {editingDriver ? t.drivers.updateDriver : t.drivers.addDriver}
             </button>
           </div>
         </form>

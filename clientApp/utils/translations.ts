@@ -140,3 +140,18 @@ export const formatQueuePosition = (translation: string, position: number, count
     .replace('{position}', position.toString())
     .replace('{count}', count.toString());
 };
+
+// Helper function to get translated product name based on language
+export const getTranslatedProductName = (
+  product: { name: string; name_en?: string; name_ru?: string; name_uz?: string; name_kaa?: string },
+  language: string
+): string => {
+  const translationMap: Record<string, string | undefined> = {
+    en: product.name_en,
+    ru: product.name_ru,
+    uz: product.name_uz,
+    kaa: product.name_kaa,
+  };
+  // Return translated name if available, otherwise fallback to default name
+  return translationMap[language] || product.name;
+};

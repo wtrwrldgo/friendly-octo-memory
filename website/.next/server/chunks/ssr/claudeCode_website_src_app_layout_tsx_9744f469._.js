@@ -1,0 +1,3 @@
+module.exports=[82294,a=>{"use strict";var b=a.i(52894);function c({children:a}){return(0,b.jsx)("html",{lang:"uz",children:(0,b.jsx)("body",{className:"antialiased",children:a})})}a.s(["default",()=>c,"metadata",0,{title:"WaterGo - Suv Yetkazib Berish Xizmati",description:"Toshkentda tez va ishonchli suv yetkazib berish xizmati. Uyingizga yoki ofisingizga toza ichimlik suvini buyurtma qiling.",keywords:"suv yetkazib berish, toza suv, Toshkent, ichimlik suvi, water delivery"}])}];
+
+//# sourceMappingURL=claudeCode_website_src_app_layout_tsx_9744f469._.js.map

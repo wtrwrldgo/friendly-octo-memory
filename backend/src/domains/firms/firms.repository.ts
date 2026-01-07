@@ -72,7 +72,7 @@ export class FirmsRepository {
   }
 
   async findById(id: string): Promise<any | null> {
-    return prisma.firms.findUnique({
+    const firm = await prisma.firms.findUnique({
       where: { id },
       include: {
         branches: {
@@ -100,6 +100,50 @@ export class FirmsRepository {
         },
       },
     });
+
+    if (!firm) return null;
+
+    // Transform snake_case to camelCase for consistency
+    return {
+      id: firm.id,
+      name: firm.name,
+      description: firm.description,
+      address: firm.address,
+      city: firm.city,
+      logo: firm.logo_url,
+      logoUrl: firm.logo_url,
+      homeBanner: firm.home_banner_url,
+      homeBannerUrl: firm.home_banner_url,
+      detailBanner: firm.detail_banner_url,
+      detailBannerUrl: firm.detail_banner_url,
+      rating: firm.rating,
+      deliveryTime: firm.delivery_time,
+      minOrder: firm.min_order,
+      minOrderEnabled: firm.min_order_enabled,
+      deliveryFee: firm.delivery_fee,
+      deliveryFeeEnabled: firm.delivery_fee_enabled,
+      deliveryFeeType: firm.delivery_fee_type,
+      deliveryFeePercent: firm.delivery_fee_percent,
+      bottleDeposit: firm.bottle_deposit,
+      bottleDepositEnabled: firm.bottle_deposit_enabled,
+      bottleDepositPrice: firm.bottle_deposit_price,
+      scheduleDaysLimit: firm.schedule_days_limit,
+      scheduleTimeInterval: firm.schedule_time_interval,
+      isActive: firm.is_active,
+      isVisibleInClientApp: firm.is_visible_in_client_app,
+      status: firm.status,
+      submittedAt: firm.submitted_at,
+      approvedAt: firm.approved_at,
+      rejectionReason: firm.rejection_reason,
+      subscriptionStatus: firm.subscription_status,
+      trialStartAt: firm.trial_start_at,
+      trialEndAt: firm.trial_end_at,
+      createdAt: firm.created_at,
+      updatedAt: firm.updated_at,
+      branches: firm.branches,
+      products: firm.products,
+      _count: firm._count,
+    };
   }
 
   async findByIdSimple(id: string): Promise<firms | null> {
@@ -236,13 +280,39 @@ export class FirmsRepository {
 
   // Public method - returns only ACTIVE firms that are visible in client app
   async findAllPublic(): Promise<any[]> {
-    return prisma.firms.findMany({
+    const firms = await prisma.firms.findMany({
       where: {
         status: 'ACTIVE',
         is_visible_in_client_app: true,
       },
       orderBy: { name: 'asc' },
     });
+
+    // Transform snake_case to camelCase for client app
+    return firms.map((firm) => ({
+      id: firm.id,
+      name: firm.name,
+      description: firm.description,
+      logo: firm.logo_url,
+      logoUrl: firm.logo_url,
+      homeBanner: firm.home_banner_url,
+      homeBannerUrl: firm.home_banner_url,
+      detailBanner: firm.detail_banner_url,
+      detailBannerUrl: firm.detail_banner_url,
+      rating: firm.rating,
+      deliveryTime: firm.delivery_time,
+      minOrder: firm.min_order,
+      minOrderEnabled: firm.min_order_enabled,
+      deliveryFee: firm.delivery_fee,
+      deliveryFeeEnabled: firm.delivery_fee_enabled,
+      bottleDeposit: firm.bottle_deposit,
+      bottleDepositEnabled: firm.bottle_deposit_enabled,
+      bottleDepositPrice: firm.bottle_deposit_price,
+      scheduleDaysLimit: firm.schedule_days_limit,
+      scheduleTimeInterval: firm.schedule_time_interval,
+      location: firm.city,
+      status: firm.status,
+    }));
   }
 }
 

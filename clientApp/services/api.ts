@@ -9,7 +9,6 @@
 
 import { shouldUseMockData, shouldUseLocalBackend } from '../config/api.config';
 import MockApiService from './mock-api.service';
-import SimpleSupabaseApiService from './simple-supabase-api.service';
 import LocalApiService from './local-api.service';
 import StorageService from './storage.service';
 import {
@@ -25,7 +24,7 @@ import {
 class ApiService {
   // Get the appropriate service based on configuration
   private getService() {
-    // Priority: Mock > Local > Supabase
+    // Priority: Mock > Local Backend
     const useMock = shouldUseMockData();
     const useLocal = shouldUseLocalBackend();
 
@@ -35,16 +34,14 @@ class ApiService {
       console.log('[ApiService] Using MockApiService');
       return MockApiService;
     }
-    if (useLocal) {
-      console.log('[ApiService] Using LocalApiService');
-      return LocalApiService; // ✅ Uses local PostgreSQL backend
-    }
-    console.log('[ApiService] Using SimpleSupabaseApiService');
-    return SimpleSupabaseApiService;
+
+    // Default to local backend
+    console.log('[ApiService] Using LocalApiService');
+    return LocalApiService;
   }
 
   // Authentication
-  async sendVerificationCode(phone: string): Promise<{ success: boolean; message: string }> {
+  async sendVerificationCode(phone: string): Promise<{ success: boolean; message: string; code?: string }> {
     try {
       return await this.getService().sendVerificationCode(phone);
     } catch (error: any) {
@@ -52,7 +49,7 @@ class ApiService {
     }
   }
 
-  async verifyCode(phone: string, code: string): Promise<{ token: string; user: User }> {
+  async verifyCode(phone: string, code: string): Promise<{ token: string; user: User; isNewUser: boolean }> {
     try {
       const result = await this.getService().verifyCode(phone, code);
 
@@ -279,7 +276,7 @@ export default new ApiService();
 export const sendVerificationCode = (phone: string) =>
   new ApiService().sendVerificationCode(phone);
 
-export const verifyCode = (phone: string, code: string) =>
+export const verifyCode = (phone: string, code: string): Promise<{ token: string; user: User; isNewUser: boolean }> =>
   new ApiService().verifyCode(phone, code);
 
 export const getUserData = () => new ApiService().getUserProfile();

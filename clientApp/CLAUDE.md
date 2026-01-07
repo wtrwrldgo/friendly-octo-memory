@@ -34,14 +34,14 @@ npx expo install <package>    # Add Expo-compatible package
 - **Navigation**: React Navigation v6 (native-stack + bottom-tabs)
 - **State Management**: Context API (UserContext, CartContext, OrderContext, ToastContext)
 - **Maps**: Yandex MapKit (`react-native-yamap`)
-- **Backend**: Supabase (authentication, database)
-- **Phone Auth**: Twilio (SMS verification)
+- **Backend**: Express.js with PostgreSQL
+- **Phone Auth**: SMS verification (console logs in dev mode)
 
 ### Application Flow
 
 **Authentication Flow:**
 1. LoadingScreen → WelcomeScreen → SelectLanguageScreen
-2. AskNameScreen → AuthPhoneScreen (Twilio SMS)
+2. AskNameScreen → AuthPhoneScreen (SMS verification)
 3. VerifyCodeScreen → EnableLocationScreen
 4. AddressSelectScreen (Yandex Maps integration)
 5. → MainNavigator (tabs)
@@ -290,7 +290,7 @@ Card Structure:
 
 1. **Native dependencies**: Due to `react-native-yamap`, the app requires development builds, not Expo Go
 2. **Location permissions**: Handled via `expo-location` plugin in `app.json`
-3. **Phone authentication**: Uses Twilio service (`services/twilio.service.ts`)
+3. **Phone authentication**: Uses SMS service (code logged to console in dev mode)
 4. **Token management**: Automatic refresh on 401 errors via `services/http.service.ts`
 5. **Storage**: SecureStore for tokens, AsyncStorage for user data
 
@@ -366,7 +366,6 @@ navigation.navigate('FirmDetails', { firmId: '123' });
 - `QUICK_START.md` - Quick reference for running the app
 - `USAGE_EXAMPLES.md` - Code examples for common tasks
 - `YANDEX_MAPKIT_SETUP.md` - Maps integration setup
-- `TWILIO-SETUP.md` - Phone auth setup
 
 ## Troubleshooting
 

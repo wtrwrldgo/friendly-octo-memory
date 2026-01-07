@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../types';
@@ -7,6 +8,7 @@ import { Colors, Spacing, FontSizes } from '../constants/Colors';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { AddressCard } from '../components/AddressCard';
 import { useUser } from '../context/UserContext';
+import { useLanguage } from '../context/LanguageContext';
 import { getUserAddresses } from '../services/api';
 
 type AddressSelectScreenProps = {
@@ -15,6 +17,7 @@ type AddressSelectScreenProps = {
 
 const AddressSelectScreen: React.FC<AddressSelectScreenProps> = ({ navigation }) => {
   const { addresses, setAddresses, selectedAddress, setSelectedAddress, setUser, user } = useUser();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
 
   // ---- GET ADDRESS ICON ----
@@ -83,24 +86,24 @@ const AddressSelectScreen: React.FC<AddressSelectScreenProps> = ({ navigation })
         style={styles.backButton}
         onPress={() => navigation.goBack()}
       >
-        <Text style={styles.backIcon}>←</Text>
+        <Ionicons name={Platform.OS === 'ios' ? 'chevron-back' : 'arrow-back'} size={24} color="#1E293B" />
       </TouchableOpacity>
 
       <View style={styles.content}>
-        <Text style={styles.title}>Select Address</Text>
+        <Text style={styles.title}>{t('addressSelect.title')}</Text>
         <Text style={styles.subtitle}>
           {addresses.length === 0
-            ? 'Add your first delivery address to continue'
-            : 'Choose your delivery address'}
+            ? t('addressSelect.addFirstAddress')
+            : t('addressSelect.chooseAddress')}
         </Text>
 
         {/* Show empty state for first-time users */}
         {!loading && addresses.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>📍</Text>
-            <Text style={styles.emptyTitle}>No addresses yet</Text>
+            <Text style={styles.emptyTitle}>{t('addressSelect.noAddresses')}</Text>
             <Text style={styles.emptyText}>
-              Add your first address to start ordering water
+              {t('addressSelect.noAddressesMessage')}
             </Text>
           </View>
         ) : (
@@ -127,14 +130,14 @@ const AddressSelectScreen: React.FC<AddressSelectScreenProps> = ({ navigation })
         >
           <Text style={styles.addAddressIcon}>📍</Text>
           <Text style={styles.addAddressText}>
-            {addresses.length === 0 ? 'Add Address on Map' : 'Add New Address'}
+            {addresses.length === 0 ? t('addressSelect.addOnMap') : t('addressSelect.addNew')}
           </Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.footer}>
         <PrimaryButton
-          title="Continue"
+          title={t('addressSelect.continue')}
           onPress={handleContinue}
           disabled={!selectedAddress}
           loading={loading}

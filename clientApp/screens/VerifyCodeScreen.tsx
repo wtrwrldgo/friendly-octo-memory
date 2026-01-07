@@ -23,7 +23,7 @@ const RESEND_SECONDS = 60;
 
 const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({ navigation, route }) => {
   const phone = route.params?.phone ?? '';
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(route.params?.autoCode ?? '');
   const [loading, setLoading] = useState(false);
   const [seconds, setSeconds] = useState(RESEND_SECONDS);
   const inputRef = useRef<TextInput>(null);
@@ -73,49 +73,47 @@ const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({ navigation, route }
       setUser(mergedUser);
       showSuccess(t('auth.verify') || 'Verified!');
 
-      // Load addresses from API to check if returning user
-      console.log('Loading addresses from API...');
-      await loadAddressesFromAPI();
+      // Use isNewUser flag from backend to determine routing
+      const isNewUser = result.isNewUser;
+      console.log('🔐 [VerifyCode] isNewUser from backend:', isNewUser);
 
-      // Check if this is a returning user (has addresses in the API response)
-      // We need to fetch addresses again to get the count since state updates are async
-      const ApiService = require('../services/api').default;
-      let userAddresses: any[] = [];
-      try {
-        userAddresses = await ApiService.getUserAddresses();
-        console.log('Fetched addresses for auth check:', userAddresses.length);
-      } catch (err) {
-        console.log('Could not fetch addresses:', err);
-      }
-
-      const hasProperName = mergedUser.name && mergedUser.name !== 'Guest' && mergedUser.name !== 'User';
-      const hasAddresses = userAddresses && userAddresses.length > 0;
-
-      console.log('🔐 [VerifyCode] hasProperName:', hasProperName, 'hasAddresses:', hasAddresses);
-
-      if (hasProperName && hasAddresses) {
-        // RETURNING USER: Has name and addresses
-        // Don't navigate - App.tsx will automatically switch to MainNavigator
-        console.log('🔐 [VerifyCode] Returning user detected - letting App.tsx handle navigation');
-        // Just wait a moment for state to update, App.tsx will switch to Home
-        return;
-      } else if (!hasProperName) {
-        // NEW USER: Needs to enter name first
+      if (isNewUser) {
+        // NEW USER: Needs to complete onboarding (name, address)
         console.log('🔐 [VerifyCode] New user - navigating to AskName');
         navigation.navigate('AskName');
       } else {
-        // User has name but no addresses - go to address selection
-        console.log('🔐 [VerifyCode] User needs address - navigating to SelectAddress');
-        navigation.navigate('SelectAddress', { isFirstAddress: true });
+        // RETURNING USER: Load addresses and let App.tsx handle navigation
+        console.log('🔐 [VerifyCode] Returning user - loading addresses from API...');
+        await loadAddressesFromAPI();
+
+        // Check if user has addresses
+        const ApiService = require('../services/api').default;
+        let userAddresses: any[] = [];
+        try {
+          userAddresses = await ApiService.getUserAddresses();
+          console.log('🔐 [VerifyCode] Fetched addresses:', userAddresses.length);
+        } catch (err) {
+          console.log('🔐 [VerifyCode] Could not fetch addresses:', err);
+        }
+
+        if (userAddresses && userAddresses.length > 0) {
+          // RETURNING USER with addresses: Let App.tsx switch to Home
+          console.log('🔐 [VerifyCode] Returning user with addresses - letting App.tsx handle navigation');
+          return;
+        } else {
+          // RETURNING USER without addresses: Need to add address
+          console.log('🔐 [VerifyCode] Returning user needs address - navigating to SelectAddress');
+          navigation.navigate('SelectAddress', { isFirstAddress: true });
+        }
       }
     } catch (e: any) {
       // Check if error is related to invalid/incorrect code
       const errorMsg = e?.message?.toLowerCase() || '';
       const isInvalidCode = errorMsg.includes('invalid') ||
-                           errorMsg.includes('incorrect') ||
-                           errorMsg.includes('wrong') ||
-                           errorMsg.includes('expired') ||
-                           errorMsg.includes('code');
+        errorMsg.includes('incorrect') ||
+        errorMsg.includes('wrong') ||
+        errorMsg.includes('expired') ||
+        errorMsg.includes('code');
 
       if (isInvalidCode) {
         showError(t('errors.invalidCode') || 'Invalid code. Please try again.');

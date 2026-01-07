@@ -14,6 +14,7 @@ import { createOrder } from '../services/api';
 import { Address } from '../types';
 import { scale, moderateScale, wp } from '../constants/Colors';
 import { getProductImageByName } from '../utils/imageMapping';
+import { getTranslatedProductName } from '../utils/translations';
 
 // 3D Duolingo-style color palette
 const C = {
@@ -151,8 +152,8 @@ function WheelPicker({
   items,
   selectedIndex,
   onSelect,
-  itemHeight = 44,
-  visibleItems = 5,
+  itemHeight = 40,
+  visibleItems = 3,
 }: {
   items: string[];
   selectedIndex: number;
@@ -264,17 +265,35 @@ function TimeSelectionModal({
   scheduleDaysLimit?: number;
   scheduleTimeInterval?: number;
 }) {
-  // Get translations and use real firm delivery time
-  const deliveryTime = firmDeliveryTime || '15-25 min';
+  // Get translations and use real firm delivery time from CRM
+  const deliveryTime = firmDeliveryTime || '30-45 min';
   const langTranslations = (translations as any)[language] || translations.en;
   const baseTs = langTranslations.timeSelection || {};
+
+  // Build subtitle with actual firm delivery time - use regex to replace any time pattern
+  const timePattern = /\d+-\d+\s*[^\s)]+/g; // Matches patterns like "15-25 min", "15-25 minutes", "15-25 минут", but NOT the closing ")"
+
+  const getDeliverNowSubtitle = () => {
+    const baseText = baseTs.deliverNowSubtitle || 'Delivered within {time}';
+    return baseText
+      .replace('{time}', deliveryTime)
+      .replace(timePattern, deliveryTime);
+  };
+
+  const getOrderNowText = () => {
+    const baseText = baseTs.orderNow || 'Order now ({time})';
+    return baseText
+      .replace('{time}', deliveryTime)
+      .replace(timePattern, deliveryTime);
+  };
+
   const ts = {
     title: baseTs.title || 'Delivery Time',
     now: baseTs.now || 'Now',
     selectTime: baseTs.selectTime || 'Select time',
     deliverNow: baseTs.deliverNow || 'Deliver now',
-    deliverNowSubtitle: baseTs.deliverNowSubtitle?.replace('15-25 min', deliveryTime) || `Delivered within ${deliveryTime}`,
-    orderNow: baseTs.orderNow?.replace('15-25 min', deliveryTime) || `Order now (${deliveryTime})`,
+    deliverNowSubtitle: getDeliverNowSubtitle(),
+    orderNow: getOrderNowText(),
     today: baseTs.today || 'Today',
     tomorrow: baseTs.tomorrow || 'Tomorrow',
     selectDay: baseTs.selectDay || 'Select day',
@@ -436,7 +455,7 @@ function TimeSelectionModal({
               </ScrollView>
 
               {/* Time Selection */}
-              <Text style={[s.sectionLabel, { marginTop: 20 }]}>{ts.selectTime}</Text>
+              <Text style={[s.sectionLabel, { marginTop: 12 }]}>{ts.selectTime}</Text>
               <View style={s.wheelContainer}>
                 <View style={s.wheelRow}>
                   {/* Hour Wheel */}
@@ -487,12 +506,14 @@ function AddressWarningModal({
   type,
   onAddAddress,
   onSelectAddress,
+  t,
 }: {
   visible: boolean;
   onClose: () => void;
   type: 'no_address' | 'select_address';
   onAddAddress: () => void;
   onSelectAddress: () => void;
+  t: (key: string) => string;
 }) {
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
@@ -505,14 +526,14 @@ function AddressWarningModal({
 
           {/* Title */}
           <Text style={s.alertTitle}>
-            {type === 'no_address' ? 'Jetkeriw mánzili kerek' : 'Mánzil saylań'}
+            {type === 'no_address' ? t('cart.addressRequired') : t('cart.selectAddressBtn')}
           </Text>
 
           {/* Message */}
           <Text style={s.alertMessage}>
             {type === 'no_address'
-              ? 'Buyırtpanı jiberıw ushın jetkeriw mánzilın saylań.'
-              : 'Dawam etıw ushın jetkeriw mánzilın saylań.'}
+              ? t('cart.selectAddressToOrder')
+              : t('cart.selectAddressToContinue')}
           </Text>
 
           {/* Buttons */}
@@ -522,7 +543,7 @@ function AddressWarningModal({
               onPress={onClose}
               activeOpacity={0.7}
             >
-              <Text style={s.alertSecondaryText}>Artqa</Text>
+              <Text style={s.alertSecondaryText}>{t('common.back') || 'Back'}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={s.alertPrimaryBtn}
@@ -537,7 +558,7 @@ function AddressWarningModal({
               activeOpacity={0.8}
             >
               <Text style={s.alertPrimaryText}>
-                {type === 'no_address' ? 'Mánzil qosıw' : 'Mánzil saylań'}
+                {type === 'no_address' ? t('address.addAddress') : t('cart.selectAddressBtn')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -567,12 +588,15 @@ const CartScreen: React.FC = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(user?.defaultPaymentMethod || null); // Use default from profile if set
   const [cartSelectedAddress, setCartSelectedAddress] = useState<Address | null>(null); // Local cart address selection
 
-  // Set initial time selection based on language and firm delivery time
+  // Set initial time selection based on language and firm delivery time from CRM
   React.useEffect(() => {
     const langTranslations = (translations as any)[language] || translations.en;
-    const deliveryTime = cart.firm?.deliveryTime || '15-25 min';
-    const orderNowText = langTranslations.timeSelection?.orderNow?.replace('15-25 min', deliveryTime)
-      || `Order now (${deliveryTime})`;
+    const deliveryTime = cart.firm?.deliveryTime || '30-45 min';
+    const baseText = langTranslations.timeSelection?.orderNow || 'Order now ({time})';
+    const timePattern = /\d+-\d+\s*[^\s)]+/g; // Matches "15-25 min", "15-25 минут", but NOT the closing ")"
+    const orderNowText = baseText
+      .replace('{time}', deliveryTime)
+      .replace(timePattern, deliveryTime);
     setSelectedTime(orderNowText);
   }, [language, cart.firm?.deliveryTime]);
 
@@ -692,16 +716,16 @@ const CartScreen: React.FC = () => {
             style={s.blockedMascot}
             resizeMode="contain"
           />
-          <Text style={s.blockedTitle}>Buyırtpańız joldа</Text>
+          <Text style={s.blockedTitle}>{t('cart.orderOnTheWay')}</Text>
           <Text style={s.blockedSubtitle}>
-            Jańa buyırtpa beriw ushin házirgi buyırtpańızdıń jetkerilıwin kútiń.
+            {t('orders.waitForDelivery') || 'Wait for your current order to be delivered before placing a new one.'}
           </Text>
           <TouchableOpacity
             style={s.trackOrderButton}
             onPress={() => navigation.navigate('OrderTracking', { orderId: currentOrder?.id })}
             activeOpacity={0.9}
           >
-            <Text style={s.trackOrderButtonText}>Buyırtpanı qadaǵalaw</Text>
+            <Text style={s.trackOrderButtonText}>{t('cart.trackOrder')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -758,11 +782,15 @@ const CartScreen: React.FC = () => {
 
             <View style={s.productContent}>
               <Text style={s.productTitle}>
-                {item.product.name.includes(item.product.volume)
-                  ? item.product.name
-                  : `${item.product.name} • ${item.product.volume}`}
+                {(() => {
+                  const productName = getTranslatedProductName(item.product, language);
+                  // Check if volume number is already in the name (handles both "19L" and "19Л" Cyrillic)
+                  const volumeNum = item.product.volume?.match(/\d+/)?.[0] || '';
+                  const nameHasVolume = volumeNum && productName.includes(volumeNum);
+                  return nameHasVolume ? productName : `${productName} • ${item.product.volume}`;
+                })()}
               </Text>
-              <Text style={s.productSubtitle}>Qaytarıladı</Text>
+              <Text style={s.productSubtitle}>{t('product.returnable')}</Text>
 
               <View style={s.productFooter}>
                 <QuantityStepper
@@ -798,7 +826,7 @@ const CartScreen: React.FC = () => {
               />
             </View>
             <View style={s.optionContent}>
-              <Text style={s.optionLabel}>Jetkeriw waqtı</Text>
+              <Text style={s.optionLabel}>{t('cart.deliveryTime')}</Text>
               <Text style={s.optionValue}>{selectedTime}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#C4C9D0" />
@@ -853,9 +881,9 @@ const CartScreen: React.FC = () => {
               />
             </View>
             <View style={s.optionContent}>
-              <Text style={s.optionLabel}>Mánzil</Text>
+              <Text style={s.optionLabel}>{t('cart.address')}</Text>
               <Text style={s.optionValue} numberOfLines={1}>
-                {cartSelectedAddress ? cartSelectedAddress.address : 'Saylań'}
+                {cartSelectedAddress ? cartSelectedAddress.address : t('cart.select')}
               </Text>
             </View>
             {cartSelectedAddress && (
@@ -880,18 +908,18 @@ const CartScreen: React.FC = () => {
         {/* Order Summary Card */}
         <View style={s.summaryCard}>
           <View style={s.summaryRow}>
-            <Text style={s.summaryLabel}>Ónim</Text>
+            <Text style={s.summaryLabel}>{t('cart.subtotal')}</Text>
             <Text style={s.summaryValue}>{formatUZS(subtotal)} UZS</Text>
           </View>
           {bottleDepositEnabled && (
             <View style={s.summaryRow}>
-              <Text style={s.summaryLabel}>Butılka depoziti</Text>
+              <Text style={s.summaryLabel}>{t('product.bottleDeposit') || 'Bottle deposit'}</Text>
               <Text style={s.summaryValue}>{formatUZS(bottleDepositPrice)} UZS</Text>
             </View>
           )}
           <View style={s.summaryRow}>
             <View style={s.summaryLabelWithInfo}>
-              <Text style={s.summaryLabel}>Jetkeriw</Text>
+              <Text style={s.summaryLabel}>{t('cart.delivery')}</Text>
               <TouchableOpacity
                 onPress={() => {
                   setFeeInfoType('delivery');
@@ -903,14 +931,14 @@ const CartScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
             {deliveryFee === 0 ? (
-              <Text style={s.summaryValueFree}>Tegin</Text>
+              <Text style={s.summaryValueFree}>{t('cart.free')}</Text>
             ) : (
               <Text style={s.summaryValue}>{formatUZS(deliveryFee)} UZS</Text>
             )}
           </View>
           <View style={s.summaryRow}>
             <View style={s.summaryLabelWithInfo}>
-              <Text style={s.summaryLabel}>Xızmet haqqı</Text>
+              <Text style={s.summaryLabel}>{t('cart.serviceFee')}</Text>
               <TouchableOpacity
                 onPress={() => {
                   setFeeInfoType('service');
@@ -921,11 +949,11 @@ const CartScreen: React.FC = () => {
                 <Ionicons name="information-circle-outline" size={16} color="#8088A2" />
               </TouchableOpacity>
             </View>
-            <Text style={s.summaryValueFree}>Tegin</Text>
+            <Text style={s.summaryValueFree}>{t('cart.free')}</Text>
           </View>
           <View style={s.summaryDivider} />
           <View style={s.summaryRow}>
-            <Text style={s.summaryTotalLabel}>Barlığı</Text>
+            <Text style={s.summaryTotalLabel}>{t('cart.total')}</Text>
             <Text style={s.summaryTotalValue}>{formatUZS(total)} UZS</Text>
           </View>
         </View>
@@ -971,6 +999,7 @@ const CartScreen: React.FC = () => {
         type={addressWarningType}
         onAddAddress={() => navigation.navigate('SelectAddress')}
         onSelectAddress={() => setShowAddressModal(true)}
+        t={t}
       />
 
       {/* Fee Info Modal */}
@@ -994,18 +1023,18 @@ const CartScreen: React.FC = () => {
               />
             </View>
             <Text style={s.feeInfoModalTitle}>
-              {feeInfoType === 'delivery' ? 'Jetkeriw haqqı' : 'Xızmet haqqı'}
+              {feeInfoType === 'delivery' ? t('cart.deliveryFeeInfo') : t('cart.serviceFeeInfo')}
             </Text>
             <Text style={s.feeInfoModalText}>
               {feeInfoType === 'delivery'
-                ? 'Jetkeriw haqqı suw kompaniyasına tólenedi. Bul buyırtpanı sizge jetkeriw ushın.'
-                : 'Xızmet haqqı WaterGo platformasına tólenedi. Bul qolaylı buyırtpa hám tez jetkeriw ushın.'}
+                ? t('cart.deliveryFeeDesc')
+                : t('cart.serviceFeeDesc')}
             </Text>
             <TouchableOpacity
               style={s.feeInfoModalButton}
               onPress={() => setShowFeeInfoModal(false)}
             >
-              <Text style={s.feeInfoModalButtonText}>Túsindim</Text>
+              <Text style={s.feeInfoModalButtonText}>{t('cart.understood')}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -1017,14 +1046,14 @@ const CartScreen: React.FC = () => {
           <View style={s.ctaWrapper}>
             <LinearGradient colors={[C.primary, C.primary2]} style={s.cta}>
               {loading ? (
-                <Text style={s.ctaTxt}>Júkleniwde...</Text>
+                <Text style={s.ctaTxt}>{t('cart.loading')}</Text>
               ) : (
                 <View style={s.ctaContent}>
-                  <Text style={s.ctaTxt}>Buyırtpa beriw • {formatUZS(total)} UZS</Text>
+                  <Text style={s.ctaTxt}>{t('cart.placeOrderBtn')} • {formatUZS(total)} UZS</Text>
                   <Text style={s.ctaSubtitle}>
                     ⏱ {selectedTime.includes(':') && !selectedTime.includes('(')
                       ? selectedTime.split(',')[0]
-                      : cart.firm?.deliveryTime || '15-25 daq'}
+                      : cart.firm?.deliveryTime || '30-45 min'}
                   </Text>
                 </View>
               )}
@@ -1816,7 +1845,7 @@ const s = StyleSheet.create({
   },
   scheduleContainer: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 8,
   },
   sectionLabel: {
     fontSize: 14,
@@ -1883,13 +1912,13 @@ const s = StyleSheet.create({
   },
   wheelContainer: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 8,
   },
   wheelRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   wheelColumn: {
     alignItems: 'center',

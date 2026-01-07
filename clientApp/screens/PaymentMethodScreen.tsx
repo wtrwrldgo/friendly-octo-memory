@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, FontSizes } from '../constants/Colors';
 import { HeaderBar } from '../components/HeaderBar';
 import { useLanguage } from '../context/LanguageContext';
+import { useUser } from '../context/UserContext';
+import { PaymentMethodType } from '../types';
 
 export type PaymentMethod = 'cash' | 'card' | 'wallet';
 
@@ -21,7 +24,20 @@ export default function PaymentMethodScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { t } = useLanguage();
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+  const insets = useSafeAreaInsets();
+  const { user, updateUser } = useUser();
+
+  // Check if coming from Profile (to set default) or Cart (temporary selection)
+  const fromProfile = route.params?.fromProfile === true;
+  const initialMethod = fromProfile ? (user?.defaultPaymentMethod || null) : null;
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(initialMethod);
+
+  // Update selected method when user data loads
+  useEffect(() => {
+    if (fromProfile && user?.defaultPaymentMethod) {
+      setSelectedMethod(user.defaultPaymentMethod);
+    }
+  }, [fromProfile, user?.defaultPaymentMethod]);
 
   const handleSelect = (method: PaymentMethod) => {
     setSelectedMethod(method);
@@ -55,7 +71,13 @@ export default function PaymentMethodScreen() {
   ];
 
   const handleContinue = () => {
-    if (route.params?.onSelect) {
+    if (fromProfile) {
+      // Save as default payment method
+      if (selectedMethod) {
+        updateUser({ defaultPaymentMethod: selectedMethod as PaymentMethodType });
+      }
+    } else if (route.params?.onSelect) {
+      // Temporary selection for checkout
       route.params.onSelect(selectedMethod);
     }
     navigation.goBack();
@@ -132,7 +154,7 @@ export default function PaymentMethodScreen() {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, Platform.OS === 'android' ? 48 : 16) + 16 }]}>
         <TouchableOpacity
           style={[styles.continueButton, selectedMethod && styles.continueButtonEnabled]}
           onPress={handleContinue}
@@ -146,7 +168,7 @@ export default function PaymentMethodScreen() {
             style={styles.continueGradient}
           >
             <Text style={[styles.continueText, !selectedMethod && styles.continueTextDisabled]}>
-              {t('payment.confirm')}
+              {fromProfile ? (t('common.save') || 'Save') : t('payment.confirm')}
             </Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -298,7 +320,6 @@ const styles = StyleSheet.create({
   // Footer
   footer: {
     padding: Spacing.lg,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 20,
     backgroundColor: Colors.white,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',

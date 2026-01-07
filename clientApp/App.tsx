@@ -140,13 +140,12 @@ const AppContent: React.FC = () => {
     if (!isLoaded) return;
 
     // Check if user is authenticated:
-    // 1. Has user ID (from backend)
-    // 2. Has proper name (not 'Guest')
-    // 3. Has at least one address (completed onboarding)
+    // 1. Has user ID (from backend) - means user verified phone
+    // 2. Has at least one address (completed onboarding)
+    // Note: Name check removed - returning users may have default 'User' name
     const hasUserId = !!user?.id;
-    const hasProperName = !!user?.name && user.name !== 'Guest' && user.name !== 'User';
     const hasAddresses = addresses.length > 0;
-    const isFullyAuthenticated = hasUserId && hasProperName && hasAddresses;
+    const isFullyAuthenticated = hasUserId && hasAddresses;
     setIsAuthenticated(isFullyAuthenticated);
 
     console.log('🔐 [Auth Check] User ID:', user?.id);

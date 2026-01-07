@@ -10,6 +10,7 @@ import {
   ChevronRight, CreditCard, Truck, CheckCircle2, AlertCircle
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { mockProducts, mockClients } from "@/lib/mockData";
 import { formatCurrency, isValidPhone, isValidEmail } from "@/lib/utils";
@@ -24,6 +25,7 @@ interface CartItem {
 
 export default function FirmOrderCreatePage() {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -258,11 +260,11 @@ export default function FirmOrderCreatePage() {
                   <FileText className="w-6 h-6 text-white" />
                 </div>
                 <h1 className={`text-3xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                  Create New Order
+                  {t.orderCreate.title}
                 </h1>
               </div>
               <p className={`text-base ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                Select a client, add products, and complete the order
+                {t.orderCreate.description}
               </p>
             </div>
 
@@ -270,9 +272,9 @@ export default function FirmOrderCreatePage() {
             <div className={`p-4 rounded-2xl border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200 shadow-lg"}`}>
               <div className="flex items-center gap-4">
                 {[
-                  { label: "Client", icon: User, done: !!selectedClient },
-                  { label: "Products", icon: Package, done: cart.length > 0 },
-                  { label: "Address", icon: MapPin, done: deliveryAddress.trim().length > 0 },
+                  { label: t.orderCreate.stepClient, icon: User, done: !!selectedClient },
+                  { label: t.orderCreate.stepProducts, icon: Package, done: cart.length > 0 },
+                  { label: t.orderCreate.stepAddress, icon: MapPin, done: deliveryAddress.trim().length > 0 },
                 ].map((step, index) => (
                   <div key={step.label} className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
@@ -316,10 +318,10 @@ export default function FirmOrderCreatePage() {
                 </div>
                 <div>
                   <h3 className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                    Select Client
+                    {t.orderCreate.selectClient}
                   </h3>
                   <p className={`text-sm ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
-                    Choose an existing client or create new
+                    {t.orderCreate.chooseClientOrCreate}
                   </p>
                 </div>
               </div>
@@ -359,7 +361,7 @@ export default function FirmOrderCreatePage() {
                         : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                     }`}
                   >
-                    Change
+                    {t.orderCreate.change}
                   </button>
                 </div>
               ) : (
@@ -372,7 +374,7 @@ export default function FirmOrderCreatePage() {
                   }`}
                 >
                   <User className="w-5 h-5" />
-                  Select Client
+                  {t.orderCreate.selectClient}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               )}
@@ -390,10 +392,10 @@ export default function FirmOrderCreatePage() {
                 </div>
                 <div>
                   <h3 className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                    Browse Products
+                    {t.orderCreate.browseProducts}
                   </h3>
                   <p className={`text-sm ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
-                    {filteredProducts.length} products available
+                    {filteredProducts.length} {t.orderCreate.productsAvailable}
                   </p>
                 </div>
               </div>
@@ -404,7 +406,7 @@ export default function FirmOrderCreatePage() {
                   <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`} />
                   <input
                     type="text"
-                    placeholder="Search products..."
+                    placeholder={t.orderCreate.searchProducts}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className={`w-full pl-12 pr-4 py-3.5 rounded-xl border-2 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all ${
@@ -525,10 +527,10 @@ export default function FirmOrderCreatePage() {
                 <div className="text-center py-12">
                   <Package className={`w-16 h-16 mx-auto mb-4 ${theme === "dark" ? "text-gray-600" : "text-gray-300"}`} />
                   <p className={`text-lg font-medium ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                    No products found
+                    {t.orderCreate.noProductsFound}
                   </p>
                   <p className={`text-sm mt-1 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
-                    Try adjusting your search or filter
+                    {t.orderCreate.tryAdjustingSearch}
                   </p>
                 </div>
               )}
@@ -546,10 +548,10 @@ export default function FirmOrderCreatePage() {
                   </div>
                   <div>
                     <h3 className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                      Order Summary
+                      {t.orderCreate.orderSummary}
                     </h3>
                     <p className={`text-sm ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
-                      {cartItemsCount} items
+                      {cartItemsCount} {t.orderCreate.items}
                     </p>
                   </div>
                 </div>
@@ -559,10 +561,10 @@ export default function FirmOrderCreatePage() {
                 <div className={`text-center py-10 rounded-xl border-2 border-dashed ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
                   <ShoppingCart className={`w-12 h-12 mx-auto mb-3 ${theme === "dark" ? "text-gray-600" : "text-gray-300"}`} />
                   <p className={`font-medium ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                    Your cart is empty
+                    {t.orderCreate.cartEmpty}
                   </p>
                   <p className={`text-sm mt-1 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
-                    Add products from the catalog
+                    {t.orderCreate.addFromCatalog}
                   </p>
                 </div>
               ) : (
@@ -584,7 +586,7 @@ export default function FirmOrderCreatePage() {
                               {item.product.name}
                             </h4>
                             <p className={`text-xs mt-0.5 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
-                              {item.product.volume} · {formatCurrency(item.product.price)} each
+                              {item.product.volume} · {formatCurrency(item.product.price)} {t.orderCreate.each}
                             </p>
                           </div>
                           <button
@@ -638,7 +640,7 @@ export default function FirmOrderCreatePage() {
                   <div className="mb-4">
                     <label className={`flex items-center gap-2 text-sm font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
                       <Truck className="w-4 h-4" />
-                      Delivery Address
+                      {t.orderCreate.deliveryAddress}
                     </label>
                     <textarea
                       value={deliveryAddress}
@@ -649,7 +651,7 @@ export default function FirmOrderCreatePage() {
                           ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-500"
                           : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"
                       }`}
-                      placeholder="Enter delivery address"
+                      placeholder={t.orderCreate.enterDeliveryAddress}
                     />
                   </div>
 
@@ -657,7 +659,7 @@ export default function FirmOrderCreatePage() {
                   <div className="mb-5">
                     <label className={`flex items-center gap-2 text-sm font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
                       <FileText className="w-4 h-4" />
-                      Notes (Optional)
+                      {t.orderCreate.notesOptional}
                     </label>
                     <textarea
                       value={notes}
@@ -668,7 +670,7 @@ export default function FirmOrderCreatePage() {
                           ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-500"
                           : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"
                       }`}
-                      placeholder="Special instructions..."
+                      placeholder={t.orderCreate.specialInstructions}
                     />
                   </div>
 
@@ -680,7 +682,7 @@ export default function FirmOrderCreatePage() {
                   }`}>
                     <div className="flex items-center justify-between mb-2">
                       <span className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                        Subtotal ({cartItemsCount} items)
+                        {t.orderCreate.subtotal} ({cartItemsCount} {t.orderCreate.items})
                       </span>
                       <span className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
                         {formatCurrency(cartTotal)}
@@ -688,7 +690,7 @@ export default function FirmOrderCreatePage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                        Total
+                        {t.orderCreate.total}
                       </span>
                       <span className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                         {formatCurrency(cartTotal)}
@@ -703,8 +705,8 @@ export default function FirmOrderCreatePage() {
                     }`}>
                       <AlertCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${theme === "dark" ? "text-amber-400" : "text-amber-600"}`} />
                       <div className={`text-sm ${theme === "dark" ? "text-amber-300" : "text-amber-700"}`}>
-                        {!selectedClient && <p>Please select a client</p>}
-                        {selectedClient && !deliveryAddress.trim() && <p>Please enter delivery address</p>}
+                        {!selectedClient && <p>{t.orderCreate.pleaseSelectClient}</p>}
+                        {selectedClient && !deliveryAddress.trim() && <p>{t.orderCreate.pleaseEnterAddress}</p>}
                       </div>
                     </div>
                   )}
@@ -716,7 +718,7 @@ export default function FirmOrderCreatePage() {
                     className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white py-4 rounded-xl font-bold transition-all shadow-xl shadow-emerald-500/25 hover:shadow-emerald-500/35 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-emerald-500/25 flex items-center justify-center gap-2"
                   >
                     <CheckCircle2 className="w-5 h-5" />
-                    Create Order
+                    {t.orderCreate.createOrder}
                   </button>
                 </>
               )}
@@ -732,7 +734,7 @@ export default function FirmOrderCreatePage() {
             setClientSearchQuery("");
             setClientTypeFilter("All");
           }}
-          title="Select Client"
+          title={t.orderCreate.selectClientTitle}
           size="lg"
         >
           <div className="space-y-4">
@@ -743,7 +745,7 @@ export default function FirmOrderCreatePage() {
                 <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`} />
                 <input
                   type="text"
-                  placeholder="Search by name, phone, or email..."
+                  placeholder={t.orderCreate.searchByNamePhoneEmail}
                   value={clientSearchQuery}
                   onChange={(e) => setClientSearchQuery(e.target.value)}
                   className={`w-full pl-12 pr-4 py-3 rounded-xl border focus:ring-2 focus:ring-blue-500/20 outline-none transition ${
@@ -793,7 +795,7 @@ export default function FirmOrderCreatePage() {
                 }`}
               >
                 <UserPlus className="w-5 h-5" />
-                Create New Client
+                {t.orderCreate.createNewClient}
               </button>
             </div>
 
@@ -803,7 +805,7 @@ export default function FirmOrderCreatePage() {
                 <div className="text-center py-10">
                   <User className={`w-12 h-12 mx-auto mb-3 ${theme === "dark" ? "text-gray-600" : "text-gray-300"}`} />
                   <p className={`font-medium ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                    No clients found
+                    {t.orderCreate.noClientsFound}
                   </p>
                   <button
                     onClick={() => {
@@ -812,7 +814,7 @@ export default function FirmOrderCreatePage() {
                     }}
                     className="mt-3 text-blue-500 hover:text-blue-600 text-sm font-semibold"
                   >
-                    Create a new client
+                    {t.orderCreate.createANewClient}
                   </button>
                 </div>
               ) : (
@@ -865,14 +867,14 @@ export default function FirmOrderCreatePage() {
             setShowNewClientModal(false);
             newClientForm.resetForm();
           }}
-          title="Create New Client"
+          title={t.orderCreate.createNewClientTitle}
           size="lg"
         >
           <form onSubmit={newClientForm.handleSubmit} className="space-y-5">
             {/* Client Name */}
             <div>
               <label className={`block text-sm font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                Client Name *
+                {t.orderCreate.clientName} *
               </label>
               <input
                 type="text"
@@ -884,7 +886,7 @@ export default function FirmOrderCreatePage() {
                     ? "bg-gray-700/50 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 } ${newClientForm.errors.name && newClientForm.touched.name ? "border-red-500" : ""}`}
-                placeholder="e.g., Aziz Karimov or Tech Solutions LLC"
+                placeholder={t.orderCreate.clientNamePlaceholder}
               />
               {newClientForm.errors.name && newClientForm.touched.name && (
                 <p className="text-red-500 text-sm mt-1">{newClientForm.errors.name}</p>
@@ -895,7 +897,7 @@ export default function FirmOrderCreatePage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={`block text-sm font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                  Phone Number *
+                  {t.orderCreate.phoneNumber} *
                 </label>
                 <input
                   type="tel"
@@ -915,7 +917,7 @@ export default function FirmOrderCreatePage() {
               </div>
               <div>
                 <label className={`block text-sm font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                  Email (Optional)
+                  {t.orderCreate.emailOptional}
                 </label>
                 <input
                   type="email"
@@ -938,7 +940,7 @@ export default function FirmOrderCreatePage() {
             {/* Address */}
             <div>
               <label className={`block text-sm font-semibold mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                Delivery Address *
+                {t.orderCreate.deliveryAddressLabel} *
               </label>
               <textarea
                 name="address"
@@ -950,7 +952,7 @@ export default function FirmOrderCreatePage() {
                     ? "bg-gray-700/50 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 } ${newClientForm.errors.address && newClientForm.touched.address ? "border-red-500" : ""}`}
-                placeholder="e.g., Chilanzar 10, apt 45, Tashkent"
+                placeholder={t.orderCreate.addressPlaceholder}
               />
               {newClientForm.errors.address && newClientForm.touched.address && (
                 <p className="text-red-500 text-sm mt-1">{newClientForm.errors.address}</p>
@@ -960,13 +962,13 @@ export default function FirmOrderCreatePage() {
             {/* Client Type */}
             <div>
               <label className={`block text-sm font-semibold mb-3 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                Client Type *
+                {t.orderCreate.clientType} *
               </label>
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { type: "B2C" as ClientType, label: "Individual", icon: User },
-                  { type: "B2B" as ClientType, label: "Business", icon: Building2 },
-                  { type: "B2G" as ClientType, label: "Government", icon: MapPin },
+                  { type: "B2C" as ClientType, label: t.orderCreate.individual, icon: User },
+                  { type: "B2B" as ClientType, label: t.orderCreate.business, icon: Building2 },
+                  { type: "B2G" as ClientType, label: t.orderCreate.government, icon: MapPin },
                 ].map((item) => {
                   const config = getClientTypeConfig(item.type);
                   const isSelected = newClientForm.values.type === item.type;
@@ -1009,7 +1011,7 @@ export default function FirmOrderCreatePage() {
                     : "bg-gray-100 hover:bg-gray-200 text-gray-900"
                 }`}
               >
-                Cancel
+                {t.orderCreate.cancel}
               </button>
               <button
                 type="submit"
@@ -1017,7 +1019,7 @@ export default function FirmOrderCreatePage() {
                 className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <UserPlus className="w-5 h-5" />
-                Create Client
+                {t.orderCreate.createClient}
               </button>
             </div>
           </form>
@@ -1028,7 +1030,7 @@ export default function FirmOrderCreatePage() {
           <Modal
             isOpen={!!showProductDetail}
             onClose={() => setShowProductDetail(null)}
-            title="Product Details"
+            title={t.orderCreate.productDetails}
             size="md"
           >
             <div className="space-y-5">
@@ -1045,25 +1047,25 @@ export default function FirmOrderCreatePage() {
               {/* Product Stats */}
               <div className="grid grid-cols-2 gap-3">
                 <div className={`p-4 rounded-xl ${theme === "dark" ? "bg-gray-700/30" : "bg-gray-50"}`}>
-                  <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>Price</p>
+                  <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>{t.orderCreate.price}</p>
                   <p className={`text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                     {formatCurrency(showProductDetail.price)}
                   </p>
                 </div>
                 <div className={`p-4 rounded-xl ${theme === "dark" ? "bg-gray-700/30" : "bg-gray-50"}`}>
-                  <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>In Stock</p>
+                  <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>{t.orderCreate.inStock}</p>
                   <p className={`text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                     {showProductDetail.stockQuantity}
                   </p>
                 </div>
                 <div className={`p-4 rounded-xl ${theme === "dark" ? "bg-gray-700/30" : "bg-gray-50"}`}>
-                  <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>Volume</p>
+                  <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>{t.orderCreate.volume}</p>
                   <p className={`text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                     {showProductDetail.volume}
                   </p>
                 </div>
                 <div className={`p-4 rounded-xl ${theme === "dark" ? "bg-gray-700/30" : "bg-gray-50"}`}>
-                  <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>Min Order</p>
+                  <p className={`text-xs font-medium mb-1 ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>{t.orderCreate.minOrder}</p>
                   <p className={`text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                     {showProductDetail.minOrder}
                   </p>
@@ -1079,7 +1081,7 @@ export default function FirmOrderCreatePage() {
                 className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
               >
                 <Plus className="w-5 h-5" />
-                Add to Cart
+                {t.orderCreate.addToCart}
               </button>
             </div>
           </Modal>

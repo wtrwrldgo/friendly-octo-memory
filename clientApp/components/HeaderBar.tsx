@@ -4,8 +4,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
 
 interface HeaderBarProps {
@@ -27,7 +29,11 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
       <View style={styles.container}>
         {onBack ? (
           <TouchableOpacity style={styles.backButton} onPress={onBack}>
-            <Text style={styles.backIcon}>←</Text>
+            <Ionicons
+              name={Platform.OS === 'ios' ? 'chevron-back' : 'arrow-back'}
+              size={24}
+              color={Colors.text}
+            />
           </TouchableOpacity>
         ) : (
           <View style={styles.placeholder} />

@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
@@ -29,6 +29,7 @@ export default function GovernmentDetailsScreen() {
   const { t } = useLanguage();
   const { addAddress } = useUser();
   const { showToast } = useToast();
+  const insets = useSafeAreaInsets();
   const addressData = route.params?.addressData;
 
   const [name, setName] = useState('');
@@ -54,19 +55,19 @@ export default function GovernmentDetailsScreen() {
 
     try {
       await addAddress({
-        title: addressData.address.split(',')[0] || 'My Address',
+        title: name.trim(),
+        name: name.trim(),
         address: addressData.address,
         lat: addressData.lat,
         lng: addressData.lng,
         isDefault: addressData.isFirstAddress || false,
         addressType: addressData.addressType,
-        name: name.trim(),
         floor: floor.trim(),
         apartment: officeNumber.trim(),
         comment: '',
       });
 
-      showToast('Address saved successfully!', 'success');
+      showToast(t('auth.addressSaved'), 'success');
 
       if (addressData.isFirstAddress) {
         navigation.dispatch(
@@ -101,7 +102,7 @@ export default function GovernmentDetailsScreen() {
       }
     } catch (error) {
       console.error('Error saving address:', error);
-      showToast('Failed to save address. Please try again.', 'error');
+      showToast(t('auth.addressSaveError'), 'error');
     } finally {
       setIsSaving(false);
     }
@@ -193,7 +194,7 @@ export default function GovernmentDetailsScreen() {
       </ScrollView>
 
       {/* Sticky Button */}
-      <View style={styles.sticky}>
+      <View style={[styles.sticky, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
         <TouchableOpacity activeOpacity={0.9} disabled={!isValid} onPress={onNext}>
           <LinearGradient
             colors={isValid ? ['#3B82F6', '#2563EB'] : ['#D1D5DB', '#D1D5DB']}
@@ -202,7 +203,7 @@ export default function GovernmentDetailsScreen() {
             style={styles.cta}
           >
             <Text style={[styles.ctaText, !isValid && styles.ctaTextDisabled]}>
-              {isSaving ? 'SAVING...' : 'SAVE ADDRESS'}
+              {isSaving ? t('common.saving') : t('auth.saveAddress')}
             </Text>
           </LinearGradient>
         </TouchableOpacity>

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, RefreshControl, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Colors, Spacing, FontSizes, scale, moderateScale, wp } from '../constants/Colors';
@@ -7,11 +7,19 @@ import { useOrder } from '../context/OrderContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Order } from '../types';
 import { StageBadge } from '../components/StageBadge';
+import { getTranslatedProductName } from '../utils/translations';
 
 const OrdersScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { currentOrder, orderHistory } = useOrder();
-  const { t } = useLanguage();
+  const { currentOrder, orderHistory, loadOrders } = useOrder();
+  const { t, language } = useLanguage();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadOrders();
+    setRefreshing(false);
+  }, [loadOrders]);
 
   // Helper function to safely convert to Date and format
   const toDate = (date: Date | string | null | undefined): Date | null => {
@@ -85,7 +93,7 @@ const OrdersScreen: React.FC = () => {
         {/* Items Preview */}
         <View style={styles.cardItems}>
           <Text style={styles.cardItemsText} numberOfLines={1}>
-            {order.items.map(item => `${item.quantity}x ${item.product.name}`).join(', ')}
+            {order.items.map(item => `${item.quantity}x ${getTranslatedProductName(item.product, language)}`).join(', ')}
           </Text>
         </View>
 
@@ -110,7 +118,17 @@ const OrdersScreen: React.FC = () => {
       </View>
 
       {!currentOrder && orderHistory.length === 0 ? (
-        <View style={styles.emptyContainer}>
+        <ScrollView
+          contentContainerStyle={styles.emptyContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[Colors.primary]}
+              tintColor={Colors.primary}
+            />
+          }
+        >
           <Image
             source={require('../assets/illustrations/empty-orders.png')}
             style={styles.emptyImage}
@@ -120,13 +138,21 @@ const OrdersScreen: React.FC = () => {
           <Text style={styles.emptyText}>
             {t('orders.noOrdersMessage')}
           </Text>
-        </View>
+        </ScrollView>
       ) : (
         <FlatList
           data={orderHistory}
           renderItem={({ item }) => <OrderCard order={item} />}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[Colors.primary]}
+              tintColor={Colors.primary}
+            />
+          }
           ListHeaderComponent={
             currentOrder ? (
               <View style={styles.activeOrderSection}>
@@ -181,7 +207,7 @@ const OrdersScreen: React.FC = () => {
                   {/* Items Preview */}
                   <View style={styles.liveOrderItems}>
                     <Text style={styles.liveOrderItemsText} numberOfLines={1}>
-                      {currentOrder.items.map(item => `${item.quantity}x ${item.product.name}`).join(', ')}
+                      {currentOrder.items.map(item => `${item.quantity}x ${getTranslatedProductName(item.product, language)}`).join(', ')}
                     </Text>
                   </View>
 
@@ -236,11 +262,12 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   emptyContainer: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F7F9FC',
     paddingHorizontal: scale(32),
+    paddingVertical: scale(40),
   },
   emptyImage: {
     width: wp(75),

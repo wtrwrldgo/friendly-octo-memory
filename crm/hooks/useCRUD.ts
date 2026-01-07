@@ -5,7 +5,7 @@ import { useState, useCallback, useMemo } from "react";
 export interface UseCRUDOptions<T> {
   initialData: T[];
   generateId?: () => string;
-  onBeforeCreate?: (item: Partial<T>) => Partial<T>;
+  onBeforeCreate?: (item: Omit<T, "id">) => Partial<T>;
   onBeforeUpdate?: (item: T) => T;
   onBeforeDelete?: (id: string) => boolean;
 }

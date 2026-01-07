@@ -5,13 +5,15 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
+import TrialExpiredOverlay from "./TrialExpiredOverlay";
 
 export default function LayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const pathname = usePathname();
 
-  // Don't show sidebar on login page
+  // Don't show sidebar on login page or pricing page
   const isLoginPage = pathname === "/login";
+  const isPricingPage = pathname === "/pricing";
 
   if (loading) {
     return (
@@ -34,6 +36,8 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
       <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900">
         {children}
       </main>
+      {/* Show trial expired overlay for firm accounts - but not on pricing page */}
+      {!isPricingPage && <TrialExpiredOverlay />}
     </div>
   );
 }

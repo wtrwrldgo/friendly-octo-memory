@@ -57,7 +57,8 @@ export default function ApartmentDetailsScreen() {
 
     try {
       await addAddress({
-        title: addressData.address.split(',')[0] || 'My Address',
+        title: apartment.trim(),
+        name: apartment.trim(),
         address: addressData.address,
         lat: addressData.lat,
         lng: addressData.lng,
@@ -69,7 +70,7 @@ export default function ApartmentDetailsScreen() {
         comment: comment.trim(),
       });
 
-      showToast('Address saved successfully!', 'success');
+      showToast(t('auth.addressSaved'), 'success');
 
       if (addressData.isFirstAddress) {
         navigation.dispatch(
@@ -104,7 +105,7 @@ export default function ApartmentDetailsScreen() {
       }
     } catch (error) {
       console.error('Error saving address:', error);
-      showToast('Failed to save address. Please try again.', 'error');
+      showToast(t('auth.addressSaveError'), 'error');
     } finally {
       setIsSaving(false);
     }
@@ -148,7 +149,7 @@ export default function ApartmentDetailsScreen() {
             </View>
           )}
 
-          {/* Apartment Number (required) - FIRST for priority */}
+          {/* Apartment Number (required) */}
           <Text style={styles.label}>
             {t('auth.apartmentNumber')} <Text style={styles.required}>*</Text>
           </Text>
@@ -225,7 +226,7 @@ export default function ApartmentDetailsScreen() {
               style={styles.cta}
             >
               <Text style={[styles.ctaText, !canSubmit && styles.ctaTextDisabled]}>
-                {isSaving ? 'SAVING...' : 'SAVE ADDRESS'}
+                {isSaving ? t('common.saving') : t('auth.saveAddress')}
               </Text>
             </LinearGradient>
           </TouchableOpacity>

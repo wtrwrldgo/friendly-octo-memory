@@ -14,7 +14,7 @@ const STORAGE_KEYS = {
   AUTH_TOKEN: 'watergo_auth_token',
   REFRESH_TOKEN: 'watergo_refresh_token',
   USER_DATA: 'watergo_user_data',
-  LANGUAGE: 'watergo_language',
+  LANGUAGE: '@watergo_language',
 } as const;
 
 class StorageService {

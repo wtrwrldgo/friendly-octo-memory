@@ -24,8 +24,13 @@ class RealApiService {
     return await HttpService.post(API_ENDPOINTS.AUTH.SEND_CODE, { phone });
   }
 
-  async verifyCode(phone: string, code: string): Promise<{ token: string; user: User }> {
-    return await HttpService.post(API_ENDPOINTS.AUTH.VERIFY_CODE, { phone, code });
+  async verifyCode(phone: string, code: string): Promise<{ token: string; user: User; isNewUser: boolean }> {
+    const result = await HttpService.post<{ token: string; user: User; isNewUser?: boolean }>(API_ENDPOINTS.AUTH.VERIFY_CODE, { phone, code });
+    return {
+      token: result.token,
+      user: result.user,
+      isNewUser: result.isNewUser ?? false,
+    };
   }
 
   async refreshToken(refreshToken: string): Promise<{ token: string }> {
@@ -66,21 +71,53 @@ class RealApiService {
 
   // Firms
   async getFirms(): Promise<Firm[]> {
-    const firms = await HttpService.get<Firm[]>(API_ENDPOINTS.FIRMS.LIST);
-    // Map to local asset images
+    const firms: any[] = await HttpService.get<Firm[]>(API_ENDPOINTS.FIRMS.LIST);
+    // Map snake_case to camelCase and local asset images
     return firms.map(firm => ({
-      ...firm,
-      logo: getFirmLogo(firm.name) || firm.logo,
+      id: firm.id,
+      name: firm.name,
+      logo: getFirmLogo(firm.name) || firm.logoUrl || firm.logo_url || firm.logo || '',
+      homeBanner: firm.homeBannerUrl || firm.home_banner_url,
+      detailBanner: firm.detailBannerUrl || firm.detail_banner_url,
+      rating: parseFloat(firm.rating) || 5.0,
+      deliveryTime: firm.deliveryTime || firm.delivery_time || '30-45 min',
+      minOrder: parseInt(firm.minOrder || firm.min_order) || 0,
+      minOrderEnabled: firm.minOrderEnabled ?? firm.min_order_enabled ?? false,
+      deliveryFee: parseInt(firm.deliveryFee || firm.delivery_fee) || 0,
+      deliveryFeeEnabled: firm.deliveryFeeEnabled ?? firm.delivery_fee_enabled ?? false,
+      bottleDeposit: parseInt(firm.bottleDeposit || firm.bottle_deposit) || 5000,
+      bottleDepositEnabled: firm.bottleDepositEnabled ?? firm.bottle_deposit_enabled ?? false,
+      bottleDepositPrice: parseInt(firm.bottleDepositPrice || firm.bottle_deposit_price) || 15000,
+      scheduleDaysLimit: parseInt(firm.scheduleDaysLimit || firm.schedule_days_limit) || 7,
+      scheduleTimeInterval: parseInt(firm.scheduleTimeInterval || firm.schedule_time_interval) || 30,
+      location: firm.city || firm.location || 'Nukus',
+      phone: firm.phone,
     }));
   }
 
   async getFirmById(firmId: string): Promise<Firm> {
     const url = API_ENDPOINTS.FIRMS.DETAIL.replace(':id', firmId);
-    const firm = await HttpService.get<Firm>(url);
-    // Map to local asset image
+    const firm: any = await HttpService.get<Firm>(url);
+    // Map snake_case to camelCase and local asset images
     return {
-      ...firm,
-      logo: getFirmLogo(firm.name) || firm.logo,
+      id: firm.id,
+      name: firm.name,
+      logo: getFirmLogo(firm.name) || firm.logoUrl || firm.logo_url || firm.logo || '',
+      homeBanner: firm.homeBannerUrl || firm.home_banner_url,
+      detailBanner: firm.detailBannerUrl || firm.detail_banner_url,
+      rating: parseFloat(firm.rating) || 5.0,
+      deliveryTime: firm.deliveryTime || firm.delivery_time || '30-45 min',
+      minOrder: parseInt(firm.minOrder || firm.min_order) || 0,
+      minOrderEnabled: firm.minOrderEnabled ?? firm.min_order_enabled ?? false,
+      deliveryFee: parseInt(firm.deliveryFee || firm.delivery_fee) || 0,
+      deliveryFeeEnabled: firm.deliveryFeeEnabled ?? firm.delivery_fee_enabled ?? false,
+      bottleDeposit: parseInt(firm.bottleDeposit || firm.bottle_deposit) || 5000,
+      bottleDepositEnabled: firm.bottleDepositEnabled ?? firm.bottle_deposit_enabled ?? false,
+      bottleDepositPrice: parseInt(firm.bottleDepositPrice || firm.bottle_deposit_price) || 15000,
+      scheduleDaysLimit: parseInt(firm.scheduleDaysLimit || firm.schedule_days_limit) || 7,
+      scheduleTimeInterval: parseInt(firm.scheduleTimeInterval || firm.schedule_time_interval) || 30,
+      location: firm.city || firm.location || 'Nukus',
+      phone: firm.phone,
     };
   }
 
@@ -89,21 +126,31 @@ class RealApiService {
     const url = firmId
       ? `${API_ENDPOINTS.PRODUCTS.LIST}?firmId=${firmId}`
       : API_ENDPOINTS.PRODUCTS.LIST;
-    const products = await HttpService.get<Product[]>(url);
-    // Map to local asset images based on firm and volume
+    const products: any[] = await HttpService.get<Product[]>(url);
+    // Map to local asset images, parse price, and include translated names
     return products.map(product => ({
       ...product,
+      price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
       image: getProductImage(this.getFirmNameFromProduct(product), product.volume) || product.image,
+      name_en: product.name_en,
+      name_ru: product.name_ru,
+      name_uz: product.name_uz,
+      name_kaa: product.name_kaa,
     }));
   }
 
   async getProductById(productId: string): Promise<Product> {
     const url = API_ENDPOINTS.PRODUCTS.DETAIL.replace(':id', productId);
-    const product = await HttpService.get<Product>(url);
-    // Map to local asset image
+    const product: any = await HttpService.get<Product>(url);
+    // Map to local asset image, parse price, and include translated names
     return {
       ...product,
+      price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
       image: getProductImage(this.getFirmNameFromProduct(product), product.volume) || product.image,
+      name_en: product.name_en,
+      name_ru: product.name_ru,
+      name_uz: product.name_uz,
+      name_kaa: product.name_kaa,
     };
   }
 

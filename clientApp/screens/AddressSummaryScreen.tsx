@@ -7,7 +7,9 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import { useUser } from '../context/UserContext';
@@ -120,7 +122,7 @@ export default function AddressSummaryScreen() {
         comment: addressData.comment,
       });
 
-      showToast('Address saved successfully! ✓', 'success');
+      showToast(t('auth.addressSaved'), 'success');
 
       // If this is first address during signup, user will be redirected to MainNavigator
       // Otherwise, navigate back to ProfileTab
@@ -147,7 +149,7 @@ export default function AddressSummaryScreen() {
       }
     } catch (error) {
       console.error('Error saving address:', error);
-      showToast('Failed to save address. Please try again.', 'error');
+      showToast(t('auth.addressSaveError'), 'error');
       setIsSaving(false);
     }
   };
@@ -156,9 +158,9 @@ export default function AddressSummaryScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>No address data found</Text>
+          <Text style={styles.errorText}>{t('addressSummary.noData')}</Text>
           <Pressable onPress={() => navigation.goBack()} style={styles.errorButton}>
-            <Text style={styles.errorButtonText}>Go Back</Text>
+            <Text style={styles.errorButtonText}>{t('addressSummary.goBack')}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -171,7 +173,7 @@ export default function AddressSummaryScreen() {
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={10} style={styles.backButton}>
-            <Text style={styles.backArrow}>←</Text>
+            <Ionicons name={Platform.OS === 'ios' ? 'chevron-back' : 'arrow-back'} size={24} color="#1E293B" />
           </Pressable>
         </View>
 
@@ -244,7 +246,7 @@ export default function AddressSummaryScreen() {
           style={styles.editBtn}
           disabled={isSaving}
         >
-          <Text style={styles.editText}>Edit</Text>
+          <Text style={styles.editText}>{t('auth.edit')}</Text>
         </Pressable>
 
         <Pressable
@@ -255,7 +257,7 @@ export default function AddressSummaryScreen() {
           {isSaving ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.saveText}>Save Address</Text>
+            <Text style={styles.saveText}>{t('auth.saveAddress')}</Text>
           )}
         </Pressable>
       </View>

@@ -6,10 +6,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { MapPin, Sparkles, Rocket, Globe, Zap } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function FirmRegionsPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!user) {
@@ -74,18 +76,17 @@ export default function FirmRegionsPage() {
 
         {/* Title with Gradient */}
         <h1 className="text-5xl md:text-7xl font-black mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
-          Coming Soon
+          {t.regions.comingSoon}
         </h1>
 
         {/* Subtitle */}
         <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-8 font-medium">
-          Regions & Districts Management
+          {t.regions.title}
         </p>
 
         {/* Description */}
         <p className="text-lg text-gray-500 dark:text-gray-500 mb-12 max-w-xl mx-auto leading-relaxed">
-          We&apos;re building something amazing! Soon you&apos;ll be able to manage your service areas,
-          delivery zones, and coverage regions with powerful tools.
+          {t.regions.description}
         </p>
 
         {/* Feature Preview Cards */}
@@ -94,31 +95,31 @@ export default function FirmRegionsPage() {
             <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
               <Globe className="w-7 h-7 text-white" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Multi-Region Support</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Manage multiple cities and regions from one dashboard</p>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{t.regions.multiRegion}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t.regions.multiRegionDesc}</p>
           </div>
 
           <div className="group bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl p-6 rounded-3xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-500" style={{ animationDelay: "0.1s" }}>
             <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform">
               <Zap className="w-7 h-7 text-white" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Dynamic Pricing</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Set custom delivery fees for each district</p>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{t.regions.dynamicPricing}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t.regions.dynamicPricingDesc}</p>
           </div>
 
           <div className="group bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl p-6 rounded-3xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-500" style={{ animationDelay: "0.2s" }}>
             <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform">
               <Rocket className="w-7 h-7 text-white" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Smart Analytics</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Track performance across all your service areas</p>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{t.regions.smartAnalytics}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t.regions.smartAnalyticsDesc}</p>
           </div>
         </div>
 
         {/* Progress Indicator */}
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3">
-            <span className="font-medium">Development Progress</span>
+            <span className="font-medium">{t.regions.developmentProgress}</span>
             <span className="font-bold text-purple-600 dark:text-purple-400">75%</span>
           </div>
           <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -136,7 +137,7 @@ export default function FirmRegionsPage() {
           <button className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold text-lg rounded-2xl shadow-xl shadow-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/40 hover:scale-105 transition-all duration-300 overflow-hidden">
             <span className="relative z-10 flex items-center gap-3">
               <Sparkles className="w-5 h-5" />
-              Notify Me When Ready
+              {t.regions.notifyMe}
               <Rocket className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

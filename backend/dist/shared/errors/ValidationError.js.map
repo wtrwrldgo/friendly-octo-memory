@@ -1,0 +1,1 @@
+{"version":3,"file":"ValidationError.js","sourceRoot":"","sources":["../../../src/shared/errors/ValidationError.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,eAAe,CAAC;AAEzC,MAAM,OAAO,eAAgB,SAAQ,QAAQ;IAC3B,MAAM,CAA2B;IAEjD,YAAY,MAAgC;QAC1C,KAAK,CAAC,mBAAmB,EAAE,GAAG,EAAE,IAAI,EAAE,kBAAkB,CAAC,CAAC;QAC1D,IAAI,CAAC,MAAM,GAAG,MAAM,CAAC;IACvB,CAAC;CACF"}

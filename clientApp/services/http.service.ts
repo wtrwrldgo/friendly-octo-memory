@@ -45,13 +45,16 @@ class HttpService {
   }
 
   private setupInterceptors(): void {
-    // Request interceptor - Add auth token to headers
+    // Request interceptor - Add auth token and language to headers
     this.axiosInstance.interceptors.request.use(
       async (config) => {
         const token = await StorageService.getAuthToken();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
+        // Add Accept-Language header for translations
+        const language = await StorageService.getLanguage();
+        config.headers['Accept-Language'] = language || 'uz';
         return config;
       },
       (error) => {

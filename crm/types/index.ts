@@ -6,7 +6,6 @@ export type OrderStatus = "PENDING" | "ASSIGNED" | "ON_THE_WAY" | "DELIVERED" | 
 export type StaffRole = "OPERATOR" | "MANAGER" | "OWNER";
 export type AccountType = "PLATFORM_ADMIN" | "FIRM_OWNER";
 export type ClientType = "B2B" | "B2C" | "B2G";
-export type PaymentMethod = "CASH" | "CARD" | "OTHER";
 
 export interface Firm {
   id: string;
@@ -26,6 +25,8 @@ export interface Firm {
   phone?: string;
   email?: string;
   productsCount?: number;
+  bottleDepositEnabled?: boolean;
+  bottleDepositPrice?: number;
 }
 
 export interface Driver {
@@ -63,7 +64,6 @@ export interface Order {
   orderNumber?: number;
   assignedAt?: string;
   deliveredAt?: string;
-  paymentMethod?: PaymentMethod;
 }
 
 export interface Client {

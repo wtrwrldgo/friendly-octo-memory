@@ -7,10 +7,8 @@ import {
   TouchableOpacity,
   GestureResponderEvent,
 } from 'react-native';
-
 type DriverCardProps = {
   name: string;
-  firm: string;
   plateNumber: string;
   carBrand?: string;
   carColor?: string;
@@ -42,7 +40,6 @@ const getCarColorHex = (colorName: string): string => {
 
 export const DriverCard: React.FC<DriverCardProps> = ({
   name,
-  firm,
   plateNumber,
   carBrand,
   carColor,
@@ -59,16 +56,13 @@ export const DriverCard: React.FC<DriverCardProps> = ({
         />
       </View>
 
-      {/* Name + firm + plate */}
+      {/* Name + car info */}
       <View style={styles.infoBlock}>
         <Text style={styles.name} numberOfLines={1}>
           {name}
         </Text>
-        <Text style={styles.firm} numberOfLines={1}>
-          Courier - {firm}
-        </Text>
 
-        {/* Car info - color • brand • plate */}
+        {/* Car info - color • brand */}
         {(carBrand || carColor) && (
           <View style={styles.carInfoRow}>
             {carColor && (
@@ -78,11 +72,15 @@ export const DriverCard: React.FC<DriverCardProps> = ({
             )}
             {carColor && carBrand && <Text style={styles.carDot}>•</Text>}
             {carBrand && <Text style={styles.carBrand}>{carBrand}</Text>}
-            {plateNumber && (
-              <View style={styles.plateWrapper}>
-                <Text style={styles.plateText}>{plateNumber}</Text>
-              </View>
-            )}
+          </View>
+        )}
+
+        {/* Plate number - separate row */}
+        {plateNumber && (
+          <View style={styles.plateRow}>
+            <View style={styles.plateWrapper}>
+              <Text style={styles.plateText}>{plateNumber}</Text>
+            </View>
           </View>
         )}
       </View>
@@ -157,7 +155,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 4,
-    flexWrap: 'wrap',
+  },
+
+  plateRow: {
+    flexDirection: 'row',
+    marginTop: 6,
   },
 
   carBrand: {

@@ -297,6 +297,7 @@ export const translations = {
       clickToUpload: "Click to upload image",
       saving: "Saving...",
       deleteConfirm: "This action cannot be undone.",
+      translatedNames: "Translated Names",
     },
 
     // Staff
@@ -919,6 +920,7 @@ export const translations = {
       clickToUpload: "Нажмите для загрузки изображения",
       saving: "Сохранение...",
       deleteConfirm: "Это действие нельзя отменить.",
+      translatedNames: "Переводы названий",
     },
 
     // Staff
@@ -1541,6 +1543,7 @@ export const translations = {
       clickToUpload: "Rasm yuklash uchun bosing",
       saving: "Saqlanmoqda...",
       deleteConfirm: "Bu amalni bekor qilib bo'lmaydi.",
+      translatedNames: "Tarjima nomlari",
     },
 
     // Staff
@@ -2163,6 +2166,7 @@ export const translations = {
       clickToUpload: "Su'wret ju'klew ushin basın'",
       saving: "Saqlanmaqta...",
       deleteConfirm: "Bu ámildi biykar etip bolmaydı.",
+      translatedNames: "Awdarma atları",
     },
 
     // Staff

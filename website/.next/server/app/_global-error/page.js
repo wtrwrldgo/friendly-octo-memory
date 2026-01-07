@@ -1,0 +1,10 @@
+var R=require("../../chunks/ssr/[turbopack]_runtime.js")("server/app/_global-error/page.js")
+R.c("server/chunks/ssr/372f9_91294450._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__81f41340._.js")
+R.c("server/chunks/ssr/372f9_next_dist_b5ec96c0._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__eed762ff._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__726a44ef._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__af0e599a._.js")
+R.c("server/chunks/ssr/claudeCode_website__next-internal_server_app__global-error_page_actions_4bc3a6d1.js")
+R.m(85296)
+module.exports=R.m(85296).exports

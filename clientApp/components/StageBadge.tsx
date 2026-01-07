@@ -2,46 +2,49 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { OrderStage } from '../types';
 import { Colors, Spacing, FontSizes, BorderRadius } from '../constants/Colors';
+import { useLanguage } from '../context/LanguageContext';
 
 interface StageBadgeProps {
   stage: OrderStage;
   showIcon?: boolean;
 }
 
-const STAGE_CONFIG = {
-  [OrderStage.ORDER_PLACED]: {
-    label: 'Order Placed',
-    icon: '📝',
-    color: Colors.primary,
-  },
-  [OrderStage.IN_QUEUE]: {
-    label: 'In Queue',
-    icon: '⏳',
-    color: Colors.warning,
-  },
-  [OrderStage.COURIER_ON_THE_WAY]: {
-    label: 'On the Way',
-    icon: '🚗',
-    color: Colors.primary,
-  },
-  [OrderStage.COURIER_ARRIVED]: {
-    label: 'Courier Arrived',
-    icon: '🚪',
-    color: Colors.primary,
-  },
-  [OrderStage.DELIVERED]: {
-    label: 'Delivered',
-    icon: '✅',
-    color: Colors.success,
-  },
-  [OrderStage.CANCELLED]: {
-    label: 'Cancelled',
-    icon: '❌',
-    color: Colors.error,
-  },
-};
-
 export const StageBadge: React.FC<StageBadgeProps> = ({ stage, showIcon = true }) => {
+  const { t } = useLanguage();
+
+  const STAGE_CONFIG = {
+    [OrderStage.ORDER_PLACED]: {
+      label: t('orderTracking.orderPlaced') || 'Order Placed',
+      icon: '📝',
+      color: Colors.primary,
+    },
+    [OrderStage.IN_QUEUE]: {
+      label: t('orderTracking.inQueue') || 'In Queue',
+      icon: '⏳',
+      color: Colors.warning,
+    },
+    [OrderStage.COURIER_ON_THE_WAY]: {
+      label: t('orderTracking.onTheWay') || 'On the Way',
+      icon: '🚗',
+      color: Colors.primary,
+    },
+    [OrderStage.COURIER_ARRIVED]: {
+      label: t('orderTracking.courierArrived') || 'Courier Arrived',
+      icon: '🚪',
+      color: Colors.primary,
+    },
+    [OrderStage.DELIVERED]: {
+      label: t('orderTracking.delivered') || 'Delivered',
+      icon: '✅',
+      color: Colors.success,
+    },
+    [OrderStage.CANCELLED]: {
+      label: t('orderTracking.cancelled') || 'Cancelled',
+      icon: '❌',
+      color: Colors.error,
+    },
+  };
+
   const config = STAGE_CONFIG[stage] || STAGE_CONFIG[OrderStage.ORDER_PLACED];
 
   if (!config) {

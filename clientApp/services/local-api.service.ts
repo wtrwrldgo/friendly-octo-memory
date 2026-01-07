@@ -1,8 +1,7 @@
 /**
  * Local Backend API Service
  *
- * Connects to local PostgreSQL via Express backend.
- * Use this for development instead of Supabase.
+ * Connects to PostgreSQL via Express backend.
  */
 
 import StorageService from './storage.service';
@@ -17,18 +16,14 @@ import {
   Driver,
 } from '../types';
 
-// Local backend URL
-// For physical devices, use your computer's IP address
-const LOCAL_IP = '192.168.1.8';
+import { API_CONFIG } from '../config/api.config';
 
 const getBaseUrl = () => {
-  // Always use actual IP for physical devices
-  // This also works in emulators when on same network
-  return `http://${LOCAL_IP}:3001`;
+  return API_CONFIG.baseURL;
 };
 
 const BASE_URL = getBaseUrl();
-const API_URL = `${BASE_URL}/api`;
+const API_URL = BASE_URL;
 
 // Helper to convert relative image paths to local assets or full URLs
 // Prioritizes local bundled assets for offline APK support
@@ -41,7 +36,7 @@ const toLocalAssetOrUrl = (path: string | null | undefined): string | number | u
   const localAsset = mapServerPathToLocalAsset(cleanPath);
   if (localAsset) return localAsset;
 
-  // Fallback to network URL (only works on local network during development)
+  // Fallback to network URL
   return `${BASE_URL}${cleanPath}`;
 };
 
@@ -75,8 +70,12 @@ class LocalApiService {
   private async request(endpoint: string, options: RequestInit = {}, retry = true): Promise<any> {
     // Get access token for protected routes
     const token = await StorageService.getToken();
+    // Get current language for translations
+    const language = await StorageService.getLanguage();
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'Accept-Language': language || 'uz',
       ...(options.headers as Record<string, string>),
     };
 
@@ -167,14 +166,14 @@ class LocalApiService {
   // AUTHENTICATION
   // ============================================
 
-  async sendVerificationCode(phone: string): Promise<{ success: boolean; message: string }> {
+  async sendVerificationCode(phone: string): Promise<{ success: boolean; message: string; code?: string }> {
     return this.request('/auth/mobile/send-code', {
       method: 'POST',
       body: JSON.stringify({ phone }),
     });
   }
 
-  async verifyCode(phone: string, code: string): Promise<{ token: string; user: User }> {
+  async verifyCode(phone: string, code: string): Promise<{ token: string; user: User; isNewUser: boolean }> {
     const storedUser = await StorageService.getUser();
     const localName = storedUser?.name || 'User';
 
@@ -183,14 +182,14 @@ class LocalApiService {
       body: JSON.stringify({ phone, code, name: localName, role: 'client' }),
     });
 
-    // Backend returns { accessToken, refreshToken, user }
+    // Backend returns { accessToken, refreshToken, user, isNewUser }
     // Backend now returns role-specific name (ClientProfile.name for clients)
     await StorageService.setToken(result.accessToken);
     await StorageService.setRefreshToken(result.refreshToken);
     await StorageService.setUser(result.user);
 
-    // Return in expected format for compatibility
-    return { token: result.accessToken, user: result.user };
+    // Return in expected format for compatibility (including isNewUser flag)
+    return { token: result.accessToken, user: result.user, isNewUser: result.isNewUser };
   }
 
   async logout(): Promise<{ success: boolean }> {
@@ -316,6 +315,11 @@ class LocalApiService {
       deliveryTime: firm.deliveryTime || firm.delivery_time || '30-45 min',
       minOrder: parseInt(firm.minOrder || firm.min_order) || 0,
       deliveryFee: parseInt(firm.deliveryFee || firm.delivery_fee) || 0,
+      bottleDeposit: parseInt(firm.bottleDeposit || firm.bottle_deposit) || 5000,
+      bottleDepositEnabled: firm.bottleDepositEnabled ?? firm.bottle_deposit_enabled ?? false,
+      bottleDepositPrice: parseInt(firm.bottleDepositPrice || firm.bottle_deposit_price) || 15000,
+      scheduleDaysLimit: parseInt(firm.scheduleDaysLimit || firm.schedule_days_limit) || 7,
+      scheduleTimeInterval: parseInt(firm.scheduleTimeInterval || firm.schedule_time_interval) || 30,
       location: firm.city || firm.location || 'Nukus',
       phone: firm.phone,
     }));
@@ -333,6 +337,11 @@ class LocalApiService {
       deliveryTime: firm.deliveryTime || firm.delivery_time || '30-45 min',
       minOrder: parseInt(firm.minOrder || firm.min_order) || 0,
       deliveryFee: parseInt(firm.deliveryFee || firm.delivery_fee) || 0,
+      bottleDeposit: parseInt(firm.bottleDeposit || firm.bottle_deposit) || 5000,
+      bottleDepositEnabled: firm.bottleDepositEnabled ?? firm.bottle_deposit_enabled ?? false,
+      bottleDepositPrice: parseInt(firm.bottleDepositPrice || firm.bottle_deposit_price) || 15000,
+      scheduleDaysLimit: parseInt(firm.scheduleDaysLimit || firm.schedule_days_limit) || 7,
+      scheduleTimeInterval: parseInt(firm.scheduleTimeInterval || firm.schedule_time_interval) || 30,
       location: firm.city || firm.location || 'Nukus',
       phone: firm.phone,
     };
@@ -374,24 +383,56 @@ class LocalApiService {
       return 'cash';
     };
 
+    // Transform driver data to client format
+    const transformDriver = (d: any, firmName?: string) => {
+      if (!d) return undefined;
+      return {
+        id: d.id,
+        name: d.name || 'Driver',
+        phone: d.phone || '',
+        photo: d.photoUrl || '',
+        rating: d.rating || 5.0,
+        vehicleNumber: d.vehicleNumber || d.driverNumber || '',
+        carBrand: d.carBrand || '',
+        carColor: d.carColor || '',
+        company: firmName || 'WaterGo',
+      };
+    };
+
     return {
       ...order,
       // Map backend stage to client app stage
       stage: mapBackendStageToClient(order.stage),
       // Map backend payment method to client format
       paymentMethod: mapPaymentMethod(order.paymentMethod),
+      // Transform driver data
+      driver: transformDriver(order.driver, order.firm?.name),
       firm: order.firm ? {
         ...order.firm,
         logo: toLocalAssetOrUrl(order.firm.logoUrl || order.firm.logo),
       } : undefined,
-      items: order.items?.map((item: any) => ({
-        ...item,
-        product_image: toLocalAssetOrUrl(item.product_image || item.product_imageUrl),
-        product: item.product ? {
-          ...item.product,
-          image: toLocalAssetOrUrl(item.product.imageUrl || item.product.image),
-        } : undefined,
-      })) || [],
+      items: order.items?.map((item: any) => {
+        // Backend returns 'products' (plural) for the product relation
+        const productData = item.products || item.product;
+        return {
+          ...item,
+          product_image: toLocalAssetOrUrl(item.product_image || item.product_imageUrl),
+          product: productData ? {
+            id: item.product_id || productData.id,
+            name: productData.name || item.product_name,
+            price: item.price,
+            volume: productData.volume || '19L',
+            image: toLocalAssetOrUrl(productData.image_url || productData.imageUrl || productData.image),
+          } : {
+            // Fallback using item-level data
+            id: item.product_id,
+            name: item.product_name,
+            price: item.price,
+            volume: '19L',
+            image: undefined,
+          },
+        };
+      }) || [],
     };
   }
 

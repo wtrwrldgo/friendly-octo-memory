@@ -54,7 +54,7 @@ class MockApiService {
     const smsResult = await SmsService.sendVerificationCode(phone, code);
 
     if (!smsResult.success) {
-      // Expected in development: Twilio Edge Function not deployed yet
+      // SMS not sent - development mode
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('📱 DEVELOPMENT MODE - SMS NOT SENT');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -71,14 +71,14 @@ class MockApiService {
       };
     }
 
-    console.log(`✅ [TWILIO] SMS sent successfully to ${phone}`);
+    console.log(`✅ SMS sent successfully to ${phone}`);
     return {
       success: true,
       message: 'Verification code sent successfully',
     };
   }
 
-  async verifyCode(phone: string, code: string): Promise<{ token: string; user: User }> {
+  async verifyCode(phone: string, code: string): Promise<{ token: string; user: User; isNewUser: boolean }> {
     await delay(1000);
 
     // Check if code exists and is valid
@@ -107,9 +107,11 @@ class MockApiService {
       phone,
     };
 
+    // Mock always returns new user (in real app, backend determines this)
     return {
       token: `mock_token_${Date.now()}`,
       user,
+      isNewUser: true,
     };
   }
 

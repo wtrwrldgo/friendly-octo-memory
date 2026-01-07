@@ -54,7 +54,8 @@ export default function HouseDetailsScreen() {
 
     try {
       await addAddress({
-        title: addressData.address.split(',')[0] || 'My Address',
+        title: houseNumber.trim(),
+        name: houseNumber.trim(),
         address: addressData.address,
         lat: addressData.lat,
         lng: addressData.lng,
@@ -65,7 +66,7 @@ export default function HouseDetailsScreen() {
         comment: '',
       });
 
-      showToast('Address saved successfully!', 'success');
+      showToast(t('auth.addressSaved'), 'success');
 
       if (addressData.isFirstAddress) {
         navigation.dispatch(
@@ -100,7 +101,7 @@ export default function HouseDetailsScreen() {
       }
     } catch (error) {
       console.error('Error saving address:', error);
-      showToast('Failed to save address. Please try again.', 'error');
+      showToast(t('auth.addressSaveError'), 'error');
     } finally {
       setIsSaving(false);
     }
@@ -177,7 +178,7 @@ export default function HouseDetailsScreen() {
               style={styles.cta}
             >
               <Text style={[styles.ctaText, !canSubmit && styles.ctaTextDisabled]}>
-                {isSaving ? 'SAVING...' : 'SAVE ADDRESS'}
+                {isSaving ? t('common.saving') : t('auth.saveAddress')}
               </Text>
             </LinearGradient>
           </TouchableOpacity>

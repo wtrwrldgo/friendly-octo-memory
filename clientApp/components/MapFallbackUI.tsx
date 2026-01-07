@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useLanguage } from '../context/LanguageContext';
 
 interface MapFallbackUIProps {
   onAddressSelected: (address: string, lat?: number, lon?: number) => void;
@@ -19,8 +20,9 @@ interface MapFallbackUIProps {
 export const MapFallbackUI: React.FC<MapFallbackUIProps> = ({
   onAddressSelected,
   onRetry,
-  placeholder = 'Enter your address manually',
+  placeholder,
 }) => {
+  const { t } = useLanguage();
   const [address, setAddress] = useState('');
 
   const handleSubmit = () => {
@@ -38,9 +40,9 @@ export const MapFallbackUI: React.FC<MapFallbackUIProps> = ({
           <Ionicons name="map-outline" size={48} color="#3B82F6" />
         </View>
 
-        <Text style={styles.title}>Map Temporarily Unavailable</Text>
+        <Text style={styles.title}>{t('mapFallback.title')}</Text>
         <Text style={styles.subtitle}>
-          Don't worry! You can still continue by entering your address manually.
+          {t('mapFallback.subtitle')}
         </Text>
 
         {/* Mascot Image */}
@@ -53,14 +55,14 @@ export const MapFallbackUI: React.FC<MapFallbackUIProps> = ({
 
       {/* Manual Address Input */}
       <ScrollView style={styles.inputSection} keyboardShouldPersistTaps="handled">
-        <Text style={styles.inputLabel}>Enter Your Address</Text>
+        <Text style={styles.inputLabel}>{t('mapFallback.enterAddress')}</Text>
         <View style={styles.inputContainer}>
           <Ionicons name="location" size={20} color="#3B82F6" style={styles.inputIcon} />
           <TextInput
             style={styles.input}
             value={address}
             onChangeText={setAddress}
-            placeholder={placeholder}
+            placeholder={placeholder || t('mapFallback.placeholder')}
             placeholderTextColor="#8A8FA4"
             multiline
             numberOfLines={3}
@@ -70,7 +72,7 @@ export const MapFallbackUI: React.FC<MapFallbackUIProps> = ({
 
         {/* Helper Text */}
         <Text style={styles.helperText}>
-          Example: Street 123, Building 5, Floor 3, Apt 42, Nukus
+          {t('mapFallback.example')}
         </Text>
 
         {/* Action Buttons */}
@@ -78,7 +80,7 @@ export const MapFallbackUI: React.FC<MapFallbackUIProps> = ({
           {onRetry && (
             <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
               <Ionicons name="refresh" size={20} color="#3B82F6" />
-              <Text style={styles.retryButtonText}>Retry Map</Text>
+              <Text style={styles.retryButtonText}>{t('mapFallback.retryMap')}</Text>
             </TouchableOpacity>
           )}
 
@@ -90,7 +92,7 @@ export const MapFallbackUI: React.FC<MapFallbackUIProps> = ({
             onPress={handleSubmit}
             disabled={!address.trim()}
           >
-            <Text style={styles.submitButtonText}>Continue</Text>
+            <Text style={styles.submitButtonText}>{t('common.continue')}</Text>
             <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -99,7 +101,7 @@ export const MapFallbackUI: React.FC<MapFallbackUIProps> = ({
         <View style={styles.infoBox}>
           <Ionicons name="information-circle" size={20} color="#3B82F6" />
           <Text style={styles.infoText}>
-            You can update your exact location later in settings
+            {t('mapFallback.infoText')}
           </Text>
         </View>
       </ScrollView>

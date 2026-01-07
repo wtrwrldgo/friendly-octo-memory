@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView, TouchableOpacity, Alert, ScrollView, Keyboard, TouchableWithoutFeedback
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../types';
@@ -30,7 +31,12 @@ const AuthPhoneScreen: React.FC<AuthPhoneScreenProps> = ({ navigation }) => {
     setLoading(true);
     try {
       const fullPhone = `+998${phone.replace(/\s/g, '')}`;
-      await sendVerificationCode(fullPhone);
+      const response = await sendVerificationCode(fullPhone);
+
+      if (response.code) {
+        Alert.alert('Dev Code', `Your verification code is: ${response.code}`);
+      }
+
       navigation.navigate('VerifyCode', { phone: fullPhone });
     } catch (error: any) {
       // Check if error is because phone number doesn't exist
@@ -40,7 +46,7 @@ const AuthPhoneScreen: React.FC<AuthPhoneScreenProps> = ({ navigation }) => {
         Alert.alert(
           t('auth.phoneNotFound') || 'Phone Not Found',
           t('auth.phoneNotFoundMessage') || 'This phone number is not registered. Please sign up first.',
-          [{ text: 'OK' }]
+          [{ text: t('common.ok') || 'OK' }]
         );
       } else {
         showError(errorMessage || t('errors.sendCodeFailed') || 'Failed to send verification code');
@@ -63,7 +69,7 @@ const AuthPhoneScreen: React.FC<AuthPhoneScreenProps> = ({ navigation }) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <Ionicons name={Platform.OS === 'ios' ? 'chevron-back' : 'arrow-back'} size={24} color="#1E293B" />
         </TouchableOpacity>
 
         <KeyboardAvoidingView

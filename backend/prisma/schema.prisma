@@ -1,0 +1,356 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model addresses {
+  id         String   @id @default(uuid())
+  user_id    String
+  title      String
+  address    String
+  latitude   Decimal  @db.Decimal(10, 8)
+  longitude  Decimal  @db.Decimal(11, 8)
+  is_default Boolean  @default(false)
+  created_at DateTime @default(now())
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  orders     orders[]
+}
+
+model branches {
+  id              String    @id @default(uuid())
+  firm_id         String
+  city_id         String
+  name            String
+  is_headquarters Boolean   @default(false)
+  delivery_fee    Int       @default(0)
+  eta_minutes     Int       @default(30)
+  is_active       Boolean   @default(true)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  cities          cities    @relation(fields: [city_id], references: [id])
+  firms           firms     @relation(fields: [firm_id], references: [id], onDelete: Cascade)
+  drivers         drivers[]
+  orders          orders[]
+  staff           staff[]
+}
+
+model cities {
+  id                 String     @id @default(uuid())
+  region_id          String
+  name               String
+  is_region_capital  Boolean    @default(false)
+  is_country_capital Boolean    @default(false)
+  is_active          Boolean    @default(true)
+  branches           branches[]
+  regions            regions    @relation(fields: [region_id], references: [id])
+}
+
+model client_profiles {
+  id         String   @id @default(uuid())
+  user_id    String   @unique
+  name       String
+  email      String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model drivers {
+  id             String    @id @default(uuid())
+  user_id        String?   @unique
+  firm_id        String?
+  branch_id      String?
+  vehicle_number String?
+  car_brand      String?
+  car_color      String?
+  district       String?
+  is_available   Boolean   @default(false)
+  rating         Decimal   @default(5.0) @db.Decimal(2, 1)
+  current_lat    Decimal?  @db.Decimal(10, 8)
+  current_lng    Decimal?  @db.Decimal(11, 8)
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+  name           String?
+  phone          String?
+  driver_number  String?
+  branches       branches? @relation(fields: [branch_id], references: [id])
+  firms          firms?    @relation(fields: [firm_id], references: [id], onDelete: Cascade)
+  users          users?    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  orders         orders[]
+}
+
+model firms {
+  id                       String             @id @default(uuid())
+  name                     String
+  logo_url                 String?
+  rating                   Decimal            @default(5.0) @db.Decimal(2, 1)
+  delivery_time            String?
+  min_order                Int                @default(0)
+  min_order_enabled        Boolean            @default(false)
+  delivery_fee             Int                @default(0)
+  delivery_fee_enabled     Boolean            @default(false)
+  delivery_fee_type        DeliveryFeeType    @default(FIXED)
+  delivery_fee_percent     Int                @default(0)
+  is_active                Boolean            @default(true)
+  created_at               DateTime           @default(now())
+  updated_at               DateTime           @updatedAt
+  address                  String?
+  description              String?
+  detail_banner_url        String?
+  home_banner_url          String?
+  approved_at              DateTime?
+  city                     String?
+  is_visible_in_client_app Boolean            @default(false)
+  rejection_reason         String?
+  status                   FirmStatus         @default(DRAFT)
+  submitted_at             DateTime?
+  subscription_status      SubscriptionStatus @default(TRIAL_ACTIVE)
+  trial_end_at             DateTime?
+  trial_start_at           DateTime           @default(now())
+  bottle_deposit           Int                @default(5000)
+  bottle_deposit_enabled   Boolean            @default(false)
+  bottle_deposit_price     Int                @default(15000)
+  schedule_days_limit      Int                @default(7)
+  schedule_time_interval   Int                @default(30)
+  branches                 branches[]
+  drivers                  drivers[]
+  orders                   orders[]
+  products                 products[]
+  staff                    staff[]
+}
+
+model order_items {
+  id           String   @id @default(uuid())
+  order_id     String
+  product_id   String
+  product_name String
+  quantity     Int
+  price        Int
+  orders       orders   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  products     products @relation(fields: [product_id], references: [id])
+
+  @@index([order_id])
+}
+
+model orders {
+  id                 String        @id @default(uuid())
+  order_number       String        @unique
+  user_id            String
+  firm_id            String
+  branch_id          String?
+  driver_id          String?
+  address_id         String
+  stage              OrderStage    @default(PENDING)
+  total              Int
+  delivery_fee       Int           @default(0)
+  payment_method     PaymentMethod @default(CASH)
+  estimated_delivery DateTime?
+  delivered_at       DateTime?
+  cancelled_at       DateTime?
+  cancel_reason      String?
+  notes              String?
+  created_at         DateTime      @default(now())
+  updated_at         DateTime      @updatedAt
+  order_items        order_items[]
+  addresses          addresses     @relation(fields: [address_id], references: [id])
+  branches           branches?     @relation(fields: [branch_id], references: [id])
+  drivers            drivers?      @relation(fields: [driver_id], references: [id])
+  firms              firms         @relation(fields: [firm_id], references: [id])
+  users              users         @relation(fields: [user_id], references: [id])
+
+  @@index([driver_id])
+  @@index([firm_id])
+  @@index([stage])
+  @@index([user_id])
+}
+
+model otp_codes {
+  id         String   @id @default(uuid())
+  phone      String
+  code       String
+  expires_at DateTime
+  verified   Boolean  @default(false)
+  attempts   Int      @default(0)
+  created_at DateTime @default(now())
+
+  @@index([phone])
+}
+
+model payments {
+  id             String        @id @default(uuid())
+  firm_id        String
+  type           PaymentType   @default(SUBSCRIPTION)
+  provider       String
+  transaction_id String?       @unique
+  external_id    String?
+  amount         Int
+  status         PaymentStatus @default(PENDING)
+  plan_id        String?
+  billing_period String?
+  metadata       Json?
+  error_message  String?
+  completed_at   DateTime?
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+
+  @@index([firm_id])
+  @@index([status])
+  @@index([transaction_id])
+}
+
+model products {
+  id          String        @id @default(uuid())
+  firm_id     String
+  name        String
+  name_en     String?
+  name_ru     String?
+  name_uz     String?
+  name_kaa    String?
+  description String?
+  price       Int
+  image_url   String?
+  volume      String?
+  in_stock    Boolean       @default(true)
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  order_items order_items[]
+  firms       firms         @relation(fields: [firm_id], references: [id], onDelete: Cascade)
+}
+
+model push_tokens {
+  id         String   @id @default(uuid())
+  user_id    String
+  token      String   @unique
+  platform   String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
+model refresh_tokens {
+  id         String   @id @default(uuid())
+  user_id    String
+  token      String   @unique
+  device_id  String?
+  expires_at DateTime
+  created_at DateTime @default(now())
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([user_id])
+}
+
+model regions {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique
+  is_active Boolean  @default(true)
+  cities    cities[]
+}
+
+model staff {
+  id            String    @id @default(uuid())
+  firm_id       String?
+  branch_id     String?
+  name          String
+  phone         String
+  email         String    @unique
+  password_hash String
+  role          StaffRole @default(OPERATOR)
+  permissions   Json      @default("[]")
+  is_active     Boolean   @default(true)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  branches      branches? @relation(fields: [branch_id], references: [id])
+  firms         firms?    @relation(fields: [firm_id], references: [id], onDelete: Cascade)
+}
+
+model users {
+  id              String           @id @default(uuid())
+  phone           String           @unique
+  role            UserRole         @default(CLIENT)
+  language        String           @default("uz")
+  is_active       Boolean          @default(true)
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+  addresses       addresses[]
+  client_profiles client_profiles?
+  drivers         drivers?
+  orders          orders[]
+  push_tokens     push_tokens[]
+  refresh_tokens  refresh_tokens[]
+}
+
+enum DeliveryFeeType {
+  FIXED
+  PERCENTAGE
+}
+
+enum FirmStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  SUSPENDED
+}
+
+enum OrderStage {
+  PENDING
+  IN_QUEUE
+  CONFIRMED
+  PREPARING
+  READY
+  PICKED_UP
+  DELIVERING
+  DELIVERED
+  CANCELLED
+  FAILED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  PAYME
+  CLICK
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum PaymentType {
+  SUBSCRIPTION
+  ORDER
+}
+
+enum StaffRole {
+  OWNER
+  MANAGER
+  OPERATOR
+  WATERGO_ADMIN
+}
+
+enum SubscriptionStatus {
+  TRIAL_ACTIVE
+  TRIAL_EXPIRED
+  BASIC
+  PRO
+  MAX
+}
+
+enum UserRole {
+  WATERGO_ADMIN
+  FIRM_OWNER
+  STAFF
+  DRIVER
+  CLIENT
+}
