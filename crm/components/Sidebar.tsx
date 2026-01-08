@@ -36,6 +36,16 @@ import { useLanguage, languages } from "@/contexts/LanguageContext";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || "http://45.92.173.121";
 
+// Helper to convert HTTP backend URLs to HTTPS proxy URLs
+const getProxyUrl = (url: string | null | undefined): string | null => {
+  if (!url) return null;
+  if (url.startsWith("data:")) return url;
+  if (url.startsWith("http://45.92.173.121")) {
+    return `/api/imageproxy?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+};
+
 export default function Sidebar() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
@@ -47,11 +57,13 @@ export default function Sidebar() {
   const [mounted, setMounted] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 
-  // Get full logo URL (handle relative paths)
+  // Get full logo URL (handle relative paths and proxy HTTP URLs)
   const getLogoUrl = () => {
     if (!firm?.logoUrl) return null;
-    if (firm.logoUrl.startsWith('http')) return firm.logoUrl;
-    return `${BACKEND_URL}${firm.logoUrl}`;
+    if (firm.logoUrl.startsWith('http')) {
+      return getProxyUrl(firm.logoUrl);
+    }
+    return getProxyUrl(`${BACKEND_URL}${firm.logoUrl}`);
   };
   const logoUrl = getLogoUrl();
 
