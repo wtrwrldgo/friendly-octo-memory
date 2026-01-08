@@ -17,20 +17,21 @@ export const FirmCard: React.FC<FirmCardProps> = ({ firm, onPress }) => {
   // Get local asset by firm name (works in APK)
   const localLogo = getFirmLogo(firm.name);
 
-  // Get image source - prioritize local assets for APK
+  // Get image source - prioritize remote homeBanner URLs over local assets
   const getImageSource = () => {
     if (imageError) return null;
-    // Try local asset first (most reliable for APK)
-    if (localLogo) return localLogo;
-    // Fallback to homeBanner if it's a bundled asset
-    if (firm.homeBanner && typeof firm.homeBanner === 'number') return firm.homeBanner;
-    // Fallback to logo if it's a bundled asset
-    if (firm.logo && typeof firm.logo === 'number') return firm.logo;
-    // Fallback to URL (for remote images) - check both field names
-    if (firm.homeBanner && typeof firm.homeBanner === 'string') return { uri: firm.homeBanner };
+    // First priority: remote homeBanner URL (uploaded by firm owner)
     if (firm.homeBannerUrl && typeof firm.homeBannerUrl === 'string') return { uri: firm.homeBannerUrl };
-    if (firm.logo && typeof firm.logo === 'string') return { uri: firm.logo };
+    if (firm.homeBanner && typeof firm.homeBanner === 'string') return { uri: firm.homeBanner };
+    // Second priority: bundled homeBanner asset
+    if (firm.homeBanner && typeof firm.homeBanner === 'number') return firm.homeBanner;
+    // Third priority: local logo asset
+    if (localLogo) return localLogo;
+    // Fourth priority: remote logo URL
     if (firm.logoUrl && typeof firm.logoUrl === 'string') return { uri: firm.logoUrl };
+    if (firm.logo && typeof firm.logo === 'string') return { uri: firm.logo };
+    // Fifth priority: bundled logo asset
+    if (firm.logo && typeof firm.logo === 'number') return firm.logo;
     return null;
   };
 
