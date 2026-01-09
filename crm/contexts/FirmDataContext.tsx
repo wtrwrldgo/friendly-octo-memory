@@ -5,7 +5,6 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "./AuthContext";
-import { db } from "@/lib/db";
 import { Order, Driver, Client } from "@/types";
 
 interface FirmDataContextType {
@@ -53,7 +52,7 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
 
   const firmId = user?.firmId || firm?.id;
 
-  // Fetch orders with caching
+  // Fetch orders with caching - uses local API route to avoid mixed content issues
   const fetchOrders = useCallback(async (force = false) => {
     if (!firmId) return;
 
@@ -65,31 +64,33 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setOrdersLoading(true);
-      const { data, error } = await db.getOrders(firmId);
-      if (error) {
-        console.error("Failed to fetch orders:", error);
+      // Use local API route instead of direct HTTP call to backend
+      const response = await fetch(`/api/orders?firmId=${firmId}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("Failed to fetch orders:", result.error);
         return;
       }
 
-      if (data) {
-        const mappedOrders = data.map((o: any) => ({
-          id: o.id,
-          orderNumber: o.orderNumber || o.order_number || `WG-${new Date().getFullYear()}-000000`,
-          firmId: o.firmId || o.firm_id,
-          firmName: o.firm?.name || o.firmName || firm?.name || "",
-          clientName: o.user?.name || o.clientName || o.users?.name || o.user?.phone || "Unknown Client",
-          address: o.address?.address || o.addressText || o.address || "",
-          status: o.stage || o.status || "PENDING",
-          paymentMethod: o.paymentMethod || o.payment_method || "CASH",
-          total: o.total || 0,
-          createdAt: o.createdAt || o.created_at,
-          driverId: o.driverId || o.driver?.id || null,
-          driverName: o.driver?.user?.name || o.driver?.name || o.driverName || null,
-          driverPhone: o.driver?.user?.phone || o.driver?.phone || o.driverPhone || null,
-        }));
-        setOrders(mappedOrders);
-        ordersLastFetch.current = now;
-      }
+      const data = result.data || [];
+      const mappedOrders = data.map((o: any) => ({
+        id: o.id,
+        orderNumber: o.orderNumber || o.order_number || `WG-${new Date().getFullYear()}-000000`,
+        firmId: o.firmId || o.firm_id,
+        firmName: o.firm?.name || o.firmName || firm?.name || "",
+        clientName: o.user?.name || o.clientName || o.users?.name || o.user?.phone || "Unknown Client",
+        address: o.address?.address || o.addressText || o.address || "",
+        status: o.stage || o.status || "PENDING",
+        paymentMethod: o.paymentMethod || o.payment_method || "CASH",
+        total: o.total || 0,
+        createdAt: o.createdAt || o.created_at,
+        driverId: o.driverId || o.driver?.id || null,
+        driverName: o.driver?.user?.name || o.driver?.name || o.driverName || null,
+        driverPhone: o.driver?.user?.phone || o.driver?.phone || o.driverPhone || null,
+      }));
+      setOrders(mappedOrders);
+      ordersLastFetch.current = now;
     } catch (error) {
       console.error("Error fetching orders:", error);
     } finally {
@@ -97,7 +98,7 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
     }
   }, [firmId, firm?.name, orders.length]);
 
-  // Fetch drivers with caching
+  // Fetch drivers with caching - uses local API route to avoid mixed content issues
   const fetchDrivers = useCallback(async (force = false) => {
     if (!firmId) return;
 
@@ -108,26 +109,28 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setDriversLoading(true);
-      const { data, error } = await db.getDrivers(firmId);
-      if (error) {
-        console.error("Failed to fetch drivers:", error);
+      // Use local API route instead of direct HTTP call to backend
+      const response = await fetch(`/api/drivers?firmId=${firmId}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("Failed to fetch drivers:", result.error);
         return;
       }
 
-      if (data) {
-        const mappedDrivers: Driver[] = data.map((d: any) => ({
-          id: d.id,
-          name: d.name,
-          phone: d.phone,
-          firmId: d.firmId,
-          firmName: firm?.name || "My Firm",
-          status: (d.isAvailable ? "ONLINE" : "OFFLINE") as "ONLINE" | "OFFLINE" | "DELIVERING",
-          carPlate: d.vehicleNumber || d.carPlate || "N/A",
-          city: d.city || "N/A",
-        }));
-        setDrivers(mappedDrivers);
-        driversLastFetch.current = now;
-      }
+      const data = result.drivers || [];
+      const mappedDrivers: Driver[] = data.map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        phone: d.phone,
+        firmId: d.firmId || d.firm_id,
+        firmName: firm?.name || "My Firm",
+        status: (d.isAvailable || d.is_available ? "ONLINE" : "OFFLINE") as "ONLINE" | "OFFLINE" | "DELIVERING",
+        carPlate: d.vehicleNumber || d.vehicle_number || d.carPlate || "N/A",
+        city: d.city || d.district || "N/A",
+      }));
+      setDrivers(mappedDrivers);
+      driversLastFetch.current = now;
     } catch (error) {
       console.error("Failed to fetch drivers:", error);
     } finally {
@@ -135,7 +138,7 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
     }
   }, [firmId, firm?.name, drivers.length]);
 
-  // Fetch clients with caching
+  // Fetch clients with caching - uses local API route to avoid mixed content issues
   const fetchClients = useCallback(async (force = false) => {
     if (!firmId) return;
 
@@ -146,29 +149,33 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setClientsLoading(true);
-      const { data, error } = await db.getClients(firmId);
-      if (error) {
-        console.error("Failed to fetch clients:", error);
+      // Use local API route instead of direct HTTP call to backend
+      const response = await fetch(`/api/clients?firmId=${firmId}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("Failed to fetch clients:", result.error);
         return;
       }
 
-      if (data) {
-        const mappedClients: Client[] = data.map((c: any) => ({
-          id: c.id,
-          name: c.name,
-          phone: c.phone,
-          email: c.email || "",
-          address: c.addresses?.[0]?.address || "No address",
-          firmId: firmId,
-          type: "B2C" as const,
-          totalOrders: c._count?.orders || c.ordersCount || 0,
-          revenue: c.totalSpent || 0,
-          createdAt: c.createdAt,
-          lastOrderAt: c.lastOrderAt || c.createdAt,
-        }));
-        setClients(mappedClients);
-        clientsLastFetch.current = now;
-      }
+      const data = result.clients || [];
+      const mappedClients: Client[] = data.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        phone: c.phone,
+        email: c.email || "",
+        // Backend returns 'address' directly (from service), fallback to addresses array
+        address: c.address || c.addresses?.[0]?.address || "No address",
+        firmId: firmId,
+        type: "B2C" as const,
+        // Backend returns 'totalOrders' and 'revenue' directly
+        totalOrders: c.totalOrders || c._count?.orders || c.ordersCount || 0,
+        revenue: c.revenue || c.totalSpent || 0,
+        createdAt: c.createdAt,
+        lastOrderAt: c.lastOrderAt || c.createdAt,
+      }));
+      setClients(mappedClients);
+      clientsLastFetch.current = now;
     } catch (error) {
       console.error("Failed to fetch clients:", error);
     } finally {
