@@ -159,6 +159,7 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data = result.clients || [];
+      console.log('[FirmDataContext] Raw clients data:', JSON.stringify(data[0], null, 2));
       const mappedClients: Client[] = data.map((c: any) => ({
         id: c.id,
         name: c.name,
