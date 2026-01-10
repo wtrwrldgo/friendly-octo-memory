@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// API URL includes /api suffix, e.g., http://localhost:3001/api
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+// API URL includes /api suffix
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://45.92.173.121/api";
 // Base URL without /api suffix for static files
 const BASE_URL = API_URL.replace(/\/api$/, "");
 

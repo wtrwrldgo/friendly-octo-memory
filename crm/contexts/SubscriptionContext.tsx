@@ -25,7 +25,7 @@ interface SubscriptionContextType {
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
-const BACKEND_URL = "http://localhost:3001";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || "http://45.92.173.121";
 const WATERGO_FIRM_ID = "00000000-0000-0000-0000-000000000000";
 const TRIAL_DAYS = 30;
 

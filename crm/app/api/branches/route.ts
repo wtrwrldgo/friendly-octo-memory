@@ -4,8 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-const USE_LOCAL_BACKEND = process.env.NEXT_PUBLIC_USE_LOCAL_BACKEND === 'true' || process.env.USE_LOCAL_BACKEND === 'true';
-const LOCAL_API_URL = process.env.NEXT_PUBLIC_LOCAL_API_URL || process.env.LOCAL_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://45.92.173.121/api';
 
 // GET branches for a firm
 export async function GET(request: NextRequest) {
@@ -20,19 +19,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (USE_LOCAL_BACKEND) {
-      const response = await fetch(`${LOCAL_API_URL}/branches/firm/${firmId}`);
-      const result = await response.json();
+    const response = await fetch(`${API_URL}/branches/firm/${firmId}`);
+    const result = await response.json();
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Failed to fetch branches');
-      }
-
-      return NextResponse.json({ branches: result.data || [] }, { status: 200 });
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Failed to fetch branches');
     }
 
-    // For Supabase, would need to query branches table
-    return NextResponse.json({ branches: [] }, { status: 200 });
+    return NextResponse.json({ branches: result.data || [] }, { status: 200 });
   } catch (error: any) {
     console.error('Error fetching branches:', error);
     return NextResponse.json(

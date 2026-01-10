@@ -27,7 +27,7 @@ import {
 import { Firm, FirmStatus } from "@/types";
 import SuccessModal from "./SuccessModal";
 
-const BACKEND_URL = "http://localhost:3001";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || "http://45.92.173.121";
 
 interface FirmModalProps {
   isOpen: boolean;

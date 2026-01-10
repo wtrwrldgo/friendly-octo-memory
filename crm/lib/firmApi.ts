@@ -1,10 +1,7 @@
 // file: lib/firmApi.ts
 // Branch-aware API calls for firm CRM pages
 
-const USE_LOCAL_BACKEND = process.env.NEXT_PUBLIC_USE_LOCAL_BACKEND === 'true';
-const API_URL = USE_LOCAL_BACKEND
-  ? (process.env.NEXT_PUBLIC_LOCAL_API_URL || "http://localhost:3001/api")
-  : (process.env.NEXT_PUBLIC_API_URL || "https://api.watergo.uz");
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://45.92.173.121/api";
 
 async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${endpoint}`, {

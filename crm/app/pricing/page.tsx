@@ -11,9 +11,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 // WaterGo logo URL from backend static files
-const WATERGO_LOGO_URL = process.env.NEXT_PUBLIC_LOCAL_API_URL
-  ? `${process.env.NEXT_PUBLIC_LOCAL_API_URL.replace('/api', '')}/static/firms/watergo-logo.png`
-  : "http://localhost:3001/static/firms/watergo-logo.png";
+const WATERGO_LOGO_URL = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL.replace('/api', '')}/static/firms/watergo-logo.png`
+  : "http://45.92.173.121/static/firms/watergo-logo.png";
 
 const PLANS = [
   {

@@ -17,7 +17,7 @@ import {
 import { Firm, FirmStatus } from "@/types";
 import StatusBadge from "./StatusBadge";
 
-const BACKEND_URL = "http://localhost:3001";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || "http://45.92.173.121";
 
 // Helper to get full logo URL
 function getFullLogoUrl(logoUrl: string | null | undefined): string | null {
