@@ -694,7 +694,7 @@ const CartScreen: React.FC = () => {
 
       await setCurrentOrder(order);
       addToHistory(order);
-      clearCart();
+      await clearCart();
       navigation.navigate('OrderTracking', { orderId: order.id });
     } catch (error: any) {
       showError(error.message || t('cart.orderError'));

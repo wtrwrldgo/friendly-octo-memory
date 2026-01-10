@@ -99,6 +99,14 @@ export const driversService = {
         if (!existing)
             return null;
         const driverId = existing.id;
+        // If phone is being updated, also update the linked user's phone
+        // This is required for the auth system to find the user by phone
+        if (data.phone && existing.user_id && data.phone !== existing.users?.phone) {
+            await prisma.users.update({
+                where: { id: existing.user_id },
+                data: { phone: data.phone },
+            });
+        }
         // Update driver fields (name and phone are now stored in Driver model)
         const updated = await prisma.drivers.update({
             where: { id: driverId },

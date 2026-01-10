@@ -11,7 +11,7 @@ interface CartContextType {
   removeFromCart: (productId: string) => void;
   incrementQuantity: (productId: string) => void;
   decrementQuantity: (productId: string) => void;
-  clearCart: () => void;
+  clearCart: () => Promise<void>;
   getItemQuantity: (productId: string) => number;
   // Active order blocking
   activeOrderPopupVisible: boolean;
@@ -179,12 +179,19 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   };
 
-  const clearCart = () => {
-    setCart({
+  const clearCart = async () => {
+    const emptyCart: Cart = {
       items: [],
       total: 0,
       firm: null,
-    });
+    };
+    setCart(emptyCart);
+    // Immediately persist to storage to prevent race conditions
+    try {
+      await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(emptyCart));
+    } catch (error) {
+      console.error('[CartContext] Failed to clear cart in storage:', error);
+    }
   };
 
   const getItemQuantity = (productId: string): number => {

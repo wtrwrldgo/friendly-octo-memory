@@ -57,27 +57,37 @@ export const clientsService = {
                 // Include orders from THIS firm only (for stats)
                 orders: {
                     where: orderFilter,
-                    select: {
-                        id: true,
-                        order_number: true,
-                        total: true,
-                        delivery_fee: true,
-                        stage: true,
-                        created_at: true,
-                        branch_id: true,
-                    },
                     orderBy: { created_at: 'desc' },
+                    include: {
+                        addresses: { select: { address: true } },
+                    },
                 },
             },
             orderBy: { created_at: 'desc' },
         });
         // Transform to response format with firm-specific stats
         return clients.map((client) => {
-            const totalOrders = client.orders.length;
-            const revenue = client.orders.reduce((sum, order) => sum + Number(order.total), 0);
-            const lastOrder = client.orders[0];
+            // Only count non-cancelled orders
+            const activeOrders = client.orders.filter((o) => o.stage !== 'CANCELLED');
+            const deliveredOrders = client.orders.filter((o) => o.stage === 'DELIVERED');
+            const totalOrders = activeOrders.length;
+            // Revenue only from delivered orders
+            const revenue = deliveredOrders.reduce((sum, order) => sum + Number(order.total), 0);
+            const lastOrder = activeOrders[0];
             const lastOrderAt = lastOrder ? lastOrder.created_at : null;
-            const address = client.addresses[0]?.address || null;
+            // Get address from the most recent order's delivery address, fallback to user's saved address
+            const address = lastOrder?.addresses?.address || client.addresses[0]?.address || null;
+            console.log('[ClientsService] Client data:', {
+                id: client.id,
+                name: client.client_profiles?.name,
+                ordersCount: client.orders.length,
+                activeOrdersCount: activeOrders.length,
+                deliveredCount: deliveredOrders.length,
+                totalOrders,
+                revenue,
+                address,
+                orderStages: client.orders.map((o) => o.stage),
+            });
             return {
                 id: client.id,
                 name: client.client_profiles?.name || 'User',

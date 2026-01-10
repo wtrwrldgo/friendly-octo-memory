@@ -36,10 +36,10 @@ export async function GET(
   }
 }
 
-// PATCH update driver (status, location, etc.)
-export async function PATCH(
+// Helper function for updating driver
+async function updateDriverHandler(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  id: string
 ) {
   try {
     const body = await request.json();
@@ -60,7 +60,7 @@ export async function PATCH(
     if (body.is_available !== undefined) updates.is_available = body.is_available;
 
     const authToken = getAuthToken();
-    const { data: driver, error } = await db.updateDriver(params.id, updates, { authToken: authToken || undefined });
+    const { data: driver, error } = await db.updateDriver(id, updates, { authToken: authToken || undefined });
 
     if (error) throw error;
 
@@ -72,6 +72,22 @@ export async function PATCH(
       { status: 500 }
     );
   }
+}
+
+// PATCH update driver (status, location, etc.)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  return updateDriverHandler(request, params.id);
+}
+
+// PUT update driver (full update from CRM)
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  return updateDriverHandler(request, params.id);
 }
 
 // DELETE driver

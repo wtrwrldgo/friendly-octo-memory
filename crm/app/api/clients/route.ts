@@ -21,7 +21,16 @@ export async function GET(request: NextRequest) {
 
     const { data: clients, error } = await db.getClients(firmId || undefined, branchId, canAccessAllBranches, { authToken });
 
-    console.log('[CRM API /api/clients] Response:', { clientCount: clients?.length, error: error?.message });
+    console.log('[CRM API /api/clients] Response:', {
+      clientCount: clients?.length,
+      error: error?.message,
+      firstClient: clients?.[0] ? {
+        name: clients[0].name,
+        totalOrders: clients[0].totalOrders,
+        revenue: clients[0].revenue,
+        address: clients[0].address,
+      } : null
+    });
 
     if (error) throw error;
 

@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import { Firm } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { Colors, BorderRadius, CardShadow } from '../constants/Colors';
 import { getFirmLogo } from '../utils/imageMapping';
+
+// Blurhash placeholder for loading state
+const PLACEHOLDER_BLURHASH = '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7teleport';
 
 interface FirmCardProps {
   firm: Firm;
@@ -42,12 +46,26 @@ export const FirmCard: React.FC<FirmCardProps> = ({ firm, onPress }) => {
       {/* Brand Banner */}
       <View style={styles.banner}>
         {imageSource ? (
-          <Image
-            source={imageSource}
-            style={styles.bannerImage}
-            resizeMode="cover"
-            onError={() => setImageError(true)}
-          />
+          typeof imageSource === 'object' && 'uri' in imageSource ? (
+            // Remote image - use ExpoImage with caching
+            <ExpoImage
+              source={imageSource.uri}
+              style={styles.bannerImage}
+              contentFit="cover"
+              cachePolicy="disk"
+              placeholder={PLACEHOLDER_BLURHASH}
+              transition={200}
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            // Local bundled asset - use regular Image
+            <Image
+              source={imageSource}
+              style={styles.bannerImage}
+              resizeMode="cover"
+              onError={() => setImageError(true)}
+            />
+          )
         ) : (
           <View style={[styles.bannerImage, styles.bannerPlaceholder]}>
             <Text style={styles.bannerPlaceholderText}>{firm.name?.[0] ?? 'W'}</Text>

@@ -193,17 +193,32 @@ class AuthMobileService {
                 },
             });
         }
-        else if (loginRole === 'client' && !user.client_profiles) {
-            // Existing user logging in as client but has no ClientProfile
-            // This handles the case where a driver account exists but no client profile
-            await prisma.client_profiles.create({
-                data: {
-                    user_id: user.id,
-                    name: name || 'User',
-                    updated_at: new Date(),
-                },
-            });
-            // Refresh user with the new profile
+        else if (loginRole === 'client') {
+            // Existing user logging in as client
+            // Ensure they have CLIENT role and ClientProfile
+            const updates = {};
+            // Update role to CLIENT if not already
+            if (user.role !== UserRole.CLIENT) {
+                updates.role = UserRole.CLIENT;
+            }
+            // Create ClientProfile if needed
+            if (!user.client_profiles) {
+                await prisma.client_profiles.create({
+                    data: {
+                        user_id: user.id,
+                        name: name || 'User',
+                        updated_at: new Date(),
+                    },
+                });
+            }
+            // Apply role update if needed
+            if (Object.keys(updates).length > 0) {
+                await prisma.users.update({
+                    where: { id: user.id },
+                    data: updates,
+                });
+            }
+            // Refresh user with the updated data
             user = await prisma.users.findUnique({
                 where: { phone },
                 include: {

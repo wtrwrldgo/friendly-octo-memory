@@ -5,6 +5,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useFirmData } from "@/contexts/FirmDataContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/contexts/ToastContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import PageHeader from "@/components/PageHeader";
@@ -23,6 +24,7 @@ export default function FirmDriversPage() {
   const { user, firm, loading: authLoading } = useAuth();
   const { drivers, driversLoading, fetchDrivers } = useFirmData();
   const router = useRouter();
+  const toast = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,6 +32,7 @@ export default function FirmDriversPage() {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
+    driverNumber: "",
     carPlate: "",
     carBrand: "",
     carColor: "",
@@ -79,6 +82,7 @@ export default function FirmDriversPage() {
     setFormData({
       name: "",
       phone: "",
+      driverNumber: "",
       carPlate: "",
       carBrand: "",
       carColor: "",
@@ -93,6 +97,7 @@ export default function FirmDriversPage() {
     setFormData({
       name: driver.name,
       phone: driver.phone,
+      driverNumber: (driver as any).driverNumber || (driver as any).driver_number || "",
       carPlate: driver.carPlate,
       carBrand: (driver as any).carBrand || "",
       carColor: (driver as any).carColor || "",
@@ -106,63 +111,80 @@ export default function FirmDriversPage() {
     e.preventDefault();
     try {
       if (editingDriver) {
-        const { error } = await db.updateDriver(editingDriver.id, {
-          name: formData.name,
-          phone: formData.phone,
-          car_plate: formData.carPlate,
-          car_brand: formData.carBrand,
-          car_color: formData.carColor,
-          city: formData.city,
+        // Update existing driver via local API route
+        const response = await fetch(`/api/drivers/${editingDriver.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            phone: formData.phone,
+            carPlate: formData.carPlate,
+            carBrand: formData.carBrand,
+            carColor: formData.carColor,
+            city: formData.city,
+          }),
         });
-        if (error) {
-          console.error("Failed to update driver:", error);
-          alert("Failed to update driver. Please try again.");
+        const data = await response.json();
+        if (!response.ok) {
+          console.error("Failed to update driver:", data.error);
+          toast.error(data.error || "Не удалось обновить водителя");
           return;
         }
+        toast.success("Водитель успешно обновлен");
       } else {
+        // Create new driver via local API route
         const firmId = user?.firmId || firm?.id;
         if (!firmId) {
-          alert("No firm ID found. Please try again.");
+          toast.error("Не найден ID фирмы");
           return;
         }
-        const { error } = await db.createDriver({
-          firmId,
-          name: formData.name,
-          phone: formData.phone,
-          car_plate: formData.carPlate,
-          car_brand: formData.carBrand,
-          car_color: formData.carColor,
-          city: formData.city,
+        const response = await fetch('/api/drivers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firmId,
+            name: formData.name,
+            phone: formData.phone,
+            driverNumber: formData.driverNumber || undefined,
+            carPlate: formData.carPlate,
+            carBrand: formData.carBrand,
+            carColor: formData.carColor,
+            city: formData.city,
+          }),
         });
-        if (error) {
-          console.error("Failed to create driver:", error);
-          alert("Failed to create driver. Please try again.");
+        const data = await response.json();
+        if (!response.ok) {
+          console.error("Failed to create driver:", data.error);
+          toast.error(data.error || "Не удалось создать водителя");
           return;
         }
+        toast.success("Водитель успешно создан");
       }
       setIsModalOpen(false);
       // Refresh cache
       fetchDrivers(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save driver:", error);
-      alert("Failed to save driver. Please try again.");
+      toast.error(error.message || "Не удалось сохранить водителя");
     }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm(t.drivers.deleteConfirm)) {
       try {
-        const { error } = await db.deleteDriver(id);
-        if (error) {
-          console.error("Failed to delete driver:", error);
-          alert("Failed to delete driver. Please try again.");
+        const response = await fetch(`/api/drivers/${id}`, { method: 'DELETE' });
+        const data = await response.json();
+        if (!response.ok) {
+          console.error("Failed to delete driver:", data.error);
+          toast.error(data.error || "Не удалось удалить водителя");
           return;
         }
+        toast.success("Водитель успешно удален");
         // Refresh cache
         fetchDrivers(true);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to delete driver:", error);
-        alert("Failed to delete driver. Please try again.");
+        toast.error(error.message || "Не удалось удалить водителя");
       }
     }
   };
@@ -501,6 +523,19 @@ export default function FirmDriversPage() {
               placeholder="+998 XX XXX XX XX"
               className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
               required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              № водителя
+            </label>
+            <input
+              type="text"
+              value={formData.driverNumber}
+              onChange={(e) => setFormData({ ...formData, driverNumber: e.target.value })}
+              placeholder="001"
+              className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
             />
           </div>
 

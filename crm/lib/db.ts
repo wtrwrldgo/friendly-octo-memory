@@ -17,7 +17,8 @@ export interface DbRequestOptions {
 // For server-side, the API routes read from cookies and pass via options
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('authToken');
+  // Check both possible keys for compatibility
+  return localStorage.getItem('auth_token') || localStorage.getItem('authToken');
 }
 
 // Local API helper - accepts optional authToken for server-side use
@@ -34,12 +35,22 @@ async function localRequest<T>(endpoint: string, options: RequestInit = {}, auth
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${LOCAL_API_URL}${endpoint}`, {
+    const url = `${LOCAL_API_URL}${endpoint}`;
+    console.log('[db.ts] Fetching:', url);
+
+    const response = await fetch(url, {
       ...options,
       headers,
     });
 
     const result = await response.json();
+
+    console.log('[db.ts] Response for', endpoint, ':', {
+      ok: response.ok,
+      success: result.success,
+      dataLength: result.data?.length,
+      firstItem: result.data?.[0] ? JSON.stringify(result.data[0]).substring(0, 200) : null
+    });
 
     if (!response.ok || !result.success) {
       return { data: null, error: new Error(result.error?.message || result.message || 'Request failed') };

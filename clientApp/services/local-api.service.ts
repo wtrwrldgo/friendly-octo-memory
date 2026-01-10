@@ -84,12 +84,25 @@ class LocalApiService {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    let response: Response;
+    let data: any;
 
-    const data = await response.json();
+    try {
+      response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers,
+      });
+    } catch (networkError: any) {
+      console.error('[LocalAPI] Network error:', networkError);
+      throw new Error(networkError.message || 'Network error. Please check your connection.');
+    }
+
+    try {
+      data = await response.json();
+    } catch (jsonError: any) {
+      console.error('[LocalAPI] JSON parse error:', jsonError, 'Status:', response.status);
+      throw new Error('Server returned invalid response. Please try again.');
+    }
 
     // Handle 401 Unauthorized - try to refresh token
     if (response.status === 401 && retry) {
@@ -104,7 +117,9 @@ class LocalApiService {
     }
 
     if (!response.ok || !data.success) {
-      throw new Error(data.message || 'Request failed');
+      // Backend error response has message in data.error.message
+      const errorMessage = data.error?.message || data.message || 'Request failed';
+      throw new Error(errorMessage);
     }
 
     return data.data;
@@ -399,18 +414,39 @@ class LocalApiService {
       };
     };
 
+    // Backend returns 'firms' (plural from Prisma), client expects 'firm' (singular)
+    const firmData = order.firm || order.firms;
+    // Backend returns 'drivers' (plural from Prisma), client expects 'driver' (singular)
+    const driverData = order.driver || order.drivers;
+    // Backend returns 'addresses' (plural from Prisma), client might expect 'address'
+    const addressData = order.address || order.addresses;
+
+    // Create firm object with fallback to prevent crashes
+    const transformedFirm = firmData ? {
+      id: firmData.id,
+      name: firmData.name || 'Unknown Firm',
+      logo: toLocalAssetOrUrl(firmData.logoUrl || firmData.logo_url || firmData.logo) || '',
+      phone: firmData.phone,
+    } : {
+      id: order.firm_id || '',
+      name: 'Unknown Firm',
+      logo: '',
+    };
+
     return {
       ...order,
+      // Map snake_case to camelCase for key fields
+      orderNumber: order.order_number || order.orderNumber,
       // Map backend stage to client app stage
       stage: mapBackendStageToClient(order.stage),
       // Map backend payment method to client format
-      paymentMethod: mapPaymentMethod(order.paymentMethod),
+      paymentMethod: mapPaymentMethod(order.payment_method || order.paymentMethod),
       // Transform driver data
-      driver: transformDriver(order.driver, order.firm?.name),
-      firm: order.firm ? {
-        ...order.firm,
-        logo: toLocalAssetOrUrl(order.firm.logoUrl || order.firm.logo),
-      } : undefined,
+      driver: transformDriver(driverData, transformedFirm.name),
+      // Use transformed firm
+      firm: transformedFirm,
+      // Include address data
+      address: addressData,
       items: order.items?.map((item: any) => {
         // Backend returns 'products' (plural) for the product relation
         const productData = item.products || item.product;
@@ -445,17 +481,32 @@ class LocalApiService {
     paymentMethod?: 'cash' | 'card';
   }): Promise<Order> {
     const user = await StorageService.getUser();
-    if (!user) throw new Error('User not found');
+    console.log('[LocalAPI] createOrder - user from storage:', user);
+    console.log('[LocalAPI] createOrder - orderData:', orderData);
+
+    if (!user) {
+      console.error('[LocalAPI] createOrder - No user found in storage');
+      throw new Error('User not found. Please log in again.');
+    }
+
+    if (!user.id) {
+      console.error('[LocalAPI] createOrder - User has no ID:', user);
+      throw new Error('User session invalid. Please log in again.');
+    }
+
+    const requestBody = {
+      ...orderData,
+      userId: user.id,
+      preferredDeliveryTime: orderData.preferredDeliveryTime || null,
+      paymentMethod: (orderData.paymentMethod || 'cash').toUpperCase(),
+    };
+    console.log('[LocalAPI] createOrder - request body:', requestBody);
 
     const order = await this.request('/orders', {
       method: 'POST',
-      body: JSON.stringify({
-        ...orderData,
-        userId: user.id,
-        preferredDeliveryTime: orderData.preferredDeliveryTime || null,
-        paymentMethod: (orderData.paymentMethod || 'cash').toUpperCase(),
-      }),
+      body: JSON.stringify(requestBody),
     });
+    console.log('[LocalAPI] createOrder - order created:', order);
     return this.transformOrder(order);
   }
 
