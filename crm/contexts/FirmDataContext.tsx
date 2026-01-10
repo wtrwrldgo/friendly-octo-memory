@@ -159,22 +159,29 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data = result.clients || [];
-      console.log('[FirmDataContext] Raw clients data:', JSON.stringify(data[0], null, 2));
-      const mappedClients: Client[] = data.map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        phone: c.phone,
-        email: c.email || "",
-        // Backend returns 'address' directly (from service), fallback to addresses array
-        address: c.address || c.addresses?.[0]?.address || "No address",
-        firmId: firmId,
-        type: "B2C" as const,
-        // Backend returns 'totalOrders' and 'revenue' directly
-        totalOrders: c.totalOrders || c._count?.orders || c.ordersCount || 0,
-        revenue: c.revenue || c.totalSpent || 0,
-        createdAt: c.createdAt,
-        lastOrderAt: c.lastOrderAt || c.createdAt,
-      }));
+      console.log('[FirmDataContext] Raw clients data:', data);
+      const mappedClients: Client[] = data.map((c: any) => {
+        // Use nullish coalescing to handle 0 values correctly
+        const totalOrders = c.totalOrders ?? c._count?.orders ?? c.ordersCount ?? 0;
+        const revenue = c.revenue ?? c.totalSpent ?? 0;
+        const address = c.address ?? c.addresses?.[0]?.address ?? "No address";
+
+        console.log('[FirmDataContext] Mapped client:', c.name, { totalOrders, revenue, address });
+
+        return {
+          id: c.id,
+          name: c.name,
+          phone: c.phone,
+          email: c.email || "",
+          address,
+          firmId: firmId,
+          type: "B2C" as const,
+          totalOrders: Number(totalOrders),
+          revenue: Number(revenue),
+          createdAt: c.createdAt,
+          lastOrderAt: c.lastOrderAt || c.createdAt,
+        };
+      });
       setClients(mappedClients);
       clientsLastFetch.current = now;
     } catch (error) {
