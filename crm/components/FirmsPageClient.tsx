@@ -146,9 +146,7 @@ export default function FirmsPageClient() {
 
     try {
       const authToken = localStorage.getItem("auth_token");
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || "http://45.92.173.121";
-
-      const response = await fetch(`${API_URL}/api/firms/${firm.id}`, {
+      const response = await fetch(`/api/firms/${firm.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -184,9 +182,7 @@ export default function FirmsPageClient() {
 
     try {
       const authToken = localStorage.getItem("auth_token");
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || "http://45.92.173.121";
-
-      const response = await fetch(`${API_URL}/api/firms/${firm.id}`, {
+      const response = await fetch(`/api/firms/${firm.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

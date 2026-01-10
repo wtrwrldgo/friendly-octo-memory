@@ -27,13 +27,14 @@ interface FirmSubscription {
   logoUrl?: string | null;
 }
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || "http://45.92.173.121";
-
-// Helper to get full logo URL
+// Helper to get logo URL through image proxy (avoids mixed content issues)
 function getFullLogoUrl(logoUrl: string | null | undefined): string | null {
   if (!logoUrl) return null;
-  if (logoUrl.startsWith('http')) return logoUrl;
-  return `${BACKEND_URL}${logoUrl}`;
+  if (logoUrl.startsWith('http')) {
+    return `/api/imageproxy?url=${encodeURIComponent(logoUrl)}`;
+  }
+  const fullUrl = `http://45.92.173.121${logoUrl}`;
+  return `/api/imageproxy?url=${encodeURIComponent(fullUrl)}`;
 }
 
 export default function BillingPage() {
@@ -49,8 +50,8 @@ export default function BillingPage() {
       setLoading(true);
       setError(null);
 
-      // Fetch real firms from backend
-      const response = await fetch(`${BACKEND_URL}/api/firms`);
+      // Fetch firms via CRM API route (avoids mixed content issues)
+      const response = await fetch(`/api/firms`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch firms");

@@ -1,10 +1,9 @@
 // file: lib/firmApi.ts
 // Branch-aware API calls for firm CRM pages
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://45.92.173.121/api";
+// Uses relative URLs to go through CRM's API routes (avoids Mixed Content issues)
 
 async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${endpoint}`, {
+  const res = await fetch(`/api${endpoint}`, {
     headers: {
       "Content-Type": "application/json",
       ...options?.headers,

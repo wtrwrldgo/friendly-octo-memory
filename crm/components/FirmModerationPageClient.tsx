@@ -17,13 +17,14 @@ import {
 import { Firm, FirmStatus } from "@/types";
 import StatusBadge from "./StatusBadge";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || "http://45.92.173.121";
-
-// Helper to get full logo URL
+// Helper to get logo URL through image proxy (avoids mixed content issues)
 function getFullLogoUrl(logoUrl: string | null | undefined): string | null {
   if (!logoUrl) return null;
-  if (logoUrl.startsWith('http')) return logoUrl;
-  return `${BACKEND_URL}${logoUrl}`;
+  if (logoUrl.startsWith('http')) {
+    return `/api/imageproxy?url=${encodeURIComponent(logoUrl)}`;
+  }
+  const fullUrl = `http://45.92.173.121${logoUrl}`;
+  return `/api/imageproxy?url=${encodeURIComponent(fullUrl)}`;
 }
 
 type FilterTab = "ALL" | "PENDING_REVIEW" | "ACTIVE" | "DRAFT" | "SUSPENDED";
@@ -102,7 +103,7 @@ export default function FirmModerationPageClient() {
     setError("");
     try {
       const token = localStorage.getItem("auth_token");
-      const response = await fetch(`${BACKEND_URL}/api/firms`, {
+      const response = await fetch(`/api/firms`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -131,7 +132,7 @@ export default function FirmModerationPageClient() {
     setSuccess("");
     try {
       const token = localStorage.getItem("auth_token");
-      const response = await fetch(`${BACKEND_URL}/api/firms/${firm.id}/approve`, {
+      const response = await fetch(`/api/firms/${firm.id}/approve`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -160,7 +161,7 @@ export default function FirmModerationPageClient() {
     setSuccess("");
     try {
       const token = localStorage.getItem("auth_token");
-      const response = await fetch(`${BACKEND_URL}/api/firms/${firm.id}/reject`, {
+      const response = await fetch(`/api/firms/${firm.id}/reject`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -189,7 +190,7 @@ export default function FirmModerationPageClient() {
     setSuccess("");
     try {
       const token = localStorage.getItem("auth_token");
-      const response = await fetch(`${BACKEND_URL}/api/firms/${firm.id}/suspend`, {
+      const response = await fetch(`/api/firms/${firm.id}/suspend`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -216,7 +217,7 @@ export default function FirmModerationPageClient() {
     setSuccess("");
     try {
       const token = localStorage.getItem("auth_token");
-      const response = await fetch(`${BACKEND_URL}/api/firms/${firm.id}/reactivate`, {
+      const response = await fetch(`/api/firms/${firm.id}/reactivate`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,

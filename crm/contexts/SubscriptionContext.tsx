@@ -25,7 +25,6 @@ interface SubscriptionContextType {
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || "http://45.92.173.121";
 const WATERGO_FIRM_ID = "00000000-0000-0000-0000-000000000000";
 const TRIAL_DAYS = 30;
 
@@ -60,8 +59,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       setLoading(true);
       setError(null);
 
-      // Fetch firm details to get createdAt date
-      const response = await fetch(`${BACKEND_URL}/api/firms/${profile.firmId}`);
+      // Fetch firm details to get createdAt date (use CRM API route as proxy)
+      const response = await fetch(`/api/firms/${profile.firmId}`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch firm details");

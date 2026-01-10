@@ -27,7 +27,7 @@ import {
 import { Firm, FirmStatus } from "@/types";
 import SuccessModal from "./SuccessModal";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || "http://45.92.173.121";
+// All API calls use relative URLs to go through CRM API routes
 
 interface FirmModalProps {
   isOpen: boolean;
@@ -175,7 +175,7 @@ export default function FirmModal({
       formDataUpload.append("image", logoFile);
 
       const token = localStorage.getItem("auth_token");
-      const response = await fetch(`${BACKEND_URL}/api/upload/admin/firm-logo`, {
+      const response = await fetch(`/api/upload/firm-logo`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -239,7 +239,7 @@ export default function FirmModal({
           throw new Error("Owner name, phone, email, and password are required");
         }
 
-        const firmResponse = await fetch(`${BACKEND_URL}/api/firms`, {
+        const firmResponse = await fetch(`/api/firms`, {
           method: "POST",
           headers,
           body: JSON.stringify({
