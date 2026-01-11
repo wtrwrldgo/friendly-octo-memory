@@ -74,6 +74,8 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data = result.data || [];
+      console.log('[FirmDataContext] Raw orders data:', data);
+      console.log('[FirmDataContext] First order addresses:', data[0]?.addresses);
       const mappedOrders = data.map((o: any) => ({
         id: o.id,
         orderNumber: o.orderNumber || o.order_number || `WG-${new Date().getFullYear()}-000000`,
@@ -89,6 +91,7 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
         driverName: o.driver?.user?.name || o.driver?.name || o.driverName || null,
         driverPhone: o.driver?.user?.phone || o.driver?.phone || o.driverPhone || null,
       }));
+      console.log('[FirmDataContext] Mapped orders:', mappedOrders.map((o: any) => ({ id: o.id, address: o.address })));
       setOrders(mappedOrders);
       ordersLastFetch.current = now;
     } catch (error) {
