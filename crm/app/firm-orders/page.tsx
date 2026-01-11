@@ -437,7 +437,7 @@ export default function FirmOrdersPage() {
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 max-w-[200px] truncate flex items-center gap-1">
                               <MapPin className="w-3 h-3" />
-                              {order.address || 'NO_ADDRESS_v2'}
+                              {order.address || '-'}
                             </p>
                           </div>
                         </td>

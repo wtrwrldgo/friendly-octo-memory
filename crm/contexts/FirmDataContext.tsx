@@ -80,8 +80,9 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data = result.data || [];
-      console.log('[FirmDataContext] Raw orders data:', data);
-      console.log('[FirmDataContext] First order addresses:', data[0]?.addresses);
+      console.log('[FirmDataContext] Raw orders data:', JSON.stringify(data, null, 2));
+      console.log('[FirmDataContext] First order FULL:', JSON.stringify(data[0], null, 2));
+      console.log('[FirmDataContext] First order keys:', data[0] ? Object.keys(data[0]) : 'no data');
       const mappedOrders = data.map((o: any) => ({
         id: o.id,
         orderNumber: o.orderNumber || o.order_number || `WG-${new Date().getFullYear()}-000000`,
