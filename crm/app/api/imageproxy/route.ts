@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 // Proxy images from HTTP backend to serve via HTTPS (v2)
 export async function GET(request: NextRequest) {
   try {
