@@ -49,6 +49,7 @@ export default function FirmOrdersPage() {
   const loading = ordersLoading;
 
   useEffect(() => {
+    console.log('[FirmOrdersPage] useEffect running, authLoading:', authLoading, 'user:', !!user, 'isWatergoAdmin:', isWatergoAdmin);
     if (authLoading) return;
 
     if (!user) {
@@ -62,6 +63,7 @@ export default function FirmOrdersPage() {
     }
 
     // Will use cached data if available
+    console.log('[FirmOrdersPage] About to call fetchOrders');
     fetchOrders();
   }, [user, router, authLoading, isWatergoAdmin, fetchOrders]);
 
