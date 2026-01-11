@@ -80,7 +80,7 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
         firmId: o.firmId || o.firm_id,
         firmName: o.firm?.name || o.firmName || firm?.name || "",
         clientName: o.user?.name || o.clientName || o.users?.name || o.user?.phone || "Unknown Client",
-        address: o.address?.address || o.addressText || o.address || "",
+        address: o.addresses?.address || o.address?.address || o.addressText || o.address || "",
         status: o.stage || o.status || "PENDING",
         paymentMethod: o.paymentMethod || o.payment_method || "CASH",
         total: o.total || 0,
