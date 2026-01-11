@@ -59,8 +59,10 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
     const now = Date.now();
     // Skip if data is fresh and not forcing refresh
     if (!force && orders.length > 0 && now - ordersLastFetch.current < CACHE_TTL) {
+      console.log('[FirmDataContext] Using cached orders, age:', Math.round((now - ordersLastFetch.current) / 1000), 'seconds');
       return;
     }
+    console.log('[FirmDataContext] Fetching fresh orders...');
 
     try {
       setOrdersLoading(true);
