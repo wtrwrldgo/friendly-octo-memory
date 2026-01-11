@@ -54,7 +54,11 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch orders with caching - uses local API route to avoid mixed content issues
   const fetchOrders = useCallback(async (force = false) => {
-    if (!firmId) return;
+    console.log('[FirmDataContext] fetchOrders called, firmId:', firmId, 'force:', force);
+    if (!firmId) {
+      console.log('[FirmDataContext] No firmId, skipping orders fetch');
+      return;
+    }
 
     const now = Date.now();
     // Skip if data is fresh and not forcing refresh
