@@ -49,7 +49,7 @@ export default function FirmOrdersPage() {
   const loading = ordersLoading;
 
   useEffect(() => {
-    console.log('[FirmOrdersPage] useEffect running, authLoading:', authLoading, 'user:', !!user, 'isWatergoAdmin:', isWatergoAdmin);
+    console.log('[FirmOrdersPage] ===== PAGE LOAD v3 =====', { authLoading, hasUser: !!user, isWatergoAdmin });
     if (authLoading) return;
 
     if (!user) {
