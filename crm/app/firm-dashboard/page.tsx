@@ -133,7 +133,10 @@ export default function FirmDashboardPage() {
         {/* Stats Cards - Modern Gradient Design */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
           {/* Revenue Card */}
-          <div className="group relative overflow-hidden p-5 md:p-6 rounded-3xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/40 transition-all duration-500 hover:-translate-y-1">
+          <div
+            className="group relative overflow-hidden p-5 md:p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
+            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #0d9488 100%)' }}
+          >
             <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-all"></div>
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative">
@@ -154,7 +157,10 @@ export default function FirmDashboardPage() {
           </div>
 
           {/* Orders Card */}
-          <div className="group relative overflow-hidden p-5 md:p-6 rounded-3xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 transition-all duration-500 hover:-translate-y-1">
+          <div
+            className="group relative overflow-hidden p-5 md:p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
+            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #4f46e5 100%)' }}
+          >
             <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-all"></div>
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative">
@@ -175,7 +181,10 @@ export default function FirmDashboardPage() {
           </div>
 
           {/* Drivers Card */}
-          <div className="group relative overflow-hidden p-5 md:p-6 rounded-3xl bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600 shadow-xl shadow-orange-500/25 hover:shadow-2xl hover:shadow-orange-500/40 transition-all duration-500 hover:-translate-y-1">
+          <div
+            className="group relative overflow-hidden p-5 md:p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
+            style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #d97706 100%)' }}
+          >
             <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-all"></div>
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative">
@@ -194,7 +203,10 @@ export default function FirmDashboardPage() {
           </div>
 
           {/* Clients Card */}
-          <div className="group relative overflow-hidden p-5 md:p-6 rounded-3xl bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 shadow-xl shadow-purple-500/25 hover:shadow-2xl hover:shadow-purple-500/40 transition-all duration-500 hover:-translate-y-1">
+          <div
+            className="group relative overflow-hidden p-5 md:p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
+            style={{ background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 50%, #4f46e5 100%)' }}
+          >
             <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-all"></div>
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative">
