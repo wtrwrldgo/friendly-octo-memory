@@ -618,6 +618,7 @@ export const translations = {
       copyright: "© 2025 WaterGo. All rights reserved.",
       invalidCredentials: "Invalid email or password",
       loginFailed: "Login failed. Please try again.",
+      secureLogin: "Secure Login",
     },
 
     // Messages
@@ -1249,6 +1250,7 @@ export const translations = {
       copyright: "© 2025 WaterGo. Все права защищены.",
       invalidCredentials: "Неверный email или пароль",
       loginFailed: "Ошибка входа. Попробуйте снова.",
+      secureLogin: "Безопасный вход",
     },
 
     // Messages
@@ -1880,6 +1882,7 @@ export const translations = {
       copyright: "© 2025 WaterGo. Barcha huquqlar himoyalangan.",
       invalidCredentials: "Email yoki parol noto'g'ri",
       loginFailed: "Kirishda xatolik. Qayta urinib ko'ring.",
+      secureLogin: "Xavfsiz kirish",
     },
 
     // Messages
@@ -2511,6 +2514,7 @@ export const translations = {
       copyright: "© 2025 WaterGo. Barlıq huqıqlar qorǵalǵan.",
       invalidCredentials: "Email yamasa parol durıs emes",
       loginFailed: "Kiriwde qátelik. Qaytalap kóriń.",
+      secureLogin: "Qáwipsiz kiriw",
     },
 
     // Messages
