@@ -80,25 +80,49 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data = result.data || [];
-      console.log('[FirmDataContext] Raw orders data:', JSON.stringify(data, null, 2));
-      console.log('[FirmDataContext] First order FULL:', JSON.stringify(data[0], null, 2));
-      console.log('[FirmDataContext] First order keys:', data[0] ? Object.keys(data[0]) : 'no data');
-      const mappedOrders = data.map((o: any) => ({
-        id: o.id,
-        orderNumber: o.orderNumber || o.order_number || `WG-${new Date().getFullYear()}-000000`,
-        firmId: o.firmId || o.firm_id,
-        firmName: o.firm?.name || o.firmName || firm?.name || "",
-        clientName: o.user?.name || o.clientName || o.users?.name || o.user?.phone || "Unknown Client",
-        address: o.addresses?.address || o.address?.address || o.addressText || o.address || "",
-        status: o.stage || o.status || "PENDING",
-        paymentMethod: o.paymentMethod || o.payment_method || "CASH",
-        total: o.total || 0,
-        createdAt: o.createdAt || o.created_at,
-        driverId: o.driverId || o.driver?.id || null,
-        driverName: o.driver?.user?.name || o.driver?.name || o.driverName || null,
-        driverPhone: o.driver?.user?.phone || o.driver?.phone || o.driverPhone || null,
-      }));
-      console.log('[FirmDataContext] Mapped orders:', mappedOrders.map((o: any) => ({ id: o.id, address: o.address })));
+      // Debug: show raw address data structure for first order
+      if (data[0]) {
+        const firstOrder = data[0];
+        console.log('[FirmDataContext] First order address debug:', {
+          hasAddresses: 'addresses' in firstOrder,
+          addressesValue: firstOrder.addresses,
+          hasAddress: 'address' in firstOrder,
+          addressValue: firstOrder.address,
+          address_id: firstOrder.address_id,
+        });
+      }
+      const mappedOrders = data.map((o: any) => {
+        // Get address from the nested addresses relation (Prisma includes this)
+        // Debug: show which path works
+        let addressText = "";
+        if (o.addresses?.address) {
+          addressText = o.addresses.address;
+        } else if (o.address?.address) {
+          addressText = o.address.address;
+        } else if (o.addressText) {
+          addressText = o.addressText;
+        } else if (typeof o.address === 'string' && o.address) {
+          addressText = o.address;
+        } else {
+          // Show debug info: which fields exist
+          addressText = `[DEBUG: addresses=${!!o.addresses}, addr=${!!o.address}]`;
+        }
+        return {
+          id: o.id,
+          orderNumber: o.orderNumber || o.order_number || `WG-${new Date().getFullYear()}-000000`,
+          firmId: o.firmId || o.firm_id,
+          firmName: o.firm?.name || o.firmName || firm?.name || "",
+          clientName: o.user?.name || o.clientName || o.users?.name || o.user?.phone || "Unknown Client",
+          address: addressText,
+          status: o.stage || o.status || "PENDING",
+          paymentMethod: o.paymentMethod || o.payment_method || "CASH",
+          total: o.total || 0,
+          createdAt: o.createdAt || o.created_at,
+          driverId: o.driverId || o.driver?.id || null,
+          driverName: o.driver?.user?.name || o.driver?.name || o.driverName || null,
+          driverPhone: o.driver?.user?.phone || o.driver?.phone || o.driverPhone || null,
+        };
+      });
       setOrders(mappedOrders);
       ordersLastFetch.current = now;
     } catch (error) {
