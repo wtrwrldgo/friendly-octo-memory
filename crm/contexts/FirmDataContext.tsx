@@ -54,19 +54,20 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch orders with caching - uses local API route to avoid mixed content issues
   const fetchOrders = useCallback(async (force = false) => {
-    console.log('[FirmDataContext] ===== ORDERS FETCH v3 =====', { firmId, force });
+    console.log('[FirmDataContext] ORDERS FETCH CALLED', { firmId, force, ordersLength: orders.length });
     if (!firmId) {
       console.log('[FirmDataContext] No firmId, skipping orders fetch');
       return;
     }
 
     const now = Date.now();
+    const cacheAge = now - ordersLastFetch.current;
     // Skip if data is fresh and not forcing refresh
-    if (!force && orders.length > 0 && now - ordersLastFetch.current < CACHE_TTL) {
-      console.log('[FirmDataContext] Using cached orders, age:', Math.round((now - ordersLastFetch.current) / 1000), 'seconds');
+    if (!force && orders.length > 0 && cacheAge < CACHE_TTL) {
+      console.log('[FirmDataContext] Using cached orders, age:', Math.round(cacheAge / 1000), 'seconds');
       return;
     }
-    console.log('[FirmDataContext] Fetching fresh orders...');
+    console.log('[FirmDataContext] Fetching fresh orders, force:', force);
 
     try {
       setOrdersLoading(true);
