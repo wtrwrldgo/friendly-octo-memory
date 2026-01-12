@@ -92,8 +92,8 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
         });
       }
       const mappedOrders = data.map((o: any) => {
-        // v6: Force test to verify deployment
-        const addressText = "TEST_ADDRESS_v6";
+        // Get address from nested addresses relation (Prisma)
+        const addressText = o.addresses?.address || "No address";
         // Get driver from 'drivers' relation (Prisma uses plural name)
         const driverData = o.drivers || o.driver;
 
