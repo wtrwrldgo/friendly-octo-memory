@@ -199,9 +199,12 @@ export default function FirmOrdersPage() {
       </div>
 
       <div className="mb-8">
-        {/* Stats Cards - Premium Design */}
+        {/* Stats Cards - Premium Design with Inline Gradients */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-5 mb-8">
-          <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 hover:-translate-y-1">
+          <div
+            className="group relative overflow-hidden p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #4f46e5 100%)' }}
+          >
             <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
@@ -214,7 +217,10 @@ export default function FirmOrdersPage() {
               </div>
             </div>
           </div>
-          <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-xl shadow-orange-500/25 hover:shadow-2xl hover:shadow-orange-500/40 transition-all duration-300 hover:-translate-y-1">
+          <div
+            className="group relative overflow-hidden p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+            style={{ background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 50%, #ea580c 100%)' }}
+          >
             <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
@@ -229,7 +235,10 @@ export default function FirmOrdersPage() {
               </div>
             </div>
           </div>
-          <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-xl shadow-purple-500/25 hover:shadow-2xl hover:shadow-purple-500/40 transition-all duration-300 hover:-translate-y-1">
+          <div
+            className="group relative overflow-hidden p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+            style={{ background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 50%, #4f46e5 100%)' }}
+          >
             <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
@@ -244,7 +253,10 @@ export default function FirmOrdersPage() {
               </div>
             </div>
           </div>
-          <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/40 transition-all duration-300 hover:-translate-y-1">
+          <div
+            className="group relative overflow-hidden p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #0d9488 100%)' }}
+          >
             <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
@@ -259,7 +271,10 @@ export default function FirmOrdersPage() {
               </div>
             </div>
           </div>
-          <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-rose-500 to-red-600 shadow-xl shadow-red-500/25 hover:shadow-2xl hover:shadow-red-500/40 transition-all duration-300 hover:-translate-y-1">
+          <div
+            className="group relative overflow-hidden p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+            style={{ background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 50%, #be123c 100%)' }}
+          >
             <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
