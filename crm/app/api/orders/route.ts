@@ -17,6 +17,19 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
+    // Debug: log first order structure to Vercel logs
+    if (orders && orders.length > 0) {
+      const first = orders[0];
+      console.log('[API/orders] First order structure:', JSON.stringify({
+        id: first.id,
+        addresses: first.addresses,
+        address: first.address,
+        drivers: first.drivers,
+        driver: first.driver,
+        driver_id: first.driver_id,
+      }, null, 2));
+    }
+
     return NextResponse.json({ success: true, data: orders || [] }, { status: 200 });
   } catch (error: any) {
     console.error('Error fetching orders:', error);

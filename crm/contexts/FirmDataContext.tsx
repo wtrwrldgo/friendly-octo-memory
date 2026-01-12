@@ -107,20 +107,23 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
           // Show debug info: which fields exist
           addressText = `[DEBUG: addresses=${!!o.addresses}, addr=${!!o.address}]`;
         }
+        // Get driver from 'drivers' relation (Prisma uses plural name)
+        const driverData = o.drivers || o.driver;
+
         return {
           id: o.id,
           orderNumber: o.orderNumber || o.order_number || `WG-${new Date().getFullYear()}-000000`,
           firmId: o.firmId || o.firm_id,
-          firmName: o.firm?.name || o.firmName || firm?.name || "",
+          firmName: o.firms?.name || o.firm?.name || o.firmName || firm?.name || "",
           clientName: o.user?.name || o.clientName || o.users?.name || o.user?.phone || "Unknown Client",
           address: addressText,
           status: o.stage || o.status || "PENDING",
           paymentMethod: o.paymentMethod || o.payment_method || "CASH",
           total: o.total || 0,
           createdAt: o.createdAt || o.created_at,
-          driverId: o.driverId || o.driver?.id || null,
-          driverName: o.driver?.user?.name || o.driver?.name || o.driverName || null,
-          driverPhone: o.driver?.user?.phone || o.driver?.phone || o.driverPhone || null,
+          driverId: o.driver_id || driverData?.id || null,
+          driverName: driverData?.name || o.driverName || null,
+          driverPhone: driverData?.phone || o.driverPhone || null,
         };
       });
       setOrders(mappedOrders);
