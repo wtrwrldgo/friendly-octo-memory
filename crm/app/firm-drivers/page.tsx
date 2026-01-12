@@ -208,9 +208,12 @@ export default function FirmDriversPage() {
       </div>
 
       <div className="mb-8">
-        {/* Stats Cards - Premium Design */}
+        {/* Stats Cards - Premium Design with Inline Gradients */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
-          <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-xl shadow-orange-500/25 hover:shadow-2xl hover:shadow-orange-500/40 transition-all duration-300 hover:-translate-y-1">
+          <div
+            className="group relative overflow-hidden p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+            style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #d97706 100%)' }}
+          >
             <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
@@ -223,7 +226,10 @@ export default function FirmDriversPage() {
               </div>
             </div>
           </div>
-          <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/40 transition-all duration-300 hover:-translate-y-1">
+          <div
+            className="group relative overflow-hidden p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #0d9488 100%)' }}
+          >
             <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
@@ -243,7 +249,10 @@ export default function FirmDriversPage() {
               </div>
             </div>
           </div>
-          <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-xl shadow-purple-500/25 hover:shadow-2xl hover:shadow-purple-500/40 transition-all duration-300 hover:-translate-y-1">
+          <div
+            className="group relative overflow-hidden p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+            style={{ background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 50%, #4f46e5 100%)' }}
+          >
             <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
@@ -256,7 +265,10 @@ export default function FirmDriversPage() {
               </div>
             </div>
           </div>
-          <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-gray-400 to-gray-500 shadow-xl shadow-gray-500/25 hover:shadow-2xl hover:shadow-gray-500/40 transition-all duration-300 hover:-translate-y-1">
+          <div
+            className="group relative overflow-hidden p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+            style={{ background: 'linear-gradient(135deg, #6b7280 0%, #4b5563 50%, #374151 100%)' }}
+          >
             <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
             <div className="absolute right-4 bottom-4 w-20 h-20 rounded-full bg-white/5"></div>
             <div className="relative flex items-start justify-between">
