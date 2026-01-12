@@ -81,6 +81,14 @@ export const translations = {
       goodMorning: "Good morning",
       goodAfternoon: "Good afternoon",
       goodEvening: "Good evening",
+      welcomeBack: "Welcome back",
+      active: "Active",
+      total: "total",
+      manage: "Manage",
+      pendingOrders: "Pending Orders",
+      delivering: "Delivering",
+      offline: "Offline",
+      createFirstOrder: "Create first order",
     },
 
     // Orders
@@ -704,6 +712,14 @@ export const translations = {
       goodMorning: "Доброе утро",
       goodAfternoon: "Добрый день",
       goodEvening: "Добрый вечер",
+      welcomeBack: "С возвращением",
+      active: "Активные",
+      total: "всего",
+      manage: "Управлять",
+      pendingOrders: "Ожидающие заказы",
+      delivering: "Доставляет",
+      offline: "Не в сети",
+      createFirstOrder: "Создать первый заказ",
     },
 
     // Orders
@@ -1327,6 +1343,14 @@ export const translations = {
       goodMorning: "Xayrli tong",
       goodAfternoon: "Xayrli kun",
       goodEvening: "Xayrli kech",
+      welcomeBack: "Qaytganingizdan xursandmiz",
+      active: "Faol",
+      total: "jami",
+      manage: "Boshqarish",
+      pendingOrders: "Kutilayotgan buyurtmalar",
+      delivering: "Yetkazmoqda",
+      offline: "Oflayn",
+      createFirstOrder: "Birinchi buyurtma yaratish",
     },
 
     // Orders
@@ -1950,6 +1974,14 @@ export const translations = {
       goodMorning: "Qayırlı tan'",
       goodAfternoon: "Qayırlı ku'n",
       goodEvening: "Qayırlı kesh",
+      welcomeBack: "Qaytqanın'ızǵa quwanıshlımız",
+      active: "Aktiv",
+      total: "ulıwma",
+      manage: "Basqarıw",
+      pendingOrders: "Ku'tilip atırǵan buyırtpalar",
+      delivering: "Jetkizip atır",
+      offline: "Oflayn",
+      createFirstOrder: "Birinshi buyırtpa jaratıw",
     },
 
     // Orders
