@@ -48,8 +48,11 @@ export default function FirmOrdersPage() {
 
   const loading = ordersLoading;
 
+  // Debug: log orders data directly
+  console.log('[FirmOrdersPage] ORDERS DATA:', orders.map(o => ({ id: o.id, address: o.address, driverName: o.driverName })));
+
   useEffect(() => {
-    console.log('[FirmOrdersPage] ===== PAGE LOAD v3 =====', { authLoading, hasUser: !!user, isWatergoAdmin });
+    console.log('[FirmOrdersPage] PAGE LOAD', { authLoading, hasUser: !!user, isWatergoAdmin, ordersCount: orders.length });
     if (authLoading) return;
 
     if (!user) {
@@ -62,9 +65,9 @@ export default function FirmOrdersPage() {
       return;
     }
 
-    // Will use cached data if available
-    console.log('[FirmOrdersPage] About to call fetchOrders');
-    fetchOrders();
+    // Force fetch orders
+    console.log('[FirmOrdersPage] Calling fetchOrders...');
+    fetchOrders(true); // Force refresh
   }, [user, router, authLoading, isWatergoAdmin, fetchOrders]);
 
   if (authLoading || isWatergoAdmin) {
