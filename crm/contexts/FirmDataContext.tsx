@@ -92,21 +92,8 @@ export function FirmDataProvider({ children }: { children: React.ReactNode }) {
         });
       }
       const mappedOrders = data.map((o: any) => {
-        // Get address from the nested addresses relation (Prisma includes this)
-        // Debug: show which path works
-        let addressText = "";
-        if (o.addresses?.address) {
-          addressText = o.addresses.address;
-        } else if (o.address?.address) {
-          addressText = o.address.address;
-        } else if (o.addressText) {
-          addressText = o.addressText;
-        } else if (typeof o.address === 'string' && o.address) {
-          addressText = o.address;
-        } else {
-          // Show debug info: which fields exist
-          addressText = `[DEBUG: addresses=${!!o.addresses}, addr=${!!o.address}]`;
-        }
+        // v5: Get address from nested addresses relation
+        const addressText = o.addresses?.address || "NO_ADDR_v5";
         // Get driver from 'drivers' relation (Prisma uses plural name)
         const driverData = o.drivers || o.driver;
 
