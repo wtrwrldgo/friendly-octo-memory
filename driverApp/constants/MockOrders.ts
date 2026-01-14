@@ -1,0 +1,357 @@
+/**
+ * Mock Orders Data for Development
+ * Used when testing driver app without backend
+ */
+
+import { OrderStage, OrderType } from '../types';
+
+export const MOCK_ACTIVE_ORDERS: any[] = [
+  {
+    id: 'order-001',
+    order_number: 'WG-2024-001',
+    stage: OrderStage.IN_QUEUE,
+    total: 45.50,
+    delivery_fee: 5.00,
+    payment_method: 'cash',
+    payment_status: 'pending',
+    quantity: 3,
+    items: [
+      { id: 'item-001-1', product_name: 'Spring Water 19L', quantity: 2, price: 10.00 },
+      { id: 'item-001-2', product_name: 'Mineral Water 5L', quantity: 1, price: 7.50 },
+    ],
+    created_at: new Date().toISOString(),
+    estimated_delivery: new Date(Date.now() + 30 * 60000).toISOString(),
+    delivered_at: null,
+    users: {
+      name: 'Alisher Karimov',
+      phone: '+998901234567',
+    },
+    addresses: {
+      id: 'addr-001',
+      title: 'Home',
+      name: '22 mkr dom 1 a 4 podezd 5 kv',
+      address: 'Yunusabad district, Amir Temur street 15, Apt 42',
+      latitude: 41.2995,
+      longitude: 69.2401,
+      type: OrderType.APARTMENT,
+    },
+    firms: {
+      name: 'Crystal Water Co.',
+      phone: '+998712345678',
+    },
+  },
+  {
+    id: 'order-002',
+    order_number: 'WG-2024-002',
+    stage: OrderStage.IN_QUEUE,
+    total: 62.00,
+    delivery_fee: 7.00,
+    payment_method: 'card',
+    payment_status: 'paid',
+    quantity: 5,
+    items: [
+      { id: 'item-002-1', product_name: 'Spring Water 19L', quantity: 5, price: 10.00 },
+    ],
+    created_at: new Date(Date.now() - 15 * 60000).toISOString(),
+    estimated_delivery: new Date(Date.now() + 15 * 60000).toISOString(),
+    delivered_at: null,
+    users: {
+      name: 'Nigora Azimova',
+      phone: '+998901234569',
+    },
+    addresses: {
+      id: 'addr-002',
+      title: 'Infinix Office',
+      name: 'Infinix',
+      address: 'Mirzo Ulugbek district, Mustaqillik avenue 98, Business Center',
+      latitude: 41.3111,
+      longitude: 69.2797,
+      type: OrderType.OFFICE,
+    },
+    firms: {
+      name: 'Pure Spring Water',
+      phone: '+998712345679',
+    },
+  },
+  {
+    id: 'order-003',
+    order_number: 'WG-2024-003',
+    stage: OrderStage.IN_QUEUE,
+    total: 28.75,
+    delivery_fee: 3.75,
+    payment_method: 'cash',
+    payment_status: 'pending',
+    quantity: 2,
+    items: [
+      { id: 'item-003-1', product_name: 'Distilled Water 10L', quantity: 2, price: 10.00 },
+    ],
+    created_at: new Date(Date.now() - 5 * 60000).toISOString(),
+    estimated_delivery: new Date(Date.now() + 45 * 60000).toISOString(),
+    delivered_at: null,
+    users: {
+      name: 'Malika Rashidova',
+      phone: '+998905551234',
+    },
+    addresses: {
+      id: 'addr-003',
+      title: 'Private House',
+      name: 'Maslaxat 21',
+      address: 'Chilonzor district, Bunyodkor avenue 7, Block 3, Apt',
+      latitude: 41.2856,
+      longitude: 69.2034,
+      type: OrderType.HOUSE,
+    },
+    firms: {
+      name: 'Mountain Fresh',
+      phone: '+998712345680',
+    },
+  },
+  {
+    id: 'order-004',
+    order_number: 'WG-2024-004',
+    stage: OrderStage.IN_QUEUE,
+    total: 120.00,
+    delivery_fee: 10.00,
+    payment_method: 'card',
+    payment_status: 'paid',
+    quantity: 10,
+    items: [
+      { id: 'item-004-1', product_name: 'Spring Water 19L', quantity: 8, price: 10.00 },
+      { id: 'item-004-2', product_name: 'Mineral Water 5L', quantity: 2, price: 7.50 },
+    ],
+    created_at: new Date(Date.now() - 25 * 60000).toISOString(),
+    estimated_delivery: new Date(Date.now() + 5 * 60000).toISOString(),
+    delivered_at: null,
+    users: {
+      name: 'Rustam Ortikov',
+      phone: '+998901234570',
+    },
+    addresses: {
+      id: 'addr-004',
+      title: 'Government Building',
+      name: 'Ministry of Finance',
+      address: 'Yashnobod district, Government complex, building 5',
+      latitude: 41.3142,
+      longitude: 69.2547,
+      type: OrderType.GOVERNMENT,
+    },
+    firms: {
+      name: 'Crystal Water Co.',
+      phone: '+998712345678',
+    },
+  },
+];
+
+export const MOCK_DELIVERED_ORDERS: any[] = [
+  {
+    id: 'order-101',
+    order_number: 'WG-2024-101',
+    stage: OrderStage.DELIVERED,
+    total: 52.00,
+    delivery_fee: 6.00,
+    payment_method: 'card',
+    payment_status: 'paid',
+    quantity: 4,
+    items: [
+      { id: 'item-101-1', product_name: 'Spring Water 19L', quantity: 3, price: 10.00 },
+      { id: 'item-101-2', product_name: 'Bottled Water 0.5L', quantity: 1, price: 5.00 },
+    ],
+    created_at: new Date(Date.now() - 2 * 60 * 60000).toISOString(),
+    estimated_delivery: null,
+    delivered_at: new Date(Date.now() - 90 * 60000).toISOString(),
+    users: {
+      name: 'Rustam Tashkentov',
+      phone: '+998901112233',
+    },
+    addresses: {
+      id: 'addr-101',
+      title: 'Home',
+      name: 'Home',
+      address: 'Yakkasaray district, Shota Rustaveli street 22',
+      latitude: 41.2889,
+      longitude: 69.2614,
+      type: OrderType.APARTMENT,
+    },
+    firms: {
+      name: 'Crystal Water Co.',
+      phone: '+998712345678',
+    },
+  },
+  {
+    id: 'order-102',
+    order_number: 'WG-2024-102',
+    stage: OrderStage.DELIVERED,
+    total: 39.25,
+    delivery_fee: 4.25,
+    payment_method: 'cash',
+    payment_status: 'paid',
+    quantity: 3,
+    items: [
+      { id: 'item-102-1', product_name: 'Distilled Water 10L', quantity: 3, price: 10.00 },
+    ],
+    created_at: new Date(Date.now() - 3 * 60 * 60000).toISOString(),
+    estimated_delivery: null,
+    delivered_at: new Date(Date.now() - 2 * 60 * 60000).toISOString(),
+    users: {
+      name: 'Sarvar Usmanov',
+      phone: '+998902223344',
+    },
+    addresses: {
+      id: 'addr-102',
+      title: 'Cafe',
+      name: 'Cafe',
+      address: 'Shaykhontohur district, Navoi street 45A',
+      latitude: 41.3225,
+      longitude: 69.2489,
+      type: OrderType.OFFICE,
+    },
+    firms: {
+      name: 'Pure Spring Water',
+      phone: '+998712345679',
+    },
+  },
+  {
+    id: 'order-103',
+    order_number: 'WG-2024-103',
+    stage: OrderStage.DELIVERED,
+    total: 71.50,
+    delivery_fee: 8.50,
+    payment_method: 'card',
+    payment_status: 'paid',
+    quantity: 6,
+    items: [
+      { id: 'item-103-1', product_name: 'Spring Water 19L', quantity: 4, price: 10.00 },
+      { id: 'item-103-2', product_name: 'Mineral Water 5L', quantity: 2, price: 7.50 },
+    ],
+    created_at: new Date(Date.now() - 5 * 60 * 60000).toISOString(),
+    estimated_delivery: null,
+    delivered_at: new Date(Date.now() - 4 * 60 * 60000).toISOString(),
+    users: {
+      name: 'Nigora Sharipova',
+      phone: '+998903334455',
+    },
+    addresses: {
+      id: 'addr-103',
+      title: 'Restaurant',
+      name: 'Restaurant',
+      address: 'Uchtepa district, Farobiy street 12, Mega Planet Mall',
+      latitude: 41.2858,
+      longitude: 69.1983,
+      type: OrderType.OFFICE,
+    },
+    firms: {
+      name: 'Mountain Fresh',
+      phone: '+998712345680',
+    },
+  },
+  {
+    id: 'order-104',
+    order_number: 'WG-2024-104',
+    stage: OrderStage.DELIVERED,
+    total: 33.00,
+    delivery_fee: 3.00,
+    payment_method: 'cash',
+    payment_status: 'paid',
+    quantity: 2,
+    items: [
+      { id: 'item-104-1', product_name: 'Spring Water 19L', quantity: 2, price: 10.00 },
+    ],
+    created_at: new Date(Date.now() - 24 * 60 * 60000).toISOString(),
+    estimated_delivery: null,
+    delivered_at: new Date(Date.now() - 23 * 60 * 60000).toISOString(),
+    users: {
+      name: 'Bekzod Normatov',
+      phone: '+998904445566',
+    },
+    addresses: {
+      id: 'addr-104',
+      title: 'Home',
+      name: 'Home',
+      address: 'Sergeli district, Yangi Sergeli 8/1',
+      latitude: 41.2244,
+      longitude: 69.2225,
+      type: OrderType.HOUSE,
+    },
+    firms: {
+      name: 'Crystal Water Co.',
+      phone: '+998712345678',
+    },
+  },
+  {
+    id: 'order-105',
+    order_number: 'WG-2024-105',
+    stage: OrderStage.DELIVERED,
+    total: 58.75,
+    delivery_fee: 5.75,
+    payment_method: 'card',
+    payment_status: 'paid',
+    quantity: 5,
+    items: [
+      { id: 'item-105-1', product_name: 'Spring Water 19L', quantity: 3, price: 10.00 },
+      { id: 'item-105-2', product_name: 'Mineral Water 5L', quantity: 2, price: 7.50 },
+    ],
+    created_at: new Date(Date.now() - 24 * 60 * 60000).toISOString(),
+    estimated_delivery: null,
+    delivered_at: new Date(Date.now() - 22 * 60 * 60000).toISOString(),
+    users: {
+      name: 'Kamola Ismoilova',
+      phone: '+998905556677',
+    },
+    addresses: {
+      id: 'addr-105',
+      title: 'Gym',
+      name: 'Gym',
+      address: 'Mirabad district, Abdulla Qodiriy street 36',
+      latitude: 41.2995,
+      longitude: 69.2679,
+      type: OrderType.OFFICE,
+    },
+    firms: {
+      name: 'Pure Spring Water',
+      phone: '+998712345679',
+    },
+  },
+];
+
+export const MOCK_CANCELLED_ORDERS: any[] = [
+  {
+    id: 'order-201',
+    order_number: 'WG-2024-201',
+    stage: OrderStage.CANCELLED,
+    total: 25.00,
+    delivery_fee: 5.00,
+    payment_method: 'cash',
+    payment_status: 'cancelled',
+    quantity: 2,
+    items: [
+      { id: 'item-201-1', product_name: 'Distilled Water 10L', quantity: 2, price: 10.00 },
+    ],
+    created_at: new Date(Date.now() - 48 * 60 * 60000).toISOString(),
+    estimated_delivery: null,
+    delivered_at: null,
+    users: {
+      name: 'Aziz Rahimov',
+      phone: '+998906667788',
+    },
+    addresses: {
+      id: 'addr-201',
+      title: 'Home',
+      name: 'Home',
+      address: 'Bektemir district, Osiyo street 19',
+      latitude: 41.2156,
+      longitude: 69.3342,
+      type: OrderType.APARTMENT,
+    },
+    firms: {
+      name: 'Mountain Fresh',
+      phone: '+998712345680',
+    },
+  },
+];
+
+// Combined mock data for all history (delivered + cancelled)
+// Using a function so it dynamically updates when orders are added
+export const getMockHistoryOrders = () => [
+  ...MOCK_DELIVERED_ORDERS,
+  ...MOCK_CANCELLED_ORDERS,
+];

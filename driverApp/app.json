@@ -1,0 +1,72 @@
+{
+  "expo": {
+    "name": "WaterGo Driver",
+    "slug": "watergo-driver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-minimal.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.watergo.driver",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "remote-notification",
+          "location"
+        ],
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "WaterGo Driver needs your location to show your position to customers and update delivery status in real-time.",
+        "NSLocationWhenInUseUsageDescription": "WaterGo Driver needs your location to show your position to customers during active deliveries."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.watergo.driver",
+      "minSdkVersion": 26,
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "POST_NOTIFICATIONS",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#FF6B35",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "WaterGo Driver needs your location to show your position to customers and update delivery status in real-time.",
+          "locationAlwaysPermission": "WaterGo Driver needs background location access to track deliveries even when the app is in the background.",
+          "locationWhenInUsePermission": "WaterGo Driver needs your location to show your position to customers during active deliveries.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ]
+    ],
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#FF6B35"
+    }
+  }
+}

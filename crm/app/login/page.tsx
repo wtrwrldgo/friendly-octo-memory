@@ -41,21 +41,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f1419] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-[#0C1633] flex items-center justify-center p-4">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white">
             Water<span className="text-blue-400">Go</span>
           </h1>
-          <p className="text-gray-500 mt-2">{t.auth.managementDashboard}</p>
+          <p className="text-gray-400 mt-2">{t.auth.managementDashboard}</p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-[#1a1f26] rounded-2xl p-8">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-white">{t.auth.welcomeBack}</h2>
-            <p className="text-gray-500 text-sm mt-1">{t.auth.signInToAccount}</p>
+            <p className="text-gray-400 text-sm mt-1">{t.auth.signInToAccount}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -77,7 +83,7 @@ export default function LoginPage() {
                   type="email"
                   required
                   placeholder={t.auth.enterEmail}
-                  className="w-full pl-11 pr-4 py-3 bg-[#0f1419] border border-gray-700 rounded-lg text-white placeholder-gray-600 focus:border-blue-500 focus:outline-none"
+                  className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
@@ -95,7 +101,7 @@ export default function LoginPage() {
                   type="password"
                   required
                   placeholder={t.auth.enterPassword}
-                  className="w-full pl-11 pr-4 py-3 bg-[#0f1419] border border-gray-700 rounded-lg text-white placeholder-gray-600 focus:border-blue-500 focus:outline-none"
+                  className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 />
@@ -125,43 +131,10 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-gray-700" />
-            <span className="text-gray-600 text-xs">{t.auth.testAccounts}</span>
-            <div className="flex-1 h-px bg-gray-700" />
-          </div>
-
-          {/* Test Accounts */}
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={() => setFormData({ email: "admin@watergo.com", password: "admin123" })}
-              className="w-full p-3 bg-[#0f1419] hover:bg-[#1a2027] border border-gray-700 rounded-lg transition-colors text-left flex items-center justify-between"
-            >
-              <div>
-                <p className="text-blue-400 text-sm font-medium">{t.auth.watergoAdmin}</p>
-                <p className="text-gray-600 text-xs">admin@watergo.com</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-gray-600" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setFormData({ email: "owner@test.com", password: "password123" })}
-              className="w-full p-3 bg-[#0f1419] hover:bg-[#1a2027] border border-gray-700 rounded-lg transition-colors text-left flex items-center justify-between"
-            >
-              <div>
-                <p className="text-emerald-400 text-sm font-medium">{t.auth.firmOwnerAccount}</p>
-                <p className="text-gray-600 text-xs">owner@test.com</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-gray-600" />
-            </button>
-          </div>
         </div>
 
         {/* Footer */}
-        <p className="text-center text-gray-600 text-xs mt-6">
+        <p className="text-center text-gray-500 text-xs mt-6">
           {t.auth.copyright}
         </p>
       </div>
