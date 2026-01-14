@@ -4,13 +4,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { FirmStatus } from '@/types';
 
-// Use the VPS IP directly for static files (logo images)
+// Use the new API domain for static files (logo images)
 const STATIC_FILES_URL = 'https://api.watergocrm.uz';
+const OLD_VPS_IP = 'http://45.92.173.121';
 
-// Helper to get full logo URL
+// Helper to get full logo URL - replace old IP with new domain
 function getFullLogoUrl(logoUrl: string | null | undefined): string | null {
   if (!logoUrl) return null;
+
+  // Replace old VPS IP with new API domain
+  if (logoUrl.includes('45.92.173.121')) {
+    return logoUrl.replace('http://45.92.173.121', STATIC_FILES_URL);
+  }
+
+  // If already a full URL, return as-is
   if (logoUrl.startsWith('http')) return logoUrl;
+
   // Ensure the path starts with /
   const path = logoUrl.startsWith('/') ? logoUrl : `/${logoUrl}`;
   return `${STATIC_FILES_URL}${path}`;
