@@ -27,14 +27,14 @@ interface FirmSubscription {
   logoUrl?: string | null;
 }
 
-// Helper to get logo URL through image proxy (avoids mixed content issues)
+// Logo URL is already transformed by /api/firms to use https://api.watergocrm.uz
+// Just return it directly - no proxy needed for HTTPS URLs
 function getFullLogoUrl(logoUrl: string | null | undefined): string | null {
   if (!logoUrl) return null;
-  if (logoUrl.startsWith('http')) {
-    return `/api/imageproxy?url=${encodeURIComponent(logoUrl)}`;
-  }
-  const fullUrl = `http://45.92.173.121${logoUrl}`;
-  return `/api/imageproxy?url=${encodeURIComponent(fullUrl)}`;
+  // If already a full URL, return as-is
+  if (logoUrl.startsWith('http')) return logoUrl;
+  // For relative paths, construct full URL
+  return `https://api.watergocrm.uz${logoUrl.startsWith('/') ? logoUrl : '/' + logoUrl}`;
 }
 
 export default function BillingPage() {
