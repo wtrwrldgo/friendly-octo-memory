@@ -2,85 +2,165 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageHeader from "@/components/PageHeader";
 import AdminAccountsTable from "@/components/AdminAccountsTable";
 import FirmAccountsTable from "@/components/FirmAccountsTable";
 import AddFirmAccountModal from "@/components/AddFirmAccountModal";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
-function getAdminAccounts() {
-  return [
-    {
-      id: "1",
-      email: "admin@watergo.uz",
-      name: "Platform Admin",
-      role: "SUPER_ADMIN" as const,
-      active: true,
-      lastLogin: new Date().toISOString(),
-      createdAt: "2024-01-01T00:00:00Z",
-    },
-    {
-      id: "2",
-      email: "support@watergo.uz",
-      name: "Support Team",
-      role: "ADMIN" as const,
-      active: true,
-      lastLogin: new Date(Date.now() - 86400000).toISOString(),
-      createdAt: "2024-01-15T00:00:00Z",
-    },
-  ];
+interface AdminAccount {
+  id: string;
+  email: string;
+  name: string;
+  role: "SUPER_ADMIN" | "ADMIN";
+  active: boolean;
+  lastLogin: string;
+  createdAt: string;
 }
 
-function getFirmAccounts() {
-  return [
-    {
-      id: "1",
-      firmId: "1",
-      firmName: "AquaPure Tashkent",
-      email: "owner@aquapure.uz",
-      ownerName: "Aziz Karimov",
-      ownerPhone: "+998901234567",
-      active: true,
-      lastLogin: new Date().toISOString(),
-      createdAt: "2024-01-15T10:00:00Z",
-    },
-    {
-      id: "2",
-      firmId: "2",
-      firmName: "Crystal Water Samarkand",
-      email: "admin@crystalwater.uz",
-      ownerName: "Dilshod Umarov",
-      ownerPhone: "+998901234568",
-      active: true,
-      lastLogin: new Date(Date.now() - 3600000).toISOString(),
-      createdAt: "2024-02-10T10:00:00Z",
-    },
-    {
-      id: "3",
-      firmId: "3",
-      firmName: "Fresh Drops Bukhara",
-      email: "contact@freshdrops.uz",
-      ownerName: "Rustam Nazarov",
-      ownerPhone: "+998901234569",
-      active: false,
-      lastLogin: null,
-      createdAt: "2024-03-05T10:00:00Z",
-    },
-  ];
+interface FirmAccount {
+  id: string;
+  firmId: string;
+  firmName: string;
+  email: string;
+  ownerName: string;
+  ownerPhone: string;
+  active: boolean;
+  lastLogin: string | null;
+  createdAt: string;
 }
 
 export default function AccountsPage() {
+  const { token } = useAuth();
   const [showAddModal, setShowAddModal] = useState(false);
   const [activeTab, setActiveTab] = useState<"admins" | "firms">("admins");
+  const [loading, setLoading] = useState(true);
+  const [adminAccounts, setAdminAccounts] = useState<AdminAccount[]>([]);
+  const [firmAccounts, setFirmAccounts] = useState<FirmAccount[]>([]);
 
-  const adminAccounts = getAdminAccounts();
-  const firmAccounts = getFirmAccounts();
+  // Fetch accounts data
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      setLoading(true);
+      try {
+        // Fetch all staff
+        const staffRes = await fetch("/api/staff", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (staffRes.ok) {
+          const staffData = await staffRes.json();
+          const allStaff = staffData.data || staffData || [];
+
+          // Separate admin accounts (WATERGO_ADMIN) and firm accounts (OWNER)
+          const admins: AdminAccount[] = [];
+          const firms: FirmAccount[] = [];
+
+          for (const staff of allStaff) {
+            if (staff.role === "WATERGO_ADMIN" || staff.role === "SUPER_ADMIN" || staff.role === "ADMIN") {
+              admins.push({
+                id: staff.id,
+                email: staff.email,
+                name: staff.name || "Admin",
+                role: staff.role === "WATERGO_ADMIN" ? "SUPER_ADMIN" : staff.role,
+                active: staff.isActive !== false,
+                lastLogin: staff.lastLoginAt || new Date().toISOString(),
+                createdAt: staff.createdAt,
+              });
+            } else if (staff.role === "OWNER") {
+              firms.push({
+                id: staff.id,
+                firmId: staff.firmId,
+                firmName: staff.firm?.name || staff.firmName || "Unknown Firm",
+                email: staff.email,
+                ownerName: staff.name || "Owner",
+                ownerPhone: staff.phone || "",
+                active: staff.isActive !== false,
+                lastLogin: staff.lastLoginAt || null,
+                createdAt: staff.createdAt,
+              });
+            }
+          }
+
+          // Add default WaterGo admin if not in list
+          if (admins.length === 0) {
+            admins.push({
+              id: "00000000-0000-0000-0000-000000000000",
+              email: "admin@watergo.com",
+              name: "WaterGo Admin",
+              role: "SUPER_ADMIN",
+              active: true,
+              lastLogin: new Date().toISOString(),
+              createdAt: "2024-01-01T00:00:00Z",
+            });
+          }
+
+          setAdminAccounts(admins);
+          setFirmAccounts(firms);
+        }
+
+        // Also fetch firms to get owner data
+        const firmsRes = await fetch("/api/firms", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (firmsRes.ok) {
+          const firmsData = await firmsRes.json();
+          const allFirms = firmsData.data || firmsData || [];
+
+          // Add firm owners that might not be in staff list
+          const existingFirmIds = new Set(firmAccounts.map(f => f.firmId));
+
+          for (const firm of allFirms) {
+            if (!existingFirmIds.has(firm.id) && firm.owner) {
+              setFirmAccounts(prev => [...prev, {
+                id: firm.owner.id || firm.id,
+                firmId: firm.id,
+                firmName: firm.name,
+                email: firm.owner.email || "",
+                ownerName: firm.owner.name || "Owner",
+                ownerPhone: firm.owner.phone || "",
+                active: firm.status === "ACTIVE",
+                lastLogin: null,
+                createdAt: firm.createdAt,
+              }]);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch accounts:", error);
+        // Add default admin on error
+        setAdminAccounts([{
+          id: "00000000-0000-0000-0000-000000000000",
+          email: "admin@watergo.com",
+          name: "WaterGo Admin",
+          role: "SUPER_ADMIN",
+          active: true,
+          lastLogin: new Date().toISOString(),
+          createdAt: "2024-01-01T00:00:00Z",
+        }]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAccounts();
+  }, [token]);
 
   const handleAddSuccess = () => {
     // Refresh data
-    console.log("Firm account created successfully");
+    window.location.reload();
   };
+
+  if (loading) {
+    return (
+      <div className="p-8 dark:bg-gray-900 min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 dark:bg-gray-900 min-h-screen">
