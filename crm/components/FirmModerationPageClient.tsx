@@ -109,15 +109,12 @@ export default function FirmModerationPageClient() {
         },
       });
       const data = await response.json();
-      if (data.success) {
-        // Transform logo URLs to full URLs
-        const firmsWithLogos = (data.data || []).map((firm: any) => ({
-          ...firm,
-          logoUrl: getFullLogoUrl(firm.logoUrl),
-        }));
-        setFirms(firmsWithLogos);
-      } else {
-        throw new Error(data.message || "Failed to fetch firms");
+      // API returns { firms: [...] } or { success: true, data: [...] }
+      const firmsArray = data.firms || data.data || [];
+      if (firmsArray.length > 0 || response.ok) {
+        setFirms(firmsArray);
+      } else if (data.error) {
+        throw new Error(data.error || "Failed to fetch firms");
       }
     } catch (err: any) {
       setError(err.message || "Failed to load firms");
