@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Search, RefreshCw, Edit2, Trash2, ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
+import { Plus, Search, RefreshCw, Edit2, Trash2, ThumbsUp, ThumbsDown, Loader2, Building2, CheckCircle2, Clock, FileEdit, XCircle, Eye } from "lucide-react";
 import PageHeader from "./PageHeader";
 import FirmModal from "./FirmModal";
 import ConfirmModal from "./ConfirmModal";
@@ -44,6 +44,16 @@ export default function FirmsPageClient() {
   useEffect(() => {
     fetchFirms();
   }, []);
+
+  // Stats
+  const stats = useMemo(() => ({
+    total: firms.length,
+    active: firms.filter(f => f.status === "ACTIVE").length,
+    pending: firms.filter(f => f.status === "PENDING_REVIEW").length,
+    draft: firms.filter(f => f.status === "DRAFT").length,
+    suspended: firms.filter(f => f.status === "SUSPENDED").length,
+    visible: firms.filter(f => f.isVisibleInClientApp).length,
+  }), [firms]);
 
   // Filter firms
   const filteredFirms = useMemo(() => {
@@ -202,6 +212,52 @@ export default function FirmsPageClient() {
         title="Firms Management"
         description="Manage partner firms on the platform"
       />
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-500 dark:text-gray-400">Total</span>
+            <Building2 className="w-5 h-5 text-blue-500" />
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-500 dark:text-gray-400">Active</span>
+            <CheckCircle2 className="w-5 h-5 text-green-500" />
+          </div>
+          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.active}</p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-500 dark:text-gray-400">Pending</span>
+            <Clock className="w-5 h-5 text-amber-500" />
+          </div>
+          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.pending}</p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-500 dark:text-gray-400">Draft</span>
+            <FileEdit className="w-5 h-5 text-gray-500" />
+          </div>
+          <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">{stats.draft}</p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-500 dark:text-gray-400">Suspended</span>
+            <XCircle className="w-5 h-5 text-red-500" />
+          </div>
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.suspended}</p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-500 dark:text-gray-400">Visible</span>
+            <Eye className="w-5 h-5 text-blue-500" />
+          </div>
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.visible}</p>
+        </div>
+      </div>
 
       {/* Filters Row */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
