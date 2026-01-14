@@ -512,16 +512,16 @@ export default function AccountsPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center text-white font-semibold">
-                            {account.firmName.charAt(0).toUpperCase()}
+                            {(account.firmName || "F").charAt(0).toUpperCase()}
                           </div>
                           <div>
                             <Link
-                              href={`/firms/${account.firmId}`}
+                              href={`/firms/${account.firmId || ""}`}
                               className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                             >
-                              {account.firmName}
+                              {account.firmName || "Unknown Firm"}
                             </Link>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">ID: {account.firmId.slice(0, 8)}...</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">ID: {(account.firmId || "").slice(0, 8) || "—"}...</p>
                           </div>
                         </div>
                       </td>
@@ -557,13 +557,17 @@ export default function AccountsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <Link
-                          href={`/firms/${account.firmId}`}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          View Firm
-                        </Link>
+                        {account.firmId ? (
+                          <Link
+                            href={`/firms/${account.firmId}`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            View Firm
+                          </Link>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                       </td>
                     </tr>
                   ))
