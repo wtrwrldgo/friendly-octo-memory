@@ -20,7 +20,7 @@ export interface ApiConfig {
 // - Physical device: use your computer's IP address
 //
 // Production VPS URL
-const VPS_URL = 'http://45.92.173.121';
+const VPS_URL = 'https://api.watergocrm.uz';
 
 const getLocalBackendUrl = () => {
   return `${VPS_URL}/api`;
@@ -41,7 +41,7 @@ const ENV = {
     useLocalBackend: false,
   },
   production: {
-    baseURL: 'http://45.92.173.121/api', // VPS deployed
+    baseURL: 'https://api.watergocrm.uz/api',
     timeout: 10000,
     useMockData: false,
     useLocalBackend: false,
