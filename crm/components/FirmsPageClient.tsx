@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Search, RefreshCw, Edit2, Trash2, ThumbsUp, ThumbsDown, Loader2, Building2, CheckCircle2, Clock, FileEdit, XCircle, Eye } from "lucide-react";
+import { Plus, Search, RefreshCw, Edit2, Trash2, ThumbsUp, ThumbsDown, Loader2, Building2, CheckCircle2, Clock, FileEdit, XCircle, Eye, EyeOff, Star, Users, ShoppingCart, Truck, MapPin } from "lucide-react";
 import PageHeader from "./PageHeader";
 import FirmModal from "./FirmModal";
 import ConfirmModal from "./ConfirmModal";
@@ -178,6 +178,34 @@ export default function FirmsPageClient() {
     }
   };
 
+  const handleToggleVisibility = async (firm: Firm) => {
+    try {
+      const authToken = localStorage.getItem("auth_token");
+      const response = await fetch(`/api/firms/${firm.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
+        body: JSON.stringify({
+          isVisibleInClientApp: !firm.isVisibleInClientApp,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success(`"${firm.name}" is now ${!firm.isVisibleInClientApp ? "visible" : "hidden"}`);
+        fetchFirms();
+      } else {
+        toast.error(data.message || data.error || "Failed to update visibility");
+      }
+    } catch (error) {
+      console.error("Error toggling visibility:", error);
+      toast.error("Failed to update visibility");
+    }
+  };
+
   const getStatusBadge = (status: FirmStatus) => {
     const styles: Record<FirmStatus, string> = {
       ACTIVE: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
@@ -198,6 +226,29 @@ export default function FirmsPageClient() {
     );
   };
 
+  const renderStars = (rating: number = 5) => {
+    return (
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`w-3.5 h-3.5 ${
+              star <= Math.round(rating)
+                ? "text-amber-400 fill-amber-400"
+                : "text-gray-300 dark:text-gray-600"
+            }`}
+          />
+        ))}
+        <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">{rating.toFixed(1)}</span>
+      </div>
+    );
+  };
+
+  // Click on stats card to filter
+  const handleStatsClick = (filter: StatusFilter) => {
+    setStatusFilter(filter === statusFilter ? "ALL" : filter);
+  };
+
   if (loading) {
     return (
       <div className="p-8 dark:bg-gray-900 min-h-screen flex items-center justify-center">
@@ -213,43 +264,78 @@ export default function FirmsPageClient() {
         description="Manage partner firms on the platform"
       />
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Clickable */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+        <button
+          onClick={() => handleStatsClick("ALL")}
+          className={`bg-white dark:bg-gray-800 rounded-xl p-4 border transition-all text-left ${
+            statusFilter === "ALL"
+              ? "border-blue-500 ring-2 ring-blue-500/20"
+              : "border-gray-100 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700"
+          }`}
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-500 dark:text-gray-400">Total</span>
             <Building2 className="w-5 h-5 text-blue-500" />
           </div>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+        </button>
+        <button
+          onClick={() => handleStatsClick("ACTIVE")}
+          className={`bg-white dark:bg-gray-800 rounded-xl p-4 border transition-all text-left ${
+            statusFilter === "ACTIVE"
+              ? "border-green-500 ring-2 ring-green-500/20"
+              : "border-gray-100 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700"
+          }`}
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-500 dark:text-gray-400">Active</span>
             <CheckCircle2 className="w-5 h-5 text-green-500" />
           </div>
           <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.active}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+        </button>
+        <button
+          onClick={() => handleStatsClick("PENDING_REVIEW")}
+          className={`bg-white dark:bg-gray-800 rounded-xl p-4 border transition-all text-left ${
+            statusFilter === "PENDING_REVIEW"
+              ? "border-amber-500 ring-2 ring-amber-500/20"
+              : "border-gray-100 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-700"
+          }`}
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-500 dark:text-gray-400">Pending</span>
             <Clock className="w-5 h-5 text-amber-500" />
           </div>
           <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.pending}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+        </button>
+        <button
+          onClick={() => handleStatsClick("DRAFT")}
+          className={`bg-white dark:bg-gray-800 rounded-xl p-4 border transition-all text-left ${
+            statusFilter === "DRAFT"
+              ? "border-gray-500 ring-2 ring-gray-500/20"
+              : "border-gray-100 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600"
+          }`}
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-500 dark:text-gray-400">Draft</span>
             <FileEdit className="w-5 h-5 text-gray-500" />
           </div>
           <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">{stats.draft}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+        </button>
+        <button
+          onClick={() => handleStatsClick("SUSPENDED")}
+          className={`bg-white dark:bg-gray-800 rounded-xl p-4 border transition-all text-left ${
+            statusFilter === "SUSPENDED"
+              ? "border-red-500 ring-2 ring-red-500/20"
+              : "border-gray-100 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-700"
+          }`}
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-500 dark:text-gray-400">Suspended</span>
             <XCircle className="w-5 h-5 text-red-500" />
           </div>
           <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.suspended}</p>
-        </div>
+        </button>
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-500 dark:text-gray-400">Visible</span>
@@ -274,18 +360,15 @@ export default function FirmsPageClient() {
             />
           </div>
 
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-            className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="ALL">All Status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="PENDING_REVIEW">Pending</option>
-            <option value="DRAFT">Draft</option>
-            <option value="SUSPENDED">Suspended</option>
-          </select>
+          {/* Clear filter button */}
+          {(statusFilter !== "ALL" || searchQuery) && (
+            <button
+              onClick={() => { setStatusFilter("ALL"); setSearchQuery(""); }}
+              className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
@@ -315,29 +398,30 @@ export default function FirmsPageClient() {
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Firm</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Location</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Rating</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Stats</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Status</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Visibility</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Created</th>
                 <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y dark:divide-gray-700">
               {filteredFirms.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     {searchQuery || statusFilter !== "ALL" ? "No firms match your filters" : "No firms found. Add your first firm to get started."}
                   </td>
                 </tr>
               ) : (
                 filteredFirms.map((firm) => (
-                  <tr key={firm.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <tr key={firm.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                        <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden border border-gray-200 dark:border-gray-600">
                           {firm.logoUrl ? (
                             <img src={firm.logoUrl} alt={firm.name} className="w-full h-full object-cover" />
                           ) : (
-                            <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
+                            <span className="text-lg font-bold text-gray-500 dark:text-gray-400">
                               {firm.name?.charAt(0)?.toUpperCase() || "F"}
                             </span>
                           )}
@@ -346,30 +430,65 @@ export default function FirmsPageClient() {
                           <Link href={`/firms/${firm.id}`} className="font-semibold text-navy dark:text-blue-400 hover:underline">
                             {firm.name}
                           </Link>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{firm.id.slice(0, 8)}...</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            ID: {firm.id.slice(0, 8)}...
+                          </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
-                      {firm.city || "-"}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                        <MapPin className="w-4 h-4 text-gray-400" />
+                        {firm.city || "-"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {renderStars(firm.rating || 5)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400" title="Clients">
+                          <Users className="w-4 h-4" />
+                          <span>{firm.clientsCount || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400" title="Orders">
+                          <ShoppingCart className="w-4 h-4" />
+                          <span>{firm.ordersCount || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400" title="Drivers">
+                          <Truck className="w-4 h-4" />
+                          <span>{firm.driversCount || 0}</span>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       {getStatusBadge(firm.status)}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                        firm.isVisibleInClientApp
-                          ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-                      }`}>
-                        {firm.isVisibleInClientApp ? "Visible" : "Hidden"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400 text-sm">
-                      {firm.createdAt ? new Date(firm.createdAt).toLocaleDateString() : "-"}
+                      <button
+                        onClick={() => handleToggleVisibility(firm)}
+                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          firm.isVisibleInClientApp
+                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+                        }`}
+                        title={firm.isVisibleInClientApp ? "Click to hide" : "Click to show"}
+                      >
+                        {firm.isVisibleInClientApp ? (
+                          <>
+                            <Eye className="w-3.5 h-3.5" />
+                            Visible
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="w-3.5 h-3.5" />
+                            Hidden
+                          </>
+                        )}
+                      </button>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1">
                         {firm.status === "PENDING_REVIEW" && (
                           <>
                             <button

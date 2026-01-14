@@ -27,6 +27,10 @@ export interface Firm {
   productsCount?: number;
   bottleDepositEnabled?: boolean;
   bottleDepositPrice?: number;
+  rating?: number;
+  deliveryTime?: string;
+  minOrder?: number;
+  deliveryFee?: number;
 }
 
 export interface Driver {
