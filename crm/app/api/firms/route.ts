@@ -4,13 +4,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { FirmStatus } from '@/types';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://45.92.173.121';
+// Use the VPS IP directly for static files (logo images)
+const STATIC_FILES_URL = 'https://api.watergocrm.uz';
 
 // Helper to get full logo URL
 function getFullLogoUrl(logoUrl: string | null | undefined): string | null {
   if (!logoUrl) return null;
   if (logoUrl.startsWith('http')) return logoUrl;
-  return `${BACKEND_URL}${logoUrl}`;
+  // Ensure the path starts with /
+  const path = logoUrl.startsWith('/') ? logoUrl : `/${logoUrl}`;
+  return `${STATIC_FILES_URL}${path}`;
 }
 
 // Helper function to transform backend firm data to CRM format
@@ -28,23 +31,26 @@ function transformFirm(backendFirm: any) {
   return {
     id: backendFirm.id,
     name: backendFirm.name,
-    city: backendFirm.city || '',
+    // Handle both camelCase and snake_case for city
+    city: backendFirm.city || backendFirm.address || backendFirm.location || '',
     status,
-    isVisibleInClientApp: backendFirm.isVisibleInClientApp ?? (status === 'ACTIVE'),
-    logoUrl: getFullLogoUrl(backendFirm.logoUrl),
+    isVisibleInClientApp: backendFirm.isVisibleInClientApp ?? backendFirm.is_visible_in_client_app ?? (status === 'ACTIVE'),
+    // Handle both camelCase and snake_case for logoUrl
+    logoUrl: getFullLogoUrl(backendFirm.logoUrl || backendFirm.logo_url || backendFirm.logo),
     rating: parseFloat(backendFirm.rating) || 5.0,
-    deliveryTime: backendFirm.deliveryTime,
-    minOrder: backendFirm.minOrder,
-    deliveryFee: backendFirm.deliveryFee,
-    clientsCount: backendFirm._count?.clients || 0,
-    ordersCount: backendFirm._count?.orders || 0,
-    driversCount: backendFirm._count?.drivers || 0,
-    createdAt: backendFirm.createdAt,
-    submittedAt: backendFirm.submittedAt,
-    approvedAt: backendFirm.approvedAt,
-    rejectionReason: backendFirm.rejectionReason,
-    bottleDepositEnabled: backendFirm.bottleDepositEnabled ?? false,
-    bottleDepositPrice: backendFirm.bottleDepositPrice ?? 15000,
+    deliveryTime: backendFirm.deliveryTime || backendFirm.delivery_time,
+    minOrder: backendFirm.minOrder || backendFirm.min_order,
+    deliveryFee: backendFirm.deliveryFee || backendFirm.delivery_fee,
+    clientsCount: backendFirm._count?.clients || backendFirm.clientsCount || backendFirm.clients_count || 0,
+    ordersCount: backendFirm._count?.orders || backendFirm.ordersCount || backendFirm.orders_count || 0,
+    driversCount: backendFirm._count?.drivers || backendFirm.driversCount || backendFirm.drivers_count || 0,
+    // Handle both camelCase and snake_case for createdAt
+    createdAt: backendFirm.createdAt || backendFirm.created_at || new Date().toISOString(),
+    submittedAt: backendFirm.submittedAt || backendFirm.submitted_at,
+    approvedAt: backendFirm.approvedAt || backendFirm.approved_at,
+    rejectionReason: backendFirm.rejectionReason || backendFirm.rejection_reason,
+    bottleDepositEnabled: backendFirm.bottleDepositEnabled ?? backendFirm.bottle_deposit_enabled ?? false,
+    bottleDepositPrice: backendFirm.bottleDepositPrice ?? backendFirm.bottle_deposit_price ?? 15000,
   };
 }
 

@@ -1,7 +1,7 @@
 // file: lib/db.ts
 // Database client wrapper - uses local PostgreSQL backend
 
-const LOCAL_API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_LOCAL_API_URL || 'http://45.92.173.121/api';
+const LOCAL_API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_LOCAL_API_URL || 'https://api.watergocrm.uz/api';
 
 interface QueryResult<T> {
   data: T | null;
