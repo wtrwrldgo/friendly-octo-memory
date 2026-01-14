@@ -58,9 +58,11 @@ export default function BillingPage() {
       }
 
       const result = await response.json();
-      if (result.success && result.data) {
+      // Handle both response formats: { firms: [...] } and { success: true, data: [...] }
+      const firmsArray = result.firms || result.data || [];
+      if (firmsArray.length > 0 || response.ok) {
         // Transform firms to subscription format - all on 30-day free trial
-        const firmsWithSubscription: FirmSubscription[] = result.data.map((firm: any) => {
+        const firmsWithSubscription: FirmSubscription[] = firmsArray.map((firm: any) => {
           const createdAt = new Date(firm.createdAt || new Date());
           const trialEndAt = new Date(createdAt);
           trialEndAt.setDate(trialEndAt.getDate() + 30);
@@ -82,8 +84,6 @@ export default function BillingPage() {
           };
         });
         setFirms(firmsWithSubscription);
-      } else {
-        throw new Error(result.message || "Failed to fetch data");
       }
     } catch (err: any) {
       console.error("Error fetching firms:", err);
