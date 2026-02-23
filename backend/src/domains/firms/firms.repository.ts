@@ -251,6 +251,9 @@ export class FirmsRepository {
     if (data.submittedAt !== undefined) updateData.submitted_at = data.submittedAt;
     if (data.approvedAt !== undefined) updateData.approved_at = data.approvedAt;
     if (data.rejectionReason !== undefined) updateData.rejection_reason = data.rejectionReason;
+    if (data.subscriptionStatus !== undefined) updateData.subscription_status = data.subscriptionStatus;
+    if (data.trialStartAt !== undefined) updateData.trial_start_at = data.trialStartAt;
+    if (data.trialEndAt !== undefined) updateData.trial_end_at = data.trialEndAt;
 
     return prisma.firms.update({
       where: { id },

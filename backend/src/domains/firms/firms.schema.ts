@@ -18,6 +18,7 @@ const firmStatusEnum = z.enum(['DRAFT', 'PENDING_REVIEW', 'ACTIVE', 'SUSPENDED']
 
 // Delivery fee type enum matching Prisma schema
 const deliveryFeeTypeEnum = z.enum(['FIXED', 'PERCENTAGE']);
+const subscriptionStatusEnum = z.enum(['TRIAL_ACTIVE', 'TRIAL_EXPIRED', 'BASIC', 'PRO', 'MAX']);
 
 export const createFirmSchema = z.object({
   name: z.string().min(2).max(100),
@@ -48,6 +49,9 @@ export const createFirmSchema = z.object({
 // Update schema includes status workflow fields
 export const updateFirmSchema = createFirmSchema.partial().extend({
   status: firmStatusEnum.optional(),
+  subscriptionStatus: subscriptionStatusEnum.optional(),
+  trialStartAt: z.string().datetime().optional().nullable(),
+  trialEndAt: z.string().datetime().optional().nullable(),
   isVisibleInClientApp: z.boolean().optional(),
   submittedAt: z.string().datetime().optional().nullable(),
   approvedAt: z.string().datetime().optional().nullable(),

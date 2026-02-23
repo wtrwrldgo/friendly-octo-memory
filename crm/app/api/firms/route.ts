@@ -60,6 +60,9 @@ function transformFirm(backendFirm: any) {
     rejectionReason: backendFirm.rejectionReason || backendFirm.rejection_reason,
     bottleDepositEnabled: backendFirm.bottleDepositEnabled ?? backendFirm.bottle_deposit_enabled ?? false,
     bottleDepositPrice: backendFirm.bottleDepositPrice ?? backendFirm.bottle_deposit_price ?? 15000,
+    subscriptionStatus: backendFirm.subscriptionStatus || backendFirm.subscription_status || 'TRIAL_ACTIVE',
+    trialStartAt: backendFirm.trialStartAt || backendFirm.trial_start_at || null,
+    trialEndAt: backendFirm.trialEndAt || backendFirm.trial_end_at || null,
   };
 }
 

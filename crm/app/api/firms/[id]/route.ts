@@ -53,6 +53,9 @@ export async function PUT(
     if (body.description !== undefined) updateData.description = body.description;
     if (body.address !== undefined) updateData.address = body.address;
     if (body.deliveryTime !== undefined) updateData.deliveryTime = body.deliveryTime;
+    if (body.subscriptionStatus !== undefined) updateData.subscriptionStatus = body.subscriptionStatus;
+    if (body.trialStartAt !== undefined) updateData.trialStartAt = body.trialStartAt;
+    if (body.trialEndAt !== undefined) updateData.trialEndAt = body.trialEndAt;
 
     // Numeric fields
     if (typeof body.minOrder === 'number') updateData.minOrder = body.minOrder;

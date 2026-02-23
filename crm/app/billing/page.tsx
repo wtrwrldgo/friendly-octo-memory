@@ -13,28 +13,43 @@ import {
   Search,
   Filter,
   RefreshCw,
+  Save,
+  Trash2,
+  Plus,
 } from "lucide-react";
+
+type SubscriptionStatus = "TRIAL_ACTIVE" | "TRIAL_EXPIRED" | "BASIC" | "PRO" | "MAX";
 
 interface FirmSubscription {
   id: string;
   name: string;
   status: string;
-  subscriptionStatus: "TRIAL_ACTIVE" | "TRIAL_EXPIRED" | "BASIC" | "PRO" | "MAX";
-  trialStartAt: string;
+  subscriptionStatus: SubscriptionStatus;
+  trialStartAt: string | null;
   trialEndAt: string | null;
   daysRemaining: number | null;
   isExpired: boolean;
   logoUrl?: string | null;
 }
 
+interface SubscriptionEdit {
+  subscriptionStatus: SubscriptionStatus;
+  trialEndAt: string;
+}
+
 // Logo URL is already transformed by /api/firms to use https://api.watergocrm.uz
 // Just return it directly - no proxy needed for HTTPS URLs
 function getFullLogoUrl(logoUrl: string | null | undefined): string | null {
   if (!logoUrl) return null;
-  // If already a full URL, return as-is
-  if (logoUrl.startsWith('http')) return logoUrl;
-  // For relative paths, construct full URL
-  return `https://api.watergocrm.uz${logoUrl.startsWith('/') ? logoUrl : '/' + logoUrl}`;
+  if (logoUrl.startsWith("http")) return logoUrl;
+  return `https://api.watergocrm.uz${logoUrl.startsWith("/") ? logoUrl : "/" + logoUrl}`;
+}
+
+function formatDateForInput(dateStr: string | null): string {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
 }
 
 export default function BillingPage() {
@@ -44,50 +59,73 @@ export default function BillingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [logoErrors, setLogoErrors] = useState<Record<string, boolean>>({});
+  const [edits, setEdits] = useState<Record<string, SubscriptionEdit>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+  const buildFirmSubscription = (firm: any): FirmSubscription => {
+    const trialStartRaw = firm.trialStartAt || firm.createdAt || null;
+    const trialStartAt = trialStartRaw ? new Date(trialStartRaw).toISOString() : null;
+
+    let trialEndAt: string | null = null;
+    if (firm.trialEndAt) {
+      trialEndAt = new Date(firm.trialEndAt).toISOString();
+    } else if (trialStartAt) {
+      const defaultEnd = new Date(trialStartAt);
+      defaultEnd.setDate(defaultEnd.getDate() + 30);
+      trialEndAt = defaultEnd.toISOString();
+    }
+
+    const now = new Date();
+    const daysRemaining = trialEndAt
+      ? Math.ceil((new Date(trialEndAt).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+      : null;
+    const isExpired = daysRemaining !== null ? daysRemaining <= 0 : false;
+
+    const status = (firm.subscriptionStatus || "TRIAL_ACTIVE") as SubscriptionStatus;
+
+    return {
+      id: firm.id,
+      name: firm.name,
+      status: firm.status || "ACTIVE",
+      subscriptionStatus: status,
+      trialStartAt,
+      trialEndAt,
+      daysRemaining: daysRemaining !== null ? Math.max(0, daysRemaining) : null,
+      isExpired,
+      logoUrl: getFullLogoUrl(firm.logoUrl),
+    };
+  };
 
   const fetchFirmsSubscriptions = async () => {
     try {
       setLoading(true);
       setError(null);
+      setActionMessage(null);
 
-      // Fetch firms via CRM API route (avoids mixed content issues)
       const response = await fetch(`/api/firms`);
-
       if (!response.ok) {
         throw new Error("Failed to fetch firms");
       }
 
       const result = await response.json();
-      // Handle both response formats: { firms: [...] } and { success: true, data: [...] }
       const firmsArray = result.firms || result.data || [];
-      if (firmsArray.length > 0 || response.ok) {
-        // Transform firms to subscription format - all on 30-day free trial
-        const firmsWithSubscription: FirmSubscription[] = firmsArray.map((firm: any) => {
-          const createdAt = new Date(firm.createdAt || new Date());
-          const trialEndAt = new Date(createdAt);
-          trialEndAt.setDate(trialEndAt.getDate() + 30);
+      const firmsWithSubscription: FirmSubscription[] = firmsArray.map(buildFirmSubscription);
 
-          const now = new Date();
-          const daysRemaining = Math.ceil((trialEndAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-          const isExpired = daysRemaining <= 0;
+      setFirms(firmsWithSubscription);
 
-          return {
-            id: firm.id,
-            name: firm.name,
-            status: firm.status || 'ACTIVE',
-            subscriptionStatus: isExpired ? 'TRIAL_EXPIRED' : 'TRIAL_ACTIVE',
-            trialStartAt: createdAt.toISOString(),
-            trialEndAt: trialEndAt.toISOString(),
-            daysRemaining: Math.max(0, daysRemaining),
-            isExpired,
-            logoUrl: getFullLogoUrl(firm.logoUrl),
-          };
-        });
-        setFirms(firmsWithSubscription);
-      }
+      const nextEdits: Record<string, SubscriptionEdit> = {};
+      firmsWithSubscription.forEach((firm) => {
+        nextEdits[firm.id] = {
+          subscriptionStatus: firm.subscriptionStatus,
+          trialEndAt: formatDateForInput(firm.trialEndAt),
+        };
+      });
+      setEdits(nextEdits);
     } catch (err: any) {
       console.error("Error fetching firms:", err);
-      setError(err.message);
+      setError(err.message || "Failed to fetch firms");
     } finally {
       setLoading(false);
     }
@@ -97,7 +135,99 @@ export default function BillingPage() {
     fetchFirmsSubscriptions();
   }, []);
 
-  // Filter firms based on search and status
+  const handleEditChange = (firmId: string, patch: Partial<SubscriptionEdit>) => {
+    setEdits((prev) => ({
+      ...prev,
+      [firmId]: {
+        ...prev[firmId],
+        ...patch,
+      },
+    }));
+  };
+
+  const handleSave = async (firmId: string) => {
+    const edit = edits[firmId];
+    if (!edit) return;
+
+    try {
+      setSavingId(firmId);
+      setActionMessage(null);
+
+      const trialEndAtIso = edit.trialEndAt
+        ? new Date(`${edit.trialEndAt}T23:59:59`).toISOString()
+        : null;
+
+      const response = await fetch(`/api/firms/${firmId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subscriptionStatus: edit.subscriptionStatus,
+          trialEndAt: trialEndAtIso,
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to update subscription");
+      }
+
+      setActionMessage("Subscription updated successfully.");
+      await fetchFirmsSubscriptions();
+    } catch (err: any) {
+      setError(err.message || "Failed to update subscription");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleExtend30Days = (firmId: string) => {
+    const firm = firms.find((f) => f.id === firmId);
+    if (!firm) return;
+
+    const baseDate = firm.trialEndAt ? new Date(firm.trialEndAt) : new Date();
+    if (baseDate.getTime() < Date.now()) {
+      baseDate.setTime(Date.now());
+    }
+    baseDate.setDate(baseDate.getDate() + 30);
+
+    handleEditChange(firmId, {
+      subscriptionStatus: "TRIAL_ACTIVE",
+      trialEndAt: baseDate.toISOString().slice(0, 10),
+    });
+  };
+
+  const handleDeleteFirm = async (firmId: string, firmName: string) => {
+    const confirmed = window.confirm(`Delete firm \"${firmName}\"? This cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(firmId);
+      setActionMessage(null);
+
+      const response = await fetch(`/api/firms/${firmId}`, {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to delete firm");
+      }
+
+      setFirms((prev) => prev.filter((firm) => firm.id !== firmId));
+      setEdits((prev) => {
+        const next = { ...prev };
+        delete next[firmId];
+        return next;
+      });
+
+      setActionMessage(`Firm \"${firmName}\" deleted.`);
+    } catch (err: any) {
+      setError(err.message || "Failed to delete firm");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const filteredFirms = firms.filter((firm) => {
     const matchesSearch = firm.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus =
@@ -108,7 +238,6 @@ export default function BillingPage() {
     return matchesSearch && matchesStatus;
   });
 
-  // Stats
   const stats = {
     total: firms.length,
     trialActive: firms.filter((f) => f.subscriptionStatus === "TRIAL_ACTIVE").length,
@@ -122,7 +251,7 @@ export default function BillingPage() {
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
             <Clock className="w-3 h-3" />
-            Free Trial (30 Days)
+            Trial Active
           </span>
         );
       case "TRIAL_EXPIRED":
@@ -160,18 +289,14 @@ export default function BillingPage() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
+    <div className="p-6 max-w-[1400px] mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Billing & Subscriptions
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Billing & Subscriptions</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
-          Manage and monitor all firms&apos; subscription statuses
+          Manage all firms&apos; plans, trial dates, and access status
         </p>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
           <div className="flex items-center gap-3">
@@ -222,10 +347,8 @@ export default function BillingPage() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
-          {/* Search */}
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -237,7 +360,6 @@ export default function BillingPage() {
             />
           </div>
 
-          {/* Status Filter */}
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-gray-400" />
             <select
@@ -252,7 +374,6 @@ export default function BillingPage() {
             </select>
           </div>
 
-          {/* Refresh */}
           <button
             onClick={fetchFirmsSubscriptions}
             disabled={loading}
@@ -264,9 +385,8 @@ export default function BillingPage() {
         </div>
       </div>
 
-      {/* Error State */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6 relative z-50">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6">
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
             <p className="text-red-700 dark:text-red-400">{error}</p>
@@ -274,10 +394,15 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* Table */}
+      {actionMessage && (
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-6">
+          <p className="text-green-700 dark:text-green-400">{actionMessage}</p>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[1200px]">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
                 <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -295,103 +420,151 @@ export default function BillingPage() {
                 <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Days Remaining
                 </th>
+                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Manage
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
+                  <td colSpan={6} className="px-6 py-12 text-center">
                     <RefreshCw className="w-6 h-6 animate-spin text-gray-400 mx-auto mb-2" />
                     <p className="text-gray-500 dark:text-gray-400">Loading subscriptions...</p>
                   </td>
                 </tr>
               ) : filteredFirms.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
+                  <td colSpan={6} className="px-6 py-12 text-center">
                     <Building2 className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
                     <p className="text-gray-500 dark:text-gray-400">No firms found</p>
                   </td>
                 </tr>
               ) : (
-                filteredFirms.map((firm) => (
-                  <tr
-                    key={firm.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-semibold overflow-hidden">
-                          {firm.logoUrl && !logoErrors[firm.id] ? (
-                            <img
-                              src={firm.logoUrl}
-                              alt={firm.name}
-                              className="w-full h-full object-cover"
-                              onError={() => setLogoErrors(prev => ({ ...prev, [firm.id]: true }))}
-                            />
-                          ) : (
-                            firm.name.charAt(0).toUpperCase()
-                          )}
+                filteredFirms.map((firm) => {
+                  const edit = edits[firm.id];
+                  return (
+                    <tr
+                      key={firm.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-semibold overflow-hidden">
+                            {firm.logoUrl && !logoErrors[firm.id] ? (
+                              <img
+                                src={firm.logoUrl}
+                                alt={firm.name}
+                                className="w-full h-full object-cover"
+                                onError={() => setLogoErrors((prev) => ({ ...prev, [firm.id]: true }))}
+                              />
+                            ) : (
+                              firm.name.charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-white">{firm.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {firm.status === "ACTIVE" ? "Active" : firm.status}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white">{firm.name}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {firm.status === "ACTIVE" ? "Active" : firm.status}
-                          </p>
+                      </td>
+
+                      <td className="px-6 py-4">{getStatusBadge(firm.subscriptionStatus)}</td>
+
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <Calendar className="w-4 h-4" />
+                          {formatDate(firm.trialStartAt)}
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">{getStatusBadge(firm.subscriptionStatus)}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <Calendar className="w-4 h-4" />
-                        {formatDate(firm.trialStartAt)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <Calendar className="w-4 h-4" />
-                        {formatDate(firm.trialEndAt)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {firm.daysRemaining !== null ? (
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-1 rounded text-sm font-medium ${
-                            firm.daysRemaining <= 0
-                              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                              : firm.daysRemaining <= 7
-                              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                              : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                          }`}
-                        >
-                          {firm.daysRemaining <= 0 ? "Expired" : `${firm.daysRemaining} days`}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <Calendar className="w-4 h-4" />
+                          {formatDate(firm.trialEndAt)}
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        {firm.daysRemaining !== null ? (
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-sm font-medium ${
+                              firm.daysRemaining <= 0
+                                ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                : firm.daysRemaining <= 7
+                                ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                                : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                            }`}
+                          >
+                            {firm.daysRemaining <= 0 ? "Expired" : `${firm.daysRemaining} days`}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <div className="space-y-2 min-w-[280px]">
+                          <select
+                            value={edit?.subscriptionStatus || firm.subscriptionStatus}
+                            onChange={(e) =>
+                              handleEditChange(firm.id, {
+                                subscriptionStatus: e.target.value as SubscriptionStatus,
+                              })
+                            }
+                            className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                          >
+                            <option value="TRIAL_ACTIVE">TRIAL_ACTIVE</option>
+                            <option value="TRIAL_EXPIRED">TRIAL_EXPIRED</option>
+                            <option value="BASIC">BASIC</option>
+                            <option value="PRO">PRO</option>
+                            <option value="MAX">MAX</option>
+                          </select>
+
+                          <input
+                            type="date"
+                            value={edit?.trialEndAt || ""}
+                            onChange={(e) => handleEditChange(firm.id, { trialEndAt: e.target.value })}
+                            className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+                          />
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleExtend30Days(firm.id)}
+                              className="flex items-center gap-1.5 px-3 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg text-xs font-medium transition-colors"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              +30 days
+                            </button>
+
+                            <button
+                              onClick={() => handleSave(firm.id)}
+                              disabled={savingId === firm.id}
+                              className="flex items-center gap-1.5 px-3 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                            >
+                              <Save className="w-3.5 h-3.5" />
+                              {savingId === firm.id ? "Saving..." : "Save"}
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteFirm(firm.id, firm.name)}
+                              disabled={deletingId === firm.id}
+                              className="ml-auto flex items-center gap-1.5 px-3 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              {deletingId === firm.id ? "Deleting..." : "Delete"}
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      {/* Info Banner */}
-      <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-        <div className="flex items-start gap-3">
-          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-800/50 rounded-lg flex items-center justify-center flex-shrink-0">
-            <AlertTriangle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div>
-            <h3 className="font-medium text-blue-900 dark:text-blue-300">Paid Plans Coming Soon</h3>
-            <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-              Payment integration is under development. Currently, all firms are on a 30-day free
-              trial. Once paid plans are available, you&apos;ll be able to manage subscriptions from this
-              page.
-            </p>
-          </div>
         </div>
       </div>
     </div>
