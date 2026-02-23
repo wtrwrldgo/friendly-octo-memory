@@ -25,7 +25,6 @@ interface SubscriptionContextType {
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
-const WATERGO_FIRM_ID = "00000000-0000-0000-0000-000000000000";
 const TRIAL_DAYS = 30;
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
@@ -59,7 +58,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       setLoading(true);
       setError(null);
 
-      // Fetch firm details to get createdAt date (use CRM API route as proxy)
+      // Fetch firm details (use CRM API route as proxy)
       const response = await fetch(`/api/firms/${profile.firmId}`);
 
       if (!response.ok) {
@@ -69,22 +68,36 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       const result = await response.json();
       const firmData = result.success ? result.data : result;
 
-      // Calculate trial status from firm's createdAt date
-      const createdAt = new Date(firmData?.createdAt || new Date());
-      const trialEndAt = new Date(createdAt);
-      trialEndAt.setDate(trialEndAt.getDate() + TRIAL_DAYS);
-
       const now = new Date();
-      const daysRemaining = Math.ceil((trialEndAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      const isTrialExpired = daysRemaining <= 0;
+      const statusFromApi = (firmData?.subscriptionStatus || "TRIAL_ACTIVE") as SubscriptionStatus;
+      const trialStartAtStr = firmData?.trialStartAt || firmData?.createdAt || null;
+      const trialEndAtStr = firmData?.trialEndAt || null;
+      const trialEndDate = trialEndAtStr ? new Date(trialEndAtStr) : null;
+      const hasValidTrialEnd = !!trialEndDate && !Number.isNaN(trialEndDate.getTime());
+
+      let daysRemaining: number | null = null;
+      let isTrialExpired = false;
+
+      if (hasValidTrialEnd && trialEndDate) {
+        daysRemaining = Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        isTrialExpired = daysRemaining <= 0;
+      } else if (statusFromApi === "TRIAL_EXPIRED") {
+        daysRemaining = 0;
+        isTrialExpired = true;
+      }
+
+      // Keep paid plan access regardless of trial dates
+      const effectiveStatus: SubscriptionStatus =
+        statusFromApi === "TRIAL_ACTIVE" && isTrialExpired ? "TRIAL_EXPIRED" : statusFromApi;
+      const hasAccess = ["BASIC", "PRO", "MAX"].includes(effectiveStatus) || !isTrialExpired;
 
       setSubscription({
-        status: isTrialExpired ? "TRIAL_EXPIRED" : "TRIAL_ACTIVE",
-        trialStartAt: createdAt.toISOString(),
-        trialEndAt: trialEndAt.toISOString(),
-        daysRemaining: Math.max(0, daysRemaining),
+        status: effectiveStatus,
+        trialStartAt: trialStartAtStr,
+        trialEndAt: trialEndAtStr,
+        daysRemaining: daysRemaining !== null ? Math.max(0, daysRemaining) : null,
         isTrialExpired,
-        hasAccess: !isTrialExpired, // Block access if trial expired
+        hasAccess,
       });
     } catch (err: any) {
       console.error("Error calculating subscription:", err);
