@@ -3,6 +3,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+function getAuthToken(request: NextRequest): string | undefined {
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    return authHeader.replace('Bearer ', '');
+  }
+
+  // Support both cookie names used across the app
+  return request.cookies.get('auth-token')?.value || request.cookies.get('authToken')?.value;
+}
+
 // GET single firm by ID
 export async function GET(
   request: NextRequest,
@@ -36,9 +46,7 @@ export async function PUT(
     const body = await request.json();
 
     // Get auth token from Authorization header or cookies
-    const authHeader = request.headers.get('Authorization');
-    const authToken = authHeader?.replace('Bearer ', '') ||
-                      request.cookies.get('authToken')?.value;
+    const authToken = getAuthToken(request);
 
     // Pass through all fields from request body
     const updateData: Record<string, any> = {};
@@ -98,9 +106,7 @@ export async function DELETE(
 ) {
   try {
     // Get auth token from Authorization header or cookies
-    const authHeader = request.headers.get('Authorization');
-    const authToken = authHeader?.replace('Bearer ', '') ||
-                      request.cookies.get('authToken')?.value;
+    const authToken = getAuthToken(request);
 
     const { error } = await db.deleteFirm(params.id, { authToken });
 
