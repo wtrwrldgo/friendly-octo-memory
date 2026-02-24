@@ -29,9 +29,10 @@ export default function FirmStaffPage() {
     role: "OPERATOR" as StaffRole,
     phone: "",
     email: "",
-    city: "",
+    password: "",
     active: true,
   });
+  const [submitting, setSubmitting] = useState(false);
   const [staff, setStaff] = useState<Staff[]>([]);
 
   // Fetch real staff from Express.js backend
@@ -100,7 +101,7 @@ export default function FirmStaffPage() {
       role: "OPERATOR",
       phone: "",
       email: "",
-      city: "",
+      password: "",
       active: true,
     });
     setIsModalOpen(true);
@@ -113,52 +114,101 @@ export default function FirmStaffPage() {
       role: member.role,
       phone: member.phone,
       email: member.email || "",
-      city: member.city || "",
+      password: "",
       active: member.active,
     });
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
 
-    if (editingStaff) {
-      setStaff(
-        staff.map((s) =>
-          s.id === editingStaff.id
-            ? {
-                ...s,
-                name: formData.name,
-                role: formData.role,
-                phone: formData.phone,
-                email: formData.email,
-                city: formData.city,
-                active: formData.active,
-              }
-            : s
-        )
-      );
-    } else {
-      const newStaff: Staff = {
-        id: `staff-${Date.now()}`,
-        firmId: "1",
-        name: formData.name,
-        role: formData.role,
-        phone: formData.phone,
-        email: formData.email,
-        city: formData.city,
-        active: formData.active,
-        createdAt: new Date().toISOString(),
-      };
-      setStaff([...staff, newStaff]);
+    try {
+      const firmId = user?.firmId || firm?.id;
+      if (!firmId) {
+        alert("Firm ID not found");
+        return;
+      }
+
+      if (editingStaff) {
+        // Update existing staff
+        const response = await firmApi.updateStaff(editingStaff.id, {
+          name: formData.name,
+          role: formData.role,
+          phone: formData.phone,
+          email: formData.email,
+          active: formData.active,
+        });
+
+        if (response?.data || response?.success !== false) {
+          setStaff(
+            staff.map((s) =>
+              s.id === editingStaff.id
+                ? {
+                    ...s,
+                    name: formData.name,
+                    role: formData.role,
+                    phone: formData.phone,
+                    email: formData.email,
+                    active: formData.active,
+                  }
+                : s
+            )
+          );
+        }
+      } else {
+        // Create new staff
+        if (!formData.password) {
+          alert("Password is required for new staff");
+          setSubmitting(false);
+          return;
+        }
+
+        const response = await firmApi.createStaff({
+          firmId,
+          branchId: user?.branchId || undefined,
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+        });
+
+        if (response?.data) {
+          const newStaff: Staff = {
+            id: response.data.id,
+            firmId: firmId,
+            name: response.data.name,
+            role: response.data.role as StaffRole,
+            phone: response.data.phone || "",
+            email: response.data.email || "",
+            city: "",
+            active: response.data.active !== false,
+            createdAt: response.data.createdAt || new Date().toISOString(),
+          };
+          setStaff([...staff, newStaff]);
+        }
+      }
+
+      setIsModalOpen(false);
+    } catch (error: any) {
+      console.error("Failed to save staff:", error);
+      alert(error.message || "Failed to save staff");
+    } finally {
+      setSubmitting(false);
     }
-
-    setIsModalOpen(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm(t.staff.deleteConfirm)) {
-      setStaff(staff.filter((s) => s.id !== id));
+      try {
+        await firmApi.deleteStaff(id);
+        setStaff(staff.filter((s) => s.id !== id));
+      } catch (error: any) {
+        console.error("Failed to delete staff:", error);
+        alert(error.message || "Failed to delete staff");
+      }
     }
   };
 
@@ -583,21 +633,25 @@ export default function FirmStaffPage() {
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="email@example.com"
               className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+              required
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              {t.drivers.city}
-            </label>
-            <input
-              type="text"
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-              placeholder="Tashkent"
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-            />
-          </div>
+          {!editingStaff && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                required
+              />
+            </div>
+          )}
 
           <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
             <input
@@ -622,10 +676,15 @@ export default function FirmStaffPage() {
             </button>
             <button
               type="submit"
-              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-purple-500/30 transition-all hover:scale-[1.02]"
+              disabled={submitting}
+              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-purple-500/30 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Save className="w-5 h-5" />
-              {editingStaff ? t.staff.updateStaff : t.staff.addStaff}
+              {submitting ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Save className="w-5 h-5" />
+              )}
+              {submitting ? "Saving..." : (editingStaff ? t.staff.updateStaff : t.staff.addStaff)}
             </button>
           </div>
         </form>
