@@ -2,23 +2,23 @@
 
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import PageHeader from "@/components/PageHeader";
 import Modal from "@/components/Modal";
 import {
   Package, Plus, Edit2, Trash2, Search, Save, Droplet, Zap, Wrench,
   AlertCircle, RefreshCw, DollarSign, Boxes, XCircle, Upload, X, Image as ImageIcon
 } from "lucide-react";
-import { useCRUD } from "@/hooks";
-import { mockProducts } from "@/lib/mockData";
 import { formatCurrency } from "@/lib/utils";
 import { Product } from "@/types";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 type CategoryFilter = "All" | "Water" | "Accessories" | "Equipment";
 
 export default function FirmProductsPage() {
   const { t } = useLanguage();
+  const { profile } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("All");
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -26,12 +26,62 @@ export default function FirmProductsPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [products, setProducts] = useState<Product[]>([]);
 
-  // CRUD Hook
-  const { items: products, create, update, remove } = useCRUD<Product>({
-    initialData: mockProducts,
+  const normalizeImageUrl = (url?: string | null) => {
+    if (!url) return "";
+    if (url.startsWith("http://")) {
+      return `/api/imageproxy?url=${encodeURIComponent(url)}`;
+    }
+    if (url.startsWith("/")) {
+      return `https://api.watergocrm.uz${url}`;
+    }
+    return url;
+  };
+
+  const mapBackendProduct = (item: any): Product => ({
+    id: item.id,
+    firmId: item.firmId || profile?.firmId || "",
+    name: item.name || "",
+    description: item.description || "",
+    price: Number(item.price || 0),
+    unit: "bottle",
+    volume: item.volume || "19L",
+    image: normalizeImageUrl(item.image || item.imageUrl || ""),
+    inStock: Boolean(item.inStock),
+    stockQuantity: item.inStock ? 1 : 0,
+    minOrder: 1,
+    category: "Water",
+    createdAt: item.createdAt || new Date().toISOString(),
   });
+
+  const fetchProducts = useCallback(async () => {
+    if (!profile?.firmId) return;
+
+    try {
+      setIsLoadingProducts(true);
+      const response = await fetch(`/api/products?firm_id=${profile.firmId}`, { cache: "no-store" });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to fetch products");
+      }
+
+      const mapped = Array.isArray(result.products) ? result.products.map(mapBackendProduct) : [];
+      setProducts(mapped);
+    } catch (error) {
+      console.error("Error loading products:", error);
+      setProducts([]);
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  }, [profile?.firmId]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -176,14 +226,44 @@ export default function FirmProductsPage() {
       const productData = { ...formData, image: imageUrl };
 
       if (editingProduct) {
-        update(editingProduct.id, productData);
-      } else {
-        create({
-          ...productData,
-          firmId: "1",
-          createdAt: new Date().toISOString(),
+        const response = await fetch(`/api/products/${editingProduct.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: productData.name,
+            description: productData.description,
+            price: productData.price,
+            imageUrl: productData.image || null,
+            volume: productData.volume || null,
+            inStock: productData.inStock,
+          }),
         });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to update product");
+        }
+      } else {
+        if (!profile?.firmId) throw new Error("Firm not found");
+        const response = await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            firmId: profile.firmId,
+            name: productData.name,
+            description: productData.description,
+            price: productData.price,
+            imageUrl: productData.image || null,
+            volume: productData.volume || null,
+            inStock: productData.inStock,
+          }),
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to create product");
+        }
       }
+
+      await fetchProducts();
       setIsModalOpen(false);
       setEditingProduct(null);
       setImageFile(null);
@@ -197,9 +277,20 @@ export default function FirmProductsPage() {
 
   const handleDelete = (id: string) => {
     const product = products.find(p => p.id === id);
-    if (confirm(`${t.common.delete} "${product?.name}"? ${t.products.deleteConfirm}`)) {
-      remove(id);
-    }
+    if (!confirm(`${t.common.delete} "${product?.name}"? ${t.products.deleteConfirm}`)) return;
+
+    (async () => {
+      try {
+        const response = await fetch(`/api/products/${id}`, { method: "DELETE" });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to delete product");
+        }
+        await fetchProducts();
+      } catch (error) {
+        console.error("Error deleting product:", error);
+      }
+    })();
   };
 
   const getCategoryIcon = (category: string, size: string = "w-5 h-5") => {
@@ -356,7 +447,14 @@ export default function FirmProductsPage() {
         </div>
 
         {/* Products Grid */}
-        {filteredProducts.length === 0 ? (
+        {isLoadingProducts ? (
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl py-24">
+            <div className="flex flex-col items-center justify-center">
+              <RefreshCw className="w-10 h-10 text-blue-500 animate-spin mb-4" />
+              <p className="text-gray-600 dark:text-gray-400">{t.common.loading}</p>
+            </div>
+          </div>
+        ) : filteredProducts.length === 0 ? (
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl py-24">
             <div className="flex flex-col items-center justify-center">
               <div className="relative mb-6">
@@ -454,10 +552,7 @@ export default function FirmProductsPage() {
                       ? "bg-blue-500 text-white"
                       : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                   }`}>
-                    {product.inStock && product.stockQuantity > 0
-                      ? `${t.products.stock}: ${product.stockQuantity}`
-                      : t.products.outOfStock
-                    }
+                    {product.inStock ? t.products.inStock : t.products.outOfStock}
                   </div>
                 </div>
               );
