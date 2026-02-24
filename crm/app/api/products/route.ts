@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         description: description || '',
         price,
         image_url: imageUrl || null,
-        volume: volume || '19L',
+        volume: volume || null,
         in_stock: inStock !== false,
       },
       { authToken }

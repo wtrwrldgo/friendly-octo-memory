@@ -17,6 +17,12 @@ import { useAuth } from "@/contexts/AuthContext";
 type CategoryFilter = "All" | "Water" | "Accessories" | "Equipment";
 const MAX_PRODUCT_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
+function inferVolumeFromText(text: string): string {
+  const normalized = text.replace(",", ".").toUpperCase();
+  const match = normalized.match(/(\d+(?:\.\d+)?)\s*L\b/);
+  return match ? `${match[1]}L` : "";
+}
+
 export default function FirmProductsPage() {
   const { t } = useLanguage();
   const { profile } = useAuth();
@@ -71,7 +77,7 @@ export default function FirmProductsPage() {
     description: item.description || "",
     price: Number(item.price || 0),
     unit: "bottle",
-    volume: item.volume || "19L",
+    volume: item.volume || inferVolumeFromText(item.name || "") || "",
     image: normalizeImageUrl(item.image || item.imageUrl || ""),
     inStock: Boolean(item.inStock),
     stockQuantity: item.inStock ? 1 : 0,
@@ -116,7 +122,7 @@ export default function FirmProductsPage() {
     description: "",
     price: 0,
     unit: "bottle",
-    volume: "19L",
+    volume: "",
     image: "",
     inStock: true,
     stockQuantity: 0,
@@ -156,7 +162,7 @@ export default function FirmProductsPage() {
       description: "",
       price: 0,
       unit: "bottle",
-      volume: "19L",
+      volume: "",
       image: "",
       inStock: true,
       stockQuantity: 0,
@@ -266,7 +272,9 @@ export default function FirmProductsPage() {
         }
       }
 
-      const productData = { ...formData, image: imageUrl };
+      const inferredVolume = inferVolumeFromText(formData.name || "");
+      const finalVolume = (formData.volume || "").trim() || inferredVolume || null;
+      const productData = { ...formData, image: imageUrl, volume: finalVolume };
 
       if (editingProduct) {
         const response = await fetch(`/api/products/${editingProduct.id}`, {
