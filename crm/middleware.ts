@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC_PATHS = ['/login'];
+const PUBLIC_PATHS = ['/login', '/robots.txt', '/sitemap.xml', '/manifest.json'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -22,12 +22,16 @@ export function middleware(request: NextRequest) {
   }
 
   // Allow static files
-  if (pathname.startsWith('/_next') || pathname.startsWith('/favicon')) {
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon') ||
+    /\.(png|jpg|jpeg|gif|svg|ico|webmanifest|txt|xml)$/i.test(pathname)
+  ) {
     return NextResponse.next();
   }
 
   // Check auth token
-  const token = request.cookies.get('auth-token')?.value;
+  const token = request.cookies.get('auth-token')?.value || request.cookies.get('authToken')?.value;
 
   if (!token) {
     const loginUrl = new URL('/login', request.url);
