@@ -16,9 +16,12 @@ export const metadata: Metadata = {
   description: "WaterGo CRM platform for admin and firm management.",
   applicationName: "WaterGo CRM",
   icons: {
-    icon: "/watergo-logo.png",
+    icon: [
+      { url: "/favicon.ico", type: "image/x-icon" },
+      { url: "/watergo-logo.png", type: "image/png" },
+    ],
     apple: "/watergo-logo.png",
-    shortcut: "/watergo-logo.png",
+    shortcut: "/favicon.ico",
   },
   openGraph: {
     type: "website",
