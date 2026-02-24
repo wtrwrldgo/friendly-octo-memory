@@ -30,24 +30,9 @@ export default function FirmProductsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const productPlaceholderImage = "/products/bottles/placeholder.svg";
-  const appImageHost = "api.watergocrm.uz";
 
   const applyFallbackImage = (event: React.SyntheticEvent<HTMLImageElement>) => {
     const imageElement = event.currentTarget;
-    const originalSrc = imageElement.dataset.originalSrc || imageElement.src;
-
-    // Retry external images through a neutral CDN proxy once before placeholder.
-    if (
-      originalSrc.startsWith("http") &&
-      !originalSrc.includes(appImageHost) &&
-      imageElement.dataset.proxyTried !== "1"
-    ) {
-      imageElement.dataset.proxyTried = "1";
-      const withoutProtocol = originalSrc.replace(/^https?:\/\//i, "");
-      imageElement.src = `https://images.weserv.nl/?url=${encodeURIComponent(withoutProtocol)}`;
-      return;
-    }
-
     if (imageElement.src.endsWith(productPlaceholderImage)) {
       return;
     }
@@ -63,7 +48,7 @@ export default function FirmProductsPage() {
         const legacyBackendHosts = new Set(["45.92.173.121", "api.watergocrm.uz", "watergocrm.uz"]);
 
         // Old records sometimes store raw IP/http URLs. Force them to API HTTPS host.
-        if (legacyBackendHosts.has(parsed.hostname)) {
+        if (legacyBackendHosts.has(parsed.hostname) || parsed.pathname.startsWith("/static/uploads/")) {
           return `https://api.watergocrm.uz${parsed.pathname}${parsed.search}`;
         }
 
@@ -555,7 +540,6 @@ export default function FirmProductsPage() {
                     {product.image ? (
                       <img
                         src={product.image}
-                        data-original-src={product.image}
                         alt={product.name}
                         className="w-full h-full object-contain"
                         onError={applyFallbackImage}
@@ -621,7 +605,6 @@ export default function FirmProductsPage() {
               <div className="relative w-full h-40 rounded-2xl overflow-hidden border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
                 <img
                   src={imagePreview}
-                  data-original-src={imagePreview}
                   alt="Preview"
                   className="w-full h-full object-contain"
                   onError={applyFallbackImage}
