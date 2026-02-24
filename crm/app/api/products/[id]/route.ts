@@ -17,7 +17,7 @@ export async function PUT(
     const { name, description, price, imageUrl, volume, inStock } = body;
 
     // Get auth token from cookies for server-side requests
-    const authToken = getAuthTokenFromCookies();
+    const authToken = getAuthTokenFromCookies(request);
 
     const { data: product, error } = await db.updateProduct(productId, {
       name,
@@ -49,7 +49,7 @@ export async function DELETE(
     const productId = params.id;
 
     // Get auth token from cookies for server-side requests
-    const authToken = getAuthTokenFromCookies();
+    const authToken = getAuthTokenFromCookies(request);
 
     const { error } = await db.deleteProduct(productId, { authToken });
 

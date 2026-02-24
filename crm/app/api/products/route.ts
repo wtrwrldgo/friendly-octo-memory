@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { firmId, name, description, price, imageUrl, volume, inStock } = body;
-    const authToken = getAuthTokenFromCookies();
+    const authToken = getAuthTokenFromCookies(request);
 
     if (!firmId || !name || price === undefined) {
       return NextResponse.json(
