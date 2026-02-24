@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Building2,
   ShoppingCart,
@@ -25,6 +26,7 @@ import {
   MapPin,
   Calendar,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Firm {
   id: string;
@@ -57,6 +59,8 @@ interface Driver {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { user, loading: authLoading, isWatergoAdmin } = useAuth();
   const [firms, setFirms] = useState<Firm[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -125,8 +129,20 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
+
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+
+    if (!isWatergoAdmin) {
+      router.replace("/firm-dashboard");
+      return;
+    }
+
     fetchData();
-  }, []);
+  }, [authLoading, user, isWatergoAdmin, router]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -214,7 +230,7 @@ export default function DashboardPage() {
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
-  if (loading) {
+  if (authLoading || !user || !isWatergoAdmin || loading) {
     return (
       <div className="p-6 max-w-7xl mx-auto flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
