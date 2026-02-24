@@ -236,6 +236,8 @@ export default function FirmProductsPage() {
     setIsUploading(true);
 
     try {
+      const authToken = localStorage.getItem("auth_token") || localStorage.getItem("authToken");
+      const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {};
       let imageUrl = formData.image;
 
       if (imageFile) {
@@ -250,7 +252,10 @@ export default function FirmProductsPage() {
       if (editingProduct) {
         const response = await fetch(`/api/products/${editingProduct.id}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders,
+          },
           body: JSON.stringify({
             name: productData.name,
             description: productData.description,
@@ -268,7 +273,10 @@ export default function FirmProductsPage() {
         if (!profile?.firmId) throw new Error("Firm not found");
         const response = await fetch("/api/products", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders,
+          },
           body: JSON.stringify({
             firmId: profile.firmId,
             name: productData.name,
@@ -303,7 +311,12 @@ export default function FirmProductsPage() {
 
     (async () => {
       try {
-        const response = await fetch(`/api/products/${id}`, { method: "DELETE" });
+        const authToken = localStorage.getItem("auth_token") || localStorage.getItem("authToken");
+        const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+        const response = await fetch(`/api/products/${id}`, {
+          method: "DELETE",
+          headers: authHeaders,
+        });
         const result = await response.json();
         if (!response.ok) {
           throw new Error(result.error || "Failed to delete product");
