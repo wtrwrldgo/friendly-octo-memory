@@ -27,7 +27,8 @@ import {
   Shield,
   CreditCard,
   Globe,
-  Check
+  Check,
+  Droplets
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,7 +41,8 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || "htt
 const getProxyUrl = (url: string | null | undefined): string | null => {
   if (!url) return null;
   if (url.startsWith("data:")) return url;
-  if (url.startsWith("http://45.92.173.121")) {
+  // Proxy any insecure HTTP image to avoid mixed-content blocking on HTTPS CRM
+  if (url.startsWith("http://")) {
     return `/api/imageproxy?url=${encodeURIComponent(url)}`;
   }
   return url;
@@ -192,14 +194,18 @@ export default function Sidebar() {
             <div className={`
               ${isCollapsed ? 'w-12 h-12' : 'w-14 h-14'}
               rounded-2xl overflow-hidden
-              bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700
+              ${isWatergoAdmin
+                ? 'bg-gradient-to-br from-cyan-400 via-blue-500 to-blue-600'
+                : 'bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700'}
               flex items-center justify-center
-              shadow-lg shadow-blue-500/25
+              shadow-lg ${isWatergoAdmin ? 'shadow-cyan-500/25' : 'shadow-blue-500/25'}
               ring-2 ring-white/10
               transition-all duration-300
               group-hover:shadow-blue-500/40 group-hover:scale-105
             `}>
-              {logoUrl && !logoError ? (
+              {isWatergoAdmin ? (
+                <Droplets className={`${isCollapsed ? 'w-6 h-6' : 'w-7 h-7'} text-white drop-shadow-lg`} />
+              ) : logoUrl && !logoError ? (
                 <img
                   src={logoUrl}
                   alt={firm?.name || "Firm logo"}
@@ -221,12 +227,24 @@ export default function Sidebar() {
           {/* Firm Name & Badge */}
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-bold text-white truncate">
-                {firm?.name || "WaterGo"}
-              </h1>
+              {isWatergoAdmin ? (
+                <>
+                  <h1 className="text-lg font-bold text-white">
+                    <span className="text-cyan-400">Water</span>
+                    <span className="text-white">Go</span>
+                  </h1>
+                  <p className="text-xs text-slate-400 mt-0.5">CRM Admin Panel</p>
+                </>
+              ) : (
+                <h1 className="text-lg font-bold text-white truncate">
+                  {firm?.name || "WaterGo"}
+                </h1>
+              )}
               <div className="flex items-center gap-2 mt-1">
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-                    subscription?.status === "TRIAL_EXPIRED"
+                    isWatergoAdmin
+                      ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/30"
+                      : subscription?.status === "TRIAL_EXPIRED"
                       ? "bg-red-500/20 text-red-300 border-red-500/30"
                       : "bg-blue-500/20 text-blue-300 border-blue-500/30"
                   }`}>
