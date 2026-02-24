@@ -42,19 +42,20 @@ export default function FirmProductsPage() {
   const normalizeImageUrl = (url?: string | null) => {
     if (!url) return "";
     if (url.startsWith("/api/imageproxy")) return url;
-    if (url.startsWith("http://")) {
+    if (url.startsWith("http://") || url.startsWith("https://")) {
       try {
         const parsed = new URL(url);
-        if (parsed.hostname) {
-          return url.replace(/^http:\/\//i, "https://");
+        const legacyBackendHosts = new Set(["45.92.173.121", "api.watergocrm.uz", "watergocrm.uz"]);
+
+        // Old records sometimes store raw IP/http URLs. Force them to API HTTPS host.
+        if (legacyBackendHosts.has(parsed.hostname) || parsed.pathname.startsWith("/static/uploads/")) {
+          return `https://api.watergocrm.uz${parsed.pathname}${parsed.search}`;
         }
+
+        return `${parsed.protocol === "http:" ? "https:" : parsed.protocol}//${parsed.host}${parsed.pathname}${parsed.search}`;
       } catch {
         return `/api/imageproxy?url=${encodeURIComponent(url)}`;
       }
-      return `/api/imageproxy?url=${encodeURIComponent(url)}`;
-    }
-    if (url.startsWith("https://")) {
-      return url;
     }
     if (url.startsWith("/")) {
       return `https://api.watergocrm.uz${url}`;
