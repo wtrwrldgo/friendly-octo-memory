@@ -115,10 +115,6 @@ export default function FirmProductsPage() {
   // Form state
   const [formData, setFormData] = useState({
     name: "",
-    name_en: "",
-    name_ru: "",
-    name_uz: "",
-    name_kaa: "",
     description: "",
     price: 0,
     unit: "bottle",
@@ -155,10 +151,6 @@ export default function FirmProductsPage() {
     setEditingProduct(null);
     setFormData({
       name: "",
-      name_en: "",
-      name_ru: "",
-      name_uz: "",
-      name_kaa: "",
       description: "",
       price: 0,
       unit: "bottle",
@@ -178,10 +170,6 @@ export default function FirmProductsPage() {
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      name_en: (product as any).name_en || "",
-      name_ru: (product as any).name_ru || "",
-      name_uz: (product as any).name_uz || "",
-      name_kaa: (product as any).name_kaa || "",
       description: product.description,
       price: product.price,
       unit: product.unit,
@@ -684,55 +672,6 @@ export default function FirmProductsPage() {
               placeholder="e.g., Premium 19L Water Bottle"
               required
             />
-          </div>
-
-          {/* Translated Names */}
-          <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800">
-            <label className="block text-sm font-semibold text-blue-700 dark:text-blue-300 mb-3">
-              🌐 {t.products.translatedNames || "Translated Names"}
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">🇬🇧 English</label>
-                <input
-                  type="text"
-                  value={formData.name_en}
-                  onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                  placeholder="English name"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">🇷🇺 Russian</label>
-                <input
-                  type="text"
-                  value={formData.name_ru}
-                  onChange={(e) => setFormData({ ...formData, name_ru: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                  placeholder="Название на русском"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">🇺🇿 Uzbek</label>
-                <input
-                  type="text"
-                  value={formData.name_uz}
-                  onChange={(e) => setFormData({ ...formData, name_uz: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                  placeholder="O'zbekcha nomi"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">🏳️ Karakalpak</label>
-                <input
-                  type="text"
-                  value={formData.name_kaa}
-                  onChange={(e) => setFormData({ ...formData, name_kaa: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                  placeholder="Qaraqalpaqsha atı"
-                />
-              </div>
-            </div>
           </div>
 
           {/* Description */}
