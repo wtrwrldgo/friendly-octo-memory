@@ -15,7 +15,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Only allow proxying from our VPS
-    const allowedDomains = ["45.92.173.121", "api.watergo.uz", "api.watergocrm.uz", "watergocrm.uz"];
+    const allowedDomains = [
+      "45.92.173.121",
+      "api.watergo.uz",
+      "api.watergocrm.uz",
+      "watergocrm.uz",
+      "i.imgur.com",
+      "i.postimg.cc",
+      "postimg.cc",
+    ];
     const urlObj = new URL(url);
 
     if (!allowedDomains.some(domain => urlObj.hostname.includes(domain))) {

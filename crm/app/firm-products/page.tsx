@@ -32,13 +32,17 @@ export default function FirmProductsPage() {
 
   const normalizeImageUrl = (url?: string | null) => {
     if (!url) return "";
+    if (url.startsWith("/api/imageproxy")) return url;
     if (url.startsWith("http://")) {
       return `/api/imageproxy?url=${encodeURIComponent(url)}`;
     }
-    if (url.startsWith("/")) {
-      return `https://api.watergocrm.uz${url}`;
+    if (url.startsWith("https://")) {
+      return `/api/imageproxy?url=${encodeURIComponent(url)}`;
     }
-    return url;
+    if (url.startsWith("/")) {
+      return `/api/imageproxy?url=${encodeURIComponent(`https://api.watergocrm.uz${url}`)}`;
+    }
+    return `/api/imageproxy?url=${encodeURIComponent(`https://api.watergocrm.uz/${url}`)}`;
   };
 
   const mapBackendProduct = (item: any): Product => ({
