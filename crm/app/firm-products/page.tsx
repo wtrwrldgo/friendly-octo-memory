@@ -29,11 +29,28 @@ export default function FirmProductsPage() {
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const productPlaceholderImage = "/products/bottles/placeholder.svg";
+
+  const applyFallbackImage = (event: React.SyntheticEvent<HTMLImageElement>) => {
+    const imageElement = event.currentTarget;
+    if (imageElement.src.endsWith(productPlaceholderImage)) {
+      return;
+    }
+    imageElement.src = productPlaceholderImage;
+  };
 
   const normalizeImageUrl = (url?: string | null) => {
     if (!url) return "";
     if (url.startsWith("/api/imageproxy")) return url;
     if (url.startsWith("http://")) {
+      try {
+        const parsed = new URL(url);
+        if (parsed.hostname) {
+          return url.replace(/^http:\/\//i, "https://");
+        }
+      } catch {
+        return `/api/imageproxy?url=${encodeURIComponent(url)}`;
+      }
       return `/api/imageproxy?url=${encodeURIComponent(url)}`;
     }
     if (url.startsWith("https://")) {
@@ -524,6 +541,7 @@ export default function FirmProductsPage() {
                         src={product.image}
                         alt={product.name}
                         className="w-full h-full object-contain"
+                        onError={applyFallbackImage}
                       />
                     ) : (
                       <div className="w-24 h-24 flex items-center justify-center">
@@ -588,6 +606,7 @@ export default function FirmProductsPage() {
                   src={imagePreview}
                   alt="Preview"
                   className="w-full h-full object-contain"
+                  onError={applyFallbackImage}
                 />
                 <button
                   type="button"
