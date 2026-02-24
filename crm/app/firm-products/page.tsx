@@ -37,12 +37,12 @@ export default function FirmProductsPage() {
       return `/api/imageproxy?url=${encodeURIComponent(url)}`;
     }
     if (url.startsWith("https://")) {
-      return `/api/imageproxy?url=${encodeURIComponent(url)}`;
+      return url;
     }
     if (url.startsWith("/")) {
-      return `/api/imageproxy?url=${encodeURIComponent(`https://api.watergocrm.uz${url}`)}`;
+      return `https://api.watergocrm.uz${url}`;
     }
-    return `/api/imageproxy?url=${encodeURIComponent(`https://api.watergocrm.uz/${url}`)}`;
+    return `https://api.watergocrm.uz/${url}`;
   };
 
   const mapBackendProduct = (item: any): Product => ({
