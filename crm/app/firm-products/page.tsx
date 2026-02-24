@@ -15,6 +15,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 
 type CategoryFilter = "All" | "Water" | "Accessories" | "Equipment";
+const MAX_PRODUCT_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function FirmProductsPage() {
   const { t } = useLanguage();
@@ -193,6 +194,13 @@ export default function FirmProductsPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > MAX_PRODUCT_IMAGE_SIZE) {
+        alert("Image is too large. Maximum allowed size is 5MB.");
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -217,17 +225,28 @@ export default function FirmProductsPage() {
     const uploadFormData = new FormData();
     uploadFormData.append("image", imageFile);
 
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("auth_token") || localStorage.getItem("authToken");
     const response = await fetch("/api/upload/product-image", {
       method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: uploadFormData,
     });
 
-    const data = await response.json();
-    if (data.success && data.data?.url) {
+    if (response.status === 413) {
+      throw new Error("Image is too large. Please upload a smaller file (max 5MB).");
+    }
+
+    const contentType = response.headers.get("content-type") || "";
+    const data = contentType.includes("application/json") ? await response.json() : null;
+
+    if (!response.ok) {
+      throw new Error(data?.message || data?.error || "Failed to upload image");
+    }
+
+    if (data?.success && data?.data?.url) {
       return data.data.url;
     }
+
     return null;
   };
 
@@ -300,6 +319,7 @@ export default function FirmProductsPage() {
       setImagePreview(null);
     } catch (error) {
       console.error("Error saving product:", error);
+      alert(error instanceof Error ? error.message : "Failed to save product");
     } finally {
       setIsUploading(false);
     }
