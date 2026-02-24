@@ -18,9 +18,9 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", type: "image/x-icon" },
-      { url: "/watergo-logo.png", type: "image/png" },
+      { url: "/watergo-mark.png", type: "image/png" },
     ],
-    apple: "/watergo-logo.png",
+    apple: "/watergo-mark.png",
     shortcut: "/favicon.ico",
   },
   openGraph: {
