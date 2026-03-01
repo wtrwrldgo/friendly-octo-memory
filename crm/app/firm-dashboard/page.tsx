@@ -9,16 +9,16 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import {
-  TrendingUp, ShoppingCart, Truck, Users, ArrowRight,
+  ShoppingCart, Truck, Users, ArrowRight,
   DollarSign, Package, Calendar, ChevronRight, Plus,
-  BarChart3, Target, MapPin, Clock, Phone, Sparkles,
+  Target, MapPin, Clock, Phone, Sparkles,
   ArrowUpRight, Activity, Zap
 } from "lucide-react";
 
 export default function FirmDashboardPage() {
   const { user, firm, loading: authLoading } = useAuth();
   const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const {
     orders: allOrders,
     ordersLoading,
@@ -45,7 +45,7 @@ export default function FirmDashboardPage() {
     fetchClients();
   }, [user, router, authLoading, fetchOrders, fetchDrivers, fetchClients]);
 
-  const orders = useMemo(() => allOrders.slice(0, 5), [allOrders]);
+  const orders = useMemo(() => [...allOrders].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5), [allOrders]);
 
   const stats = useMemo(() => ({
     ordersCount: allOrders.length,
@@ -84,8 +84,25 @@ export default function FirmDashboardPage() {
   const now = new Date();
   const greeting = now.getHours() < 12 ? t.dashboard.goodMorning : now.getHours() < 18 ? t.dashboard.goodAfternoon : t.dashboard.goodEvening;
 
+  const localeMap: Record<string, string> = { en: 'en-US', ru: 'ru-RU', uz: 'uz-UZ', kaa: 'kk-KZ' };
+  const dateLocale = localeMap[language] || 'en-US';
+
+  const todayDelivered = allOrders.filter(o => {
+    const d = new Date(o.createdAt);
+    return o.status === "DELIVERED" && d.toDateString() === now.toDateString();
+  }).length;
+
+  const todayPending = allOrders.filter(o => {
+    const d = new Date(o.createdAt);
+    return (o.status === "PENDING" || o.status === "CONFIRMED" || o.status === "PREPARING") && d.toDateString() === now.toDateString();
+  }).length;
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('uz-UZ').format(value) + ' UZS';
+  };
+
+  const formatStatus = (status: string) => {
+    return status.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
   };
 
   const getStatusConfig = (status: string) => {
@@ -116,7 +133,7 @@ export default function FirmDashboardPage() {
                 {greeting}, {user.name?.split(" ")[0] || "there"}!
               </h1>
               <p className="mt-1 text-gray-600 dark:text-gray-400">
-                {firm?.name || "Your Firm"} • {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+                {firm?.name || "Your Firm"} • {now.toLocaleDateString(dateLocale, { weekday: "long", month: "long", day: "numeric" })}
               </p>
             </div>
             <button
@@ -144,13 +161,9 @@ export default function FirmDashboardPage() {
                 <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-sm">
                   <DollarSign className="w-5 h-5 text-white" />
                 </div>
-                <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/20 backdrop-blur-sm">
-                  <TrendingUp className="w-3 h-3 text-white" />
-                  <span className="text-xs font-semibold text-white">+12%</span>
-                </div>
               </div>
               <p className="text-sm font-medium text-emerald-100 mb-1">{t.dashboard.totalRevenue}</p>
-              <p className="text-xl md:text-2xl font-bold text-white truncate">
+              <p className="text-xl md:text-2xl font-bold text-white truncate" title={formatCurrency(stats.revenue)}>
                 {formatCurrency(stats.revenue)}
               </p>
             </div>
@@ -169,7 +182,7 @@ export default function FirmDashboardPage() {
                   <ShoppingCart className="w-5 h-5 text-white" />
                 </div>
                 {pendingOrders > 0 && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-400/90 animate-pulse">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-400/90">
                     <Clock className="w-3 h-3 text-amber-900" />
                     <span className="text-xs font-semibold text-amber-900">{pendingOrders}</span>
                   </div>
@@ -193,12 +206,11 @@ export default function FirmDashboardPage() {
                   <Truck className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/20 backdrop-blur-sm">
-                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                  <span className="text-xs font-semibold text-white">{onlineDrivers} {t.dashboard.online}</span>
+                  <span className="text-xs font-semibold text-white">{stats.driversCount} {t.dashboard.total}</span>
                 </div>
               </div>
               <p className="text-sm font-medium text-orange-100 mb-1">{t.dashboard.activeDrivers}</p>
-              <p className="text-xl md:text-2xl font-bold text-white">{stats.driversCount}</p>
+              <p className="text-xl md:text-2xl font-bold text-white">{onlineDrivers}</p>
             </div>
           </div>
 
@@ -265,7 +277,7 @@ export default function FirmDashboardPage() {
             className="group p-4 md:p-5 rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg shadow-gray-200/30 dark:shadow-none hover:shadow-xl hover:shadow-emerald-500/20 dark:hover:shadow-emerald-500/10 transition-all duration-300 hover:-translate-y-1"
           >
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg shadow-emerald-500/30">
-              <BarChart3 className="w-6 h-6 text-white" />
+              <Package className="w-6 h-6 text-white" />
             </div>
             <span className="font-semibold text-gray-900 dark:text-white">{t.nav.products}</span>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t.dashboard.manage}</p>
@@ -318,7 +330,7 @@ export default function FirmDashboardPage() {
                   return (
                     <div
                       key={order.id}
-                      className="p-4 md:p-5 flex items-center gap-4 cursor-pointer hover:bg-gray-50/80 dark:hover:bg-gray-700/30 transition-all"
+                      className="p-4 md:p-5 flex items-center gap-4 cursor-pointer hover:bg-gray-50/80 dark:hover:bg-gray-700/30 active:bg-gray-100 dark:active:bg-gray-700/50 transition-all"
                       onClick={() => router.push(`/firm-orders?id=${order.id}`)}
                     >
                       <div className="w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-white bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30">
@@ -339,7 +351,7 @@ export default function FirmDashboardPage() {
                       <div className="text-right flex-shrink-0">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${statusConfig.bg} ${statusConfig.text}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`}></span>
-                          {order.status.replace(/_/g, " ")}
+                          {formatStatus(order.status)}
                         </span>
                         <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">
                           {formatCurrency(order.total || 0)}
@@ -371,13 +383,13 @@ export default function FirmDashboardPage() {
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-gray-600 dark:text-gray-400">{t.dashboard.ordersCompleted}</span>
                     <span className="font-semibold text-gray-900 dark:text-white">
-                      {deliveredOrders}/{stats.ordersCount}
+                      {todayDelivered}/{todayOrders}
                     </span>
                   </div>
                   <div className="h-3 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
-                      style={{ width: stats.ordersCount > 0 ? `${(deliveredOrders / stats.ordersCount) * 100}%` : "0%" }}
+                      style={{ width: todayOrders > 0 ? `${(todayDelivered / todayOrders) * 100}%` : "0%" }}
                     ></div>
                   </div>
                 </div>
@@ -401,13 +413,13 @@ export default function FirmDashboardPage() {
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-gray-600 dark:text-gray-400">{t.dashboard.pendingOrders}</span>
                     <span className="font-semibold text-gray-900 dark:text-white">
-                      {pendingOrders}
+                      {todayPending}
                     </span>
                   </div>
                   <div className="h-3 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
-                      style={{ width: stats.ordersCount > 0 ? `${(pendingOrders / stats.ordersCount) * 100}%` : "0%" }}
+                      style={{ width: todayOrders > 0 ? `${(todayPending / todayOrders) * 100}%` : "0%" }}
                     ></div>
                   </div>
                 </div>
@@ -428,9 +440,10 @@ export default function FirmDashboardPage() {
                   </div>
                   <button
                     onClick={() => router.push("/firm-drivers")}
-                    className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 font-medium text-sm hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors"
                   >
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
+                    {t.dashboard.viewAll}
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
