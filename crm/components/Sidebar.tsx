@@ -252,13 +252,20 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-2 overflow-y-auto scrollbar-thin">
-        {sections.map((section, sectionIndex) => {
+        {sections.map((section) => {
           const sectionLinks = links.filter(link => link.section === section.id);
           if (sectionLinks.length === 0) return null;
 
           return (
-            <div key={section.id} className={sectionIndex > 0 ? "mt-1 pt-1 border-t border-white/5" : ""}>
-              <div className="space-y-0.5">
+            <div key={section.id} className="mb-5">
+              {!isCollapsed && (
+                <div className="px-3 mb-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                    {section.label}
+                  </span>
+                </div>
+              )}
+              <div className="space-y-1">
                 {sectionLinks.map((link) => {
                   const Icon = link.icon;
                   const active = isActive(link.href);
@@ -300,7 +307,6 @@ export default function Sidebar() {
           );
         })}
       </nav>
-
 
       {/* Bottom Section */}
       <div className="px-3 pb-3 space-y-1">
