@@ -46,7 +46,12 @@ const getProxyUrl = (url: string | null | undefined): string | null => {
   return url;
 };
 
-export default function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
   const { user, firm, logout, isWatergoAdmin, isOwner, isManager, profile } = useAuth();
@@ -168,8 +173,11 @@ export default function Sidebar() {
   return (
     <aside
       className={`
+        fixed inset-y-0 left-0 z-40
+        md:relative md:translate-x-0 md:z-auto
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
         ${isCollapsed ? 'w-20' : 'w-72'}
-        relative flex flex-col h-screen
+        flex flex-col h-screen
         bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950
         border-r border-white/5
         transition-all duration-300 ease-in-out
