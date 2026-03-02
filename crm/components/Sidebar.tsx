@@ -46,12 +46,7 @@ const getProxyUrl = (url: string | null | undefined): string | null => {
   return url;
 };
 
-interface SidebarProps {
-  mobileOpen?: boolean;
-  onMobileClose?: () => void;
-}
-
-export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
+export default function Sidebar() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
   const { user, firm, logout, isWatergoAdmin, isOwner, isManager, profile } = useAuth();
@@ -173,11 +168,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
   return (
     <aside
       className={`
-        fixed inset-y-0 left-0 z-40
-        md:relative md:translate-x-0 md:z-auto
-        ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
         ${isCollapsed ? 'w-20' : 'w-72'}
-        flex flex-col h-screen
+        relative flex flex-col h-screen
         bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950
         border-r border-white/5
         transition-all duration-300 ease-in-out
@@ -194,8 +186,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
         {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
       </button>
 
-      {/* Logo Section — h-16 matches header height, border-b matches header border */}
-      <div className={`relative flex items-center h-16 border-b border-white/10 ${isCollapsed ? 'px-4 justify-center' : 'px-5'}`}>
+      {/* Logo Section */}
+      <div className={`relative p-6 ${isCollapsed ? 'px-4' : ''}`}>
         <div className={`flex ${isCollapsed ? 'justify-center' : 'items-center gap-4'}`}>
           <div className="relative">
             <div className={`
