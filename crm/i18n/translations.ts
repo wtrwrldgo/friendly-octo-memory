@@ -89,6 +89,11 @@ export const translations = {
       delivering: "Delivering",
       offline: "Offline",
       createFirstOrder: "Create first order",
+      todayRevenue: "Today's Revenue",
+      todayOrders: "Today's Orders",
+      allTime: "all time",
+      available: "available",
+      noOrdersToday: "No orders today",
     },
 
     // Orders
@@ -721,6 +726,11 @@ export const translations = {
       delivering: "Доставляет",
       offline: "Не в сети",
       createFirstOrder: "Создать первый заказ",
+      todayRevenue: "Доход за сегодня",
+      todayOrders: "Заказы за сегодня",
+      allTime: "за всё время",
+      available: "доступны",
+      noOrdersToday: "Сегодня заказов нет",
     },
 
     // Orders
@@ -1353,6 +1363,11 @@ export const translations = {
       delivering: "Yetkazmoqda",
       offline: "Oflayn",
       createFirstOrder: "Birinchi buyurtma yaratish",
+      todayRevenue: "Bugungi daromad",
+      todayOrders: "Bugungi buyurtmalar",
+      allTime: "jami",
+      available: "bo'sh",
+      noOrdersToday: "Bugun buyurtma yo'q",
     },
 
     // Orders
@@ -1985,6 +2000,11 @@ export const translations = {
       delivering: "Jetkizip atır",
       offline: "Oflayn",
       createFirstOrder: "Birinshi buyırtpa jaratıw",
+      todayRevenue: "Bu'gingi tabıs",
+      todayOrders: "Bu'gingi buyırtpalar",
+      allTime: "barlıq waqıt",
+      available: "qol jetimli",
+      noOrdersToday: "Bu'gin buyırtpa joq",
     },
 
     // Orders

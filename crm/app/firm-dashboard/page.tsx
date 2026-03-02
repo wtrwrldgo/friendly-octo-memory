@@ -43,6 +43,7 @@ export default function FirmDashboardPage() {
     fetchClients();
   }, [user, router, authLoading, fetchOrders, fetchDrivers, fetchClients]);
 
+  // Last 5 most recent orders
   const orders = useMemo(() =>
     [...allOrders]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -54,7 +55,7 @@ export default function FirmDashboardPage() {
     ordersCount: allOrders.length,
     driversCount: drivers.length,
     clientsCount: clients.length,
-    revenue: allOrders.reduce((sum, o) => sum + (o.total || 0), 0),
+    totalRevenue: allOrders.reduce((sum, o) => sum + (o.total || 0), 0),
   }), [allOrders, drivers, clients]);
 
   const loading = ordersLoading || driversLoading || clientsLoading;
@@ -75,21 +76,29 @@ export default function FirmDashboardPage() {
 
   if (!user) return null;
 
-  const onlineDrivers = drivers.filter(d => d.status === "ONLINE" || d.status === "DELIVERING").length;
-  const pendingOrders = allOrders.filter(o => o.status === "PENDING" || o.status === "CONFIRMED" || o.status === "PREPARING").length;
-
   const now = new Date();
-  const greeting = now.getHours() < 12 ? t.dashboard.goodMorning : now.getHours() < 18 ? t.dashboard.goodAfternoon : t.dashboard.goodEvening;
-
-  const localeMap: Record<string, string> = { en: 'en-US', ru: 'ru-RU', uz: 'uz-UZ', kaa: 'kk-KZ' };
-  const dateLocale = localeMap[language] || 'en-US';
-
   const isToday = (date: string) => new Date(date).toDateString() === now.toDateString();
+
+  // Real-time driver counts
+  const onlineDrivers = drivers.filter(d => d.status === "ONLINE" || d.status === "DELIVERING").length;
+  const availableDrivers = drivers.filter(d => d.status === "ONLINE").length; // truly free (not delivering)
+
+  // All unresolved pending orders (regardless of date — these need attention)
+  const pendingOrders = allOrders.filter(o =>
+    o.status === "PENDING" || o.status === "CONFIRMED" || o.status === "PREPARING"
+  ).length;
+
+  // Today-specific stats
   const todayOrders = allOrders.filter(o => isToday(o.createdAt)).length;
+  const todayRevenue = allOrders.filter(o => isToday(o.createdAt)).reduce((sum, o) => sum + (o.total || 0), 0);
   const todayDelivered = allOrders.filter(o => o.status === "DELIVERED" && isToday(o.createdAt)).length;
   const todayPending = allOrders.filter(o =>
     (o.status === "PENDING" || o.status === "CONFIRMED" || o.status === "PREPARING") && isToday(o.createdAt)
   ).length;
+
+  const greeting = now.getHours() < 12 ? t.dashboard.goodMorning : now.getHours() < 18 ? t.dashboard.goodAfternoon : t.dashboard.goodEvening;
+  const localeMap: Record<string, string> = { en: 'en-US', ru: 'ru-RU', uz: 'uz-UZ', kaa: 'kk-KZ' };
+  const dateLocale = localeMap[language] || 'en-US';
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('uz-UZ').format(value) + ' UZS';
@@ -145,10 +154,10 @@ export default function FirmDashboardPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards — show today's data, all-time as sub-info */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
 
-          {/* Revenue */}
+          {/* Today's Revenue */}
           <div
             className="group relative overflow-hidden p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
             style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #0d9488 100%)' }}
@@ -158,14 +167,17 @@ export default function FirmDashboardPage() {
               <div className="p-2 rounded-lg bg-white/20 w-fit mb-3">
                 <DollarSign className="w-4 h-4 text-white" />
               </div>
-              <p className="text-xs font-medium text-emerald-100 mb-1">{t.dashboard.totalRevenue}</p>
-              <p className="text-lg md:text-xl font-bold text-white truncate" title={formatCurrency(stats.revenue)}>
-                {formatCurrency(stats.revenue)}
+              <p className="text-xs font-medium text-emerald-100 mb-1">{t.dashboard.todayRevenue}</p>
+              <p className="text-lg md:text-xl font-bold text-white truncate" title={formatCurrency(todayRevenue)}>
+                {formatCurrency(todayRevenue)}
+              </p>
+              <p className="text-xs text-emerald-200/70 mt-1 truncate">
+                {formatCurrency(stats.totalRevenue)} {t.dashboard.allTime}
               </p>
             </div>
           </div>
 
-          {/* Orders */}
+          {/* Today's Orders */}
           <div
             className="group relative overflow-hidden p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
             style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #4f46e5 100%)' }}
@@ -183,12 +195,15 @@ export default function FirmDashboardPage() {
                   </div>
                 )}
               </div>
-              <p className="text-xs font-medium text-blue-100 mb-1">{t.dashboard.totalOrders}</p>
-              <p className="text-lg md:text-xl font-bold text-white">{stats.ordersCount}</p>
+              <p className="text-xs font-medium text-blue-100 mb-1">{t.dashboard.todayOrders}</p>
+              <p className="text-lg md:text-xl font-bold text-white">{todayOrders}</p>
+              <p className="text-xs text-blue-200/70 mt-1">
+                {stats.ordersCount} {t.dashboard.allTime}
+              </p>
             </div>
           </div>
 
-          {/* Drivers */}
+          {/* Active Drivers (online + delivering) */}
           <div
             className="group relative overflow-hidden p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
             style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #d97706 100%)' }}
@@ -207,10 +222,13 @@ export default function FirmDashboardPage() {
               </div>
               <p className="text-xs font-medium text-orange-100 mb-1">{t.dashboard.activeDrivers}</p>
               <p className="text-lg md:text-xl font-bold text-white">{onlineDrivers}</p>
+              <p className="text-xs text-orange-200/70 mt-1">
+                {availableDrivers} {t.dashboard.available}
+              </p>
             </div>
           </div>
 
-          {/* Clients */}
+          {/* Total Clients */}
           <div
             className="group relative overflow-hidden p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
             style={{ background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 50%, #4f46e5 100%)' }}
@@ -232,7 +250,7 @@ export default function FirmDashboardPage() {
           </div>
         </div>
 
-        {/* Quick Actions - horizontal layout */}
+        {/* Quick Actions */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <button
             onClick={() => router.push("/firm-orders")}
@@ -287,7 +305,7 @@ export default function FirmDashboardPage() {
           </button>
         </div>
 
-        {/* Main Content Grid */}
+        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
           {/* Recent Orders */}
@@ -300,7 +318,9 @@ export default function FirmDashboardPage() {
                     {t.dashboard.recentOrders}
                   </h2>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {todayOrders > 0 ? `${todayOrders} ${t.dashboard.ordersToday}` : "—"}
+                    {todayOrders > 0
+                      ? `${todayOrders} ${t.dashboard.ordersToday}`
+                      : t.dashboard.noOrdersToday}
                   </p>
                 </div>
                 <button
@@ -372,7 +392,7 @@ export default function FirmDashboardPage() {
           {/* Right Sidebar */}
           <div className="space-y-5">
 
-            {/* Performance Card */}
+            {/* Today's Performance */}
             <div className="rounded-2xl p-4 md:p-5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
               <div className="flex items-center gap-2 mb-4">
                 <div className="p-1.5 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 shadow-md shadow-purple-500/30">
@@ -383,74 +403,58 @@ export default function FirmDashboardPage() {
                 </h3>
               </div>
 
-              {todayOrders === 0 ? (
-                <div className="py-4">
+              <div className="space-y-4">
+                {/* Orders completed today */}
+                <div>
                   <div className="flex justify-between text-xs mb-1.5">
-                    <span className="text-gray-500 dark:text-gray-400">{t.dashboard.ordersCompleted}</span>
-                    <span className="text-gray-400">—</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t.dashboard.ordersCompleted}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {todayOrders > 0 ? `${todayDelivered}/${todayOrders}` : "—"}
+                    </span>
                   </div>
-                  <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-700 mb-4"></div>
-
-                  <div className="flex justify-between text-xs mb-1.5">
-                    <span className="text-gray-600 dark:text-gray-400">{t.dashboard.driverAvailability}</span>
-                    <span className="font-semibold text-gray-900 dark:text-white text-xs">{onlineDrivers}/{stats.driversCount}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden mb-4">
+                  <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
-                      style={{ width: stats.driversCount > 0 ? `${(onlineDrivers / stats.driversCount) * 100}%` : "0%" }}
+                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+                      style={{ width: todayOrders > 0 ? `${(todayDelivered / todayOrders) * 100}%` : "0%" }}
                     ></div>
                   </div>
+                </div>
 
+                {/* Driver availability — truly free drivers, always shown */}
+                <div>
                   <div className="flex justify-between text-xs mb-1.5">
-                    <span className="text-gray-500 dark:text-gray-400">{t.dashboard.pendingOrders}</span>
-                    <span className="text-gray-400">—</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t.dashboard.driverAvailability}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {availableDrivers}/{stats.driversCount}
+                    </span>
                   </div>
-                  <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-700"></div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-xs mb-1.5">
-                      <span className="text-gray-600 dark:text-gray-400">{t.dashboard.ordersCompleted}</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">{todayDelivered}/{todayOrders}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
-                        style={{ width: `${(todayDelivered / todayOrders) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs mb-1.5">
-                      <span className="text-gray-600 dark:text-gray-400">{t.dashboard.driverAvailability}</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">{onlineDrivers}/{stats.driversCount}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
-                        style={{ width: stats.driversCount > 0 ? `${(onlineDrivers / stats.driversCount) * 100}%` : "0%" }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs mb-1.5">
-                      <span className="text-gray-600 dark:text-gray-400">{t.dashboard.pendingOrders}</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">{todayPending}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
-                        style={{ width: `${(todayPending / todayOrders) * 100}%` }}
-                      ></div>
-                    </div>
+                  <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
+                      style={{ width: stats.driversCount > 0 ? `${(availableDrivers / stats.driversCount) * 100}%` : "0%" }}
+                    ></div>
                   </div>
                 </div>
-              )}
+
+                {/* All unresolved pending orders — always shown, not just today's */}
+                <div>
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span className="text-gray-600 dark:text-gray-400">{t.dashboard.pendingOrders}</span>
+                    <span className={`font-semibold ${pendingOrders > 0 ? "text-amber-600 dark:text-amber-400" : "text-gray-900 dark:text-white"}`}>
+                      {pendingOrders}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
+                      style={{ width: stats.ordersCount > 0 ? `${Math.min((pendingOrders / stats.ordersCount) * 100, 100)}%` : "0%" }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Drivers Card */}
+            {/* Drivers */}
             <div className="rounded-2xl overflow-hidden bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
               <div className="p-4 border-b border-gray-200/50 dark:border-gray-700/50">
                 <div className="flex items-center justify-between">
@@ -507,7 +511,9 @@ export default function FirmDashboardPage() {
                           driver.status === "ONLINE" ? "text-green-600 dark:text-green-400" :
                           driver.status === "DELIVERING" ? "text-blue-600 dark:text-blue-400" : "text-gray-500"
                         }`}>
-                          {driver.status === "ONLINE" ? t.dashboard.online : driver.status === "DELIVERING" ? t.dashboard.delivering : t.dashboard.offline}
+                          {driver.status === "ONLINE" ? t.dashboard.online :
+                           driver.status === "DELIVERING" ? t.dashboard.delivering :
+                           t.dashboard.offline}
                         </span>
                       </div>
                     </div>
