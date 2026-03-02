@@ -11,7 +11,8 @@ import { useEffect, useMemo } from "react";
 import {
   ShoppingCart, Truck, Users, ArrowRight,
   DollarSign, Package, ChevronRight, Plus,
-  Target, MapPin, Clock, Activity
+  Target, MapPin, Clock, Sparkles,
+  ArrowUpRight, Activity, Zap
 } from "lucide-react";
 
 export default function FirmDashboardPage() {
@@ -95,6 +96,7 @@ export default function FirmDashboardPage() {
     (o.status === "PENDING" || o.status === "CONFIRMED" || o.status === "PREPARING") && isToday(o.createdAt)
   ).length;
 
+  const greeting = now.getHours() < 12 ? t.dashboard.goodMorning : now.getHours() < 18 ? t.dashboard.goodAfternoon : t.dashboard.goodEvening;
   const localeMap: Record<string, string> = { en: 'en-US', ru: 'ru-RU', uz: 'uz-UZ', kaa: 'kk-KZ' };
   const dateLocale = localeMap[language] || 'en-US';
 
@@ -127,86 +129,180 @@ export default function FirmDashboardPage() {
       <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
 
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t.dashboard.title}</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              {firm?.name} · {now.toLocaleDateString(dateLocale, { weekday: "long", month: "long", day: "numeric" })}
-            </p>
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                <span className="text-sm font-medium text-amber-600 dark:text-amber-400">{t.dashboard.welcomeBack}</span>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                {greeting}, {user.name?.split(" ")[0] || "there"}!
+              </h1>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {firm?.name || "Your Firm"} • {now.toLocaleDateString(dateLocale, { weekday: "long", month: "long", day: "numeric" })}
+              </p>
+            </div>
+            <button
+              onClick={() => router.push("/firm-order-create")}
+              className="group flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-300 hover:scale-105"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{t.dashboard.newOrder}</span>
+              <ArrowUpRight className="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+            </button>
           </div>
-          <button
-            onClick={() => router.push("/firm-order-create")}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            {t.dashboard.newOrder}
-          </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {/* Stats Cards — show today's data, all-time as sub-info */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
 
           {/* Today's Revenue */}
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700/60 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{t.dashboard.todayRevenue}</span>
-              <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
-                <DollarSign className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+          <div
+            className="group relative overflow-hidden p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #0d9488 100%)' }}
+          >
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+            <div className="relative">
+              <div className="p-2 rounded-lg bg-white/20 w-fit mb-3">
+                <DollarSign className="w-4 h-4 text-white" />
               </div>
+              <p className="text-xs font-medium text-emerald-100 mb-1">{t.dashboard.todayRevenue}</p>
+              <p className="text-lg md:text-xl font-bold text-white truncate" title={formatCurrency(todayRevenue)}>
+                {formatCurrency(todayRevenue)}
+              </p>
+              <p className="text-xs text-emerald-200/70 mt-1 truncate">
+                {formatCurrency(stats.totalRevenue)} {t.dashboard.allTime}
+              </p>
             </div>
-            <p className="text-xl font-bold text-gray-900 dark:text-white truncate" title={formatCurrency(todayRevenue)}>
-              {formatCurrency(todayRevenue)}
-            </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 truncate">
-              {formatCurrency(stats.totalRevenue)} {t.dashboard.allTime}
-            </p>
           </div>
 
           {/* Today's Orders */}
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700/60 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{t.dashboard.todayOrders}</span>
-              <div className="flex items-center gap-1.5">
-                {pendingOrders > 0 && (
-                  <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[10px] font-semibold">
-                    <Clock className="w-2.5 h-2.5" />{pendingOrders}
-                  </span>
-                )}
-                <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                  <ShoppingCart className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+          <div
+            className="group relative overflow-hidden p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #4f46e5 100%)' }}
+          >
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 rounded-lg bg-white/20">
+                  <ShoppingCart className="w-4 h-4 text-white" />
                 </div>
+                {pendingOrders > 0 && (
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/90">
+                    <Clock className="w-3 h-3 text-amber-900" />
+                    <span className="text-xs font-semibold text-amber-900">{pendingOrders}</span>
+                  </div>
+                )}
               </div>
+              <p className="text-xs font-medium text-blue-100 mb-1">{t.dashboard.todayOrders}</p>
+              <p className="text-lg md:text-xl font-bold text-white">{todayOrders}</p>
+              <p className="text-xs text-blue-200/70 mt-1">
+                {stats.ordersCount} {t.dashboard.allTime}
+              </p>
             </div>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">{todayOrders}</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-              {stats.ordersCount} {t.dashboard.allTime}
-            </p>
           </div>
 
-          {/* Active Drivers */}
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700/60 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{t.dashboard.activeDrivers}</span>
-              <div className="p-1.5 rounded-lg bg-orange-50 dark:bg-orange-900/20">
-                <Truck className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+          {/* Active Drivers (online + delivering) */}
+          <div
+            className="group relative overflow-hidden p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+            style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #d97706 100%)' }}
+          >
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 rounded-lg bg-white/20">
+                  <Truck className="w-4 h-4 text-white" />
+                </div>
+                {stats.driversCount !== onlineDrivers && (
+                  <div className="px-2 py-0.5 rounded-full bg-white/20">
+                    <span className="text-xs font-semibold text-white">{stats.driversCount} {t.dashboard.total}</span>
+                  </div>
+                )}
               </div>
+              <p className="text-xs font-medium text-orange-100 mb-1">{t.dashboard.activeDrivers}</p>
+              <p className="text-lg md:text-xl font-bold text-white">{onlineDrivers}</p>
+              <p className="text-xs text-orange-200/70 mt-1">
+                {availableDrivers} {t.dashboard.available}
+              </p>
             </div>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">{onlineDrivers}</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-              {availableDrivers} {t.dashboard.available}
-            </p>
           </div>
 
           {/* Total Clients */}
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700/60 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{t.dashboard.totalClients}</span>
-              <div className="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/20">
-                <Users className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+          <div
+            className="group relative overflow-hidden p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+            style={{ background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 50%, #4f46e5 100%)' }}
+          >
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/10 blur-xl"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 rounded-lg bg-white/20">
+                  <Users className="w-4 h-4 text-white" />
+                </div>
+                <div className="px-2 py-0.5 rounded-full bg-white/20">
+                  <Zap className="w-3 h-3 text-white inline mr-1" />
+                  <span className="text-xs font-semibold text-white">{t.dashboard.active}</span>
+                </div>
               </div>
+              <p className="text-xs font-medium text-purple-100 mb-1">{t.dashboard.totalClients}</p>
+              <p className="text-lg md:text-xl font-bold text-white">{stats.clientsCount}</p>
             </div>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.clientsCount}</p>
           </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <button
+            onClick={() => router.push("/firm-orders")}
+            className="flex items-center gap-3 p-3.5 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:shadow-blue-500/10 transition-all duration-200 hover:-translate-y-0.5 text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-blue-500/30">
+              <Package className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-gray-900 dark:text-white">{t.nav.orders}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{stats.ordersCount} {t.dashboard.total}</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => router.push("/firm-drivers")}
+            className="flex items-center gap-3 p-3.5 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:shadow-orange-500/10 transition-all duration-200 hover:-translate-y-0.5 text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-orange-500/30">
+              <Truck className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-gray-900 dark:text-white">{t.nav.drivers}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{onlineDrivers} {t.dashboard.online}</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => router.push("/firm-clients")}
+            className="flex items-center gap-3 p-3.5 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:shadow-purple-500/10 transition-all duration-200 hover:-translate-y-0.5 text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-purple-500/30">
+              <Users className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-gray-900 dark:text-white">{t.nav.clients}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{stats.clientsCount} {t.dashboard.total}</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => router.push("/firm-products")}
+            className="flex items-center gap-3 p-3.5 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:shadow-emerald-500/10 transition-all duration-200 hover:-translate-y-0.5 text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-emerald-500/30">
+              <Package className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-gray-900 dark:text-white">{t.nav.products}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t.dashboard.manage}</p>
+            </div>
+          </button>
         </div>
 
         {/* Main Content */}
