@@ -194,8 +194,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
         {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
       </button>
 
-      {/* Logo Section */}
-      <div className={`relative p-6 ${isCollapsed ? 'px-4' : ''}`}>
+      {/* Logo Section — h-16 matches header height, border-b matches header border */}
+      <div className={`relative flex items-center h-16 border-b border-white/10 ${isCollapsed ? 'px-4 justify-center' : 'px-5'}`}>
         <div className={`flex ${isCollapsed ? 'justify-center' : 'items-center gap-4'}`}>
           <div className="relative">
             <div className={`

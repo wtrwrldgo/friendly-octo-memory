@@ -33,17 +33,17 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      <Header onMobileMenuToggle={() => setMobileOpen(!mobileOpen)} />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
-        {/* Mobile backdrop */}
-        {mobileOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-30 md:hidden"
-            onClick={() => setMobileOpen(false)}
-          />
-        )}
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <Header onMobileMenuToggle={() => setMobileOpen(!mobileOpen)} />
         <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900">
           {children}
         </main>
