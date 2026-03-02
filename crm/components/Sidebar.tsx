@@ -126,17 +126,17 @@ export default function Sidebar() {
 
   // Each link declares which roles can see it
   const firmLinks = [
-    { href: "/firm-dashboard",    icon: LayoutDashboard, label: t.nav.dashboard,    section: "core",       roles: ["OWNER", "MANAGER", "OPERATOR"] },
-    { href: "/firm-order-create", icon: PlusCircle,      label: t.nav.createOrder,  section: "core",       roles: ["OWNER", "MANAGER", "OPERATOR"] },
-    { href: "/firm-orders",       icon: ShoppingCart,    label: t.nav.orders,       section: "core",       roles: ["OWNER", "MANAGER", "OPERATOR"] },
-    { href: "/firm-products",     icon: Package,         label: t.nav.products,     section: "core",       roles: ["OWNER", "MANAGER"] },
-    { href: "/firm-clients",      icon: UserCircle,      label: t.nav.clients,      section: "core",       roles: ["OWNER", "MANAGER", "OPERATOR"] },
-    { href: "/firm-drivers",      icon: Truck,           label: t.nav.drivers,      section: "operations", roles: ["OWNER", "MANAGER"] },
-    { href: "/firm-staff",        icon: Briefcase,       label: t.nav.staff,        section: "operations", roles: ["OWNER", "MANAGER"] },
-    { href: "/firm-regions",      icon: Map,             label: t.nav.regions,      section: "operations", roles: ["OWNER"] },
-    { href: "/firm-finances",     icon: DollarSign,      label: t.nav.finances,     section: "system",     roles: ["OWNER"] },
-    { href: "/firm-settings",     icon: Settings,        label: t.nav.settings,     section: "system",     roles: ["OWNER"] },
-    { href: "/pricing",           icon: CreditCard,      label: t.nav.subscription, section: "system",     roles: ["OWNER"] },
+    { href: "/firm-dashboard",    icon: LayoutDashboard, label: t.nav.dashboard,    section: "main",       roles: ["OWNER", "MANAGER", "OPERATOR"] },
+    { href: "/firm-order-create", icon: PlusCircle,      label: t.nav.createOrder,  section: "main",       roles: ["OWNER", "MANAGER", "OPERATOR"] },
+    { href: "/firm-products",     icon: Package,         label: t.nav.products,     section: "catalog",    roles: ["OWNER", "MANAGER"] },
+    { href: "/firm-finances",     icon: DollarSign,      label: t.nav.finances,     section: "catalog",    roles: ["OWNER"] },
+    { href: "/firm-clients",      icon: UserCircle,      label: t.nav.clients,      section: "management", roles: ["OWNER", "MANAGER", "OPERATOR"] },
+    { href: "/firm-orders",       icon: ShoppingCart,    label: t.nav.orders,       section: "management", roles: ["OWNER", "MANAGER", "OPERATOR"] },
+    { href: "/firm-drivers",      icon: Truck,           label: t.nav.drivers,      section: "management", roles: ["OWNER", "MANAGER"] },
+    { href: "/firm-staff",        icon: Briefcase,       label: t.nav.staff,        section: "management", roles: ["OWNER", "MANAGER"] },
+    { href: "/firm-regions",      icon: Map,             label: t.nav.regions,      section: "settings",   roles: ["OWNER"] },
+    { href: "/firm-settings",     icon: Settings,        label: t.nav.settings,     section: "settings",   roles: ["OWNER"] },
+    { href: "/pricing",           icon: CreditCard,      label: t.nav.subscription, section: "settings",   roles: ["OWNER"] },
   ];
 
   const filteredFirmLinks = firmLinks.filter(link => link.roles.includes(userRole));
@@ -144,13 +144,14 @@ export default function Sidebar() {
 
   const sections = isWatergoAdmin
     ? [
-        { id: "main",       label: "Overview" },
-        { id: "management", label: "Management" },
+        { id: "main",       label: t.sections.overview },
+        { id: "management", label: t.sections.management },
       ]
     : [
-        { id: "core",       label: "Core" },
-        { id: "operations", label: "Operations" },
-        { id: "system",     label: "System" },
+        { id: "main",       label: t.sections.quickActions },
+        { id: "catalog",    label: t.sections.catalog },
+        { id: "management", label: t.sections.operations },
+        { id: "settings",   label: t.sections.settings },
       ];
 
   const isActive = (href: string) => {
@@ -256,10 +257,7 @@ export default function Sidebar() {
           if (sectionLinks.length === 0) return null;
 
           return (
-            <div key={section.id} className={sectionIndex > 0 ? "mt-3 pt-3 border-t border-white/[0.06]" : ""}>
-              {!isCollapsed && (
-                <p className="text-[10px] font-medium text-slate-600 px-3 mb-1.5">{section.label}</p>
-              )}
+            <div key={section.id} className={sectionIndex > 0 ? "mt-1 pt-1 border-t border-white/5" : ""}>
               <div className="space-y-0.5">
                 {sectionLinks.map((link) => {
                   const Icon = link.icon;
